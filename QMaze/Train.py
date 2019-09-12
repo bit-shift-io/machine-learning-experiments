@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# Train the model
+
 from __future__ import print_function
 import os, sys, time, datetime, json, random
 import numpy as np
@@ -16,27 +18,6 @@ from Experience import *
 
 
 
-def show(qmaze):
-    plt.grid('on')
-    nrows, ncols = qmaze.maze.shape
-    ax = plt.gca()
-    ax.set_xticks(np.arange(0.5, nrows, 1))
-    ax.set_yticks(np.arange(0.5, ncols, 1))
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    canvas = np.copy(qmaze.maze)
-    for row,col in qmaze.visited:
-        canvas[row,col] = 0.6
-    rat_row, rat_col, _ = qmaze.state
-    canvas[rat_row, rat_col] = 0.3   # rat cell
-    canvas[nrows-1, ncols-1] = 0.9 # cheese cell
-    img = plt.imshow(canvas, interpolation='none', cmap='gray')
-
-    #plt.ion() # https://stackoverflow.com/questions/28269157/plotting-in-a-non-blocking-way-with-matplotlib
-    plt.show(block = False)
-    plt.draw()
-    plt.pause(0.001)
-    return img
 
 
 def play_game(model, qmaze, rat_cell):
@@ -178,29 +159,10 @@ def format_time(seconds):
         h = seconds / 3600.0
         return "%.2f hours" % (h,)
 
-def build_model(maze, lr=0.001):
-    model = Sequential()
-    model.add(Dense(maze.size, input_shape=(maze.size,)))
-    model.add(PReLU())
-    model.add(Dense(maze.size))
-    model.add(PReLU())
-    model.add(Dense(num_actions))
-    model.compile(optimizer='adam', loss='mse')
-    return model
 
 
-# Small Q-test:
-maze =  np.array([
-    [ 1.,  0.,  1.,  1.,  1.,  1.,  1.],
-    [ 1.,  1.,  1.,  0.,  0.,  1.,  0.],
-    [ 0.,  0.,  0.,  1.,  1.,  1.,  0.],
-    [ 1.,  1.,  1.,  1.,  0.,  0.,  1.],
-    [ 1.,  0.,  0.,  0.,  1.,  1.,  1.],
-    [ 1.,  0.,  1.,  1.,  1.,  1.,  1.],
-    [ 1.,  1.,  1.,  0.,  1.,  1.,  1.]
-])
-
-qmaze = QMaze(maze)
-show(qmaze)
-model = build_model(maze)
-qtrain(model, maze, n_epoch=100, max_memory=8*maze.size, data_size=32)
+if __name__ == "__main__":
+    qmaze = QMaze(maze)
+    show(qmaze)
+    model = build_model(maze)
+    qtrain(model, maze, n_epoch=100, max_memory=8*maze.size, data_size=32)
