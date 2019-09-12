@@ -31,6 +31,11 @@ def show(qmaze):
     canvas[rat_row, rat_col] = 0.3   # rat cell
     canvas[nrows-1, ncols-1] = 0.9 # cheese cell
     img = plt.imshow(canvas, interpolation='none', cmap='gray')
+
+    #plt.ion() # https://stackoverflow.com/questions/28269157/plotting-in-a-non-blocking-way-with-matplotlib
+    plt.show(block = False)
+    plt.draw()
+    plt.pause(0.001)
     return img
 
 
@@ -198,4 +203,4 @@ maze =  np.array([
 qmaze = QMaze(maze)
 show(qmaze)
 model = build_model(maze)
-qtrain(model, maze, epochs=10, max_memory=8*maze.size, data_size=32)
+qtrain(model, maze, n_epoch=100, max_memory=8*maze.size, data_size=32)
