@@ -4,6 +4,7 @@ from keras.layers.core import Dense, Activation
 from keras.optimizers import SGD , Adam, RMSprop
 from keras.layers.advanced_activations import PReLU
 import matplotlib.pyplot as plt
+from PIL import Image
 
 rat_mark = 0.5      # The current rat cell will be painteg by gray 0.5
 
@@ -70,3 +71,23 @@ def show(qmaze, pause_time = 0.001):
     plt.draw()
     plt.pause(pause_time)
     return img
+
+
+# https://stackoverflow.com/questions/15612373/convert-image-png-to-matrix-and-then-to-1d-array
+def read_img(file_path):
+    img = Image.open(file_path).convert(mode='L').convert(mode='F')
+    np_im = np.array(img)
+    np_im /= 255.0
+    nothing = 0
+    return np_im
+    #img = plt.imread(file_path)
+  #  rows,cols,colors = img.shape # gives dimensions for RGB array
+  #  img_size = rows*cols*colors
+  #  img_1D_vector = img.reshape(img_size)
+    # you can recover the orginal image with:
+  #  img2 = img_1D_vector.reshape(rows,cols,colors)
+
+   # plt.imshow(img) # followed by 
+   # plt.show() # to show the first image, then 
+   # plt.imshow(img2) # followed by
+   # plt.show() # to show you the second image.

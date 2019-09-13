@@ -17,9 +17,6 @@ from QMaze import *
 from Experience import *
 
 
-
-
-
 def play_game(model, qmaze, rat_cell):
     qmaze.reset(rat_cell)
     envstate = qmaze.observe()
@@ -162,6 +159,7 @@ def format_time(seconds):
 
 
 if __name__ == "__main__":
+    maze = read_img("Data/Maze_1.png")
     qmaze = QMaze(maze)
     show(qmaze)
     model = build_model(maze)

@@ -20,9 +20,8 @@ from Experience import *
 
 pause_time = 0.5
 
+maze = read_img("Data/Maze_1.png")
 qmaze = QMaze(maze)
-rat_cell = random.choice(qmaze.free_cells)
-qmaze.reset(rat_cell)
 
 model = build_model(maze)
 model.load_weights("model.h5")
