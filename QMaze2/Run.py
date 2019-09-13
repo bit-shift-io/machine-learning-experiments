@@ -20,7 +20,7 @@ from Experience import *
 
 pause_time = 0.3
 
-maze = read_img("Data/Maze_3.png") #random.choice(["Data/Maze_2.png", "Data/Maze_1.png"]))
+maze = read_img("Data/Maze_1.png") #random.choice(["Data/Maze_2.png", "Data/Maze_1.png"]))
 qmaze = QMaze(maze)
 
 model = build_model(maze)
@@ -29,14 +29,25 @@ model.load_weights("model.h5")
 show(qmaze, pause_time)
 
 envstate = qmaze.observe()
+
+# set up null experience as we feed history into the NN
+experience = Experience(model, max_memory=1000)
+null_episode = [envstate, 0, 0, envstate, '']
+experience.remember(null_episode)
+experience.remember(null_episode)
+
 while True:
     prev_envstate = envstate
     # get next action
-    q = model.predict(prev_envstate)
+    q = experience.predict(prev_envstate) #model.predict(prev_envstate)
     action = np.argmax(q[0])
 
     # apply action, get rewards and new state
     envstate, reward, game_status = qmaze.act(action)
+
+    # Store episode (experience)
+    episode = [prev_envstate, action, reward, envstate, '']
+    experience.remember(episode)
 
     show(qmaze, pause_time)
 
