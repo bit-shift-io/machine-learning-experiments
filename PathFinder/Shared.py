@@ -9,9 +9,13 @@ from keras.layers import Input, Embedding, LSTM, Dense
 import keras.layers
 import keras
 import matplotlib.pyplot as plt
+import operator
+from enum import Enum
+
 
 data_path = "./Data"
 map_size = (7, 7)
+
 
 # https://stackoverflow.com/questions/15612373/convert-image-png-to-matrix-and-then-to-1d-array
 def read_img(file_path):
@@ -22,10 +26,66 @@ def read_img(file_path):
     return np_im
 
 
+
+class PathAction(Enum):
+    NONE = 0
+    UP = 1
+    RIGHT = 2
+    DOWN = 3
+    LEFT = 4
+    MAX = 5
+
+action_direction_map = {
+    PathAction.NONE: (0, 0),
+    PathAction.UP: (0, -1),
+    PathAction.RIGHT: (1, 0),
+    PathAction.DOWN: (0, 1),
+    PathAction.LEFT: (-1, 0)
+}
+
+
 class Path:
     def __init__(self, path):
         self.path = path
         self.image = read_img(path)
+        self.compiled_path = self.compile_from_image()
+        return
+
+    def compile_from_image(self):
+        pos = (0, 0)
+
+        location_history = []
+        action_history = []
+
+        image_shape = self.image.shape        
+
+        # TODO: this while loop is exiting early
+        while (pos[0] != (image_shape[0] - 1) and pos[1] != (image_shape[1] - 1)):
+            for a in range(PathAction.UP.value, PathAction.LEFT.value):
+                action = PathAction(a)
+                direction = action_direction_map[action]
+
+                next_pos = tuple(map(operator.add, pos, direction))
+
+                # do not go backwards!
+                if (len(location_history) and location_history[-1] == next_pos):
+                    continue
+
+                # out of bounds check
+                if (next_pos[0] < 0 or next_pos[0] >= image_shape[0]
+                    or next_pos[1] < 0 or next_pos[1] >= image_shape[1]):
+                    continue
+
+                # we found the next pixel we haven't been too yet
+                pixel = self.image[next_pos]
+                if (pixel < 0.5):
+                    location_history.append(pos)
+                    action_history.append(action)
+                    pos = next_pos
+                    break
+
+        self.location_history = location_history
+        self.action_history = action_history
         return
 
 
@@ -43,16 +103,28 @@ class Map:
         return
 
 
-def load_data():
-    maps = []
-    for o in os.listdir(data_path):
-        map_path = os.path.join(data_path, o)
-        if os.path.isdir(map_path):
-            maps.append(Map(map_path))
-
-    return maps
+class DataSet:
+    def __init__(self):
+        self.maps = self.load_data()
+        return
 
 
+    def load_data(self):
+        maps = []
+        for o in os.listdir(data_path):
+            map_path = os.path.join(data_path, o)
+            if os.path.isdir(map_path):
+                maps.append(Map(map_path))
+
+        return maps
+
+
+class History:
+    def __init__(self):
+        self.history = []
+        return
+
+        
 class PFModel:
     def __init__(self):
         self.model = self.build_model()
@@ -96,7 +168,17 @@ class PFModel:
         return model
 
 
-    def train(self):
+    def train(self, dataset, history):
+
+        # compile data into appropriate lists
+        aux_inputs = []
+        aux_outputs = []
+        for map in dataset.maps:
+            for path in map.paths:
+                aux_inputs.append(map.map)
+                aux_outputs.append(path)
+
+
         # And trained it via:
         self.model.fit({'main_input': headline_data, 'aux_input': additional_data},
             {'main_output': labels, 'aux_output': labels},
