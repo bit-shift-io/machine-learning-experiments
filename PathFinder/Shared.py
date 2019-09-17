@@ -53,14 +53,14 @@ class Path:
 
     def compile_from_image(self):
         pos = (0, 0)
-
+        
         location_history = []
         action_history = []
 
-        image_shape = self.image.shape        
+        image_shape = self.image.shape     
+        end_pos = tuple(map(operator.add, image_shape, (-1, -1)))
 
-        # TODO: this while loop is exiting early
-        while (pos[0] != (image_shape[0] - 1) and pos[1] != (image_shape[1] - 1)):
+        while (pos != end_pos):
             for a in range(PathAction.UP.value, PathAction.LEFT.value):
                 action = PathAction(a)
                 direction = action_direction_map[action]
@@ -87,6 +87,10 @@ class Path:
         self.location_history = location_history
         self.action_history = action_history
         return
+
+    def get_action_history_values(self):
+        values = list(map(lambda a: a.value, self.action_history))
+        return values
 
 
 class Map:
@@ -168,15 +172,14 @@ class PFModel:
         return model
 
 
-    def train(self, dataset, history):
-
+    def train(self, dataset):
         # compile data into appropriate lists
         aux_inputs = []
         aux_outputs = []
         for map in dataset.maps:
             for path in map.paths:
                 aux_inputs.append(map.map)
-                aux_outputs.append(path)
+                aux_outputs.append(path.get_action_history_values())
 
 
         # And trained it via:
