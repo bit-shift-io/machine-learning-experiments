@@ -93,10 +93,12 @@ class Path:
         return values
 
 
+
 class Map:
     def __init__(self, path):
         self.path = path
-        self.map = read_img(os.path.join(path, "Map.png"))
+        self.map_2d = read_img(os.path.join(path, "Map.png"))
+        self.map_1d = self.map_2d.reshape((-1,)) # convert from 2d to 1d array
 
         self.paths = []
         for o in os.listdir(path):
@@ -123,36 +125,40 @@ class DataSet:
         return maps
 
 
-class History:
-    def __init__(self):
-        self.history = []
-        return
+    def get_const_input_shape(self):
+        first_map = self.maps[0]
+        shape = first_map.map_1d.shape
+        return shape
+
+
+
 
         
 class PFModel:
-    def __init__(self):
-        self.model = self.build_model()
-
+    def __init__(self, dataset):
+        self.dataset = dataset
+        self.model = self.build_model()        
 
     def build_model(self):
         # https://keras.io/getting-started/functional-api-guide/
 
         # Headline input: meant to receive sequences of 100 integers, between 1 and 10000.
         # Note that we can name any layer by passing it a "name" argument.
-        main_input = Input(shape=(100,), dtype='int32', name='main_input')
+        temporal_input = Input(shape=(100,), dtype='int32', name='temporal_input')
 
         # This embedding layer will encode the input sequence
         # into a sequence of dense 512-dimensional vectors.
-        x = Embedding(output_dim=512, input_dim=10000, input_length=100)(main_input)
+        x = Embedding(output_dim=512, input_dim=10000, input_length=100)(temporal_input)
 
         # A LSTM will transform the vector sequence into a single vector,
         # containing information about the entire sequence
-        lstm_out = LSTM(32)(x)
+        lstm_out = LSTM(32, input_dim=2)(x)
 
-        auxiliary_output = Dense(1, activation='sigmoid', name='aux_output')(lstm_out)
+        #temporal_output = Dense(1, activation='sigmoid', name='temporal_output')(lstm_out) # FMNOTE: commented out
 
-        auxiliary_input = Input(shape=(5,), name='aux_input')
-        x = keras.layers.concatenate([lstm_out, auxiliary_input])
+        const_input_shape = self.dataset.get_const_input_shape()
+        const_input = Input(shape=const_input_shape, name='const_input')
+        x = keras.layers.concatenate([lstm_out, const_input])
 
         # We stack a deep densely-connected network on top
         x = Dense(64, activation='relu')(x)
@@ -162,27 +168,29 @@ class PFModel:
         # And finally we add the main logistic regression layer
         main_output = Dense(1, activation='sigmoid', name='main_output')(x)
 
-        model = Model(inputs=[main_input, auxiliary_input], outputs=[main_output, auxiliary_output])
+        model = Model(inputs=[temporal_input, const_input], outputs=[main_output]) # , temporal_output # FMNOTE: commented out
 
         model.compile(optimizer='rmsprop',
-                loss={'main_output': 'binary_crossentropy', 'aux_output': 'binary_crossentropy'},
-                loss_weights={'main_output': 1., 'aux_output': 0.2})
+                loss={'main_output': 'binary_crossentropy'}, # , 'temporal_output': 'binary_crossentropy' # FMNOTE: commented out
+                loss_weights={'main_output': 1.}) # , 'temporal_output': 0.2 # FMNOTE: commented out
 
         print(model.summary())
         return model
 
 
-    def train(self, dataset):
+    def train(self):
         # compile data into appropriate lists
-        aux_inputs = []
-        aux_outputs = []
-        for map in dataset.maps:
+        temporal_inputs = []
+        const_inputs = []
+        main_outputs = []
+        temporal_outputs = []
+        for map in self.dataset.maps:
             for path in map.paths:
-                aux_inputs.append(map.map)
-                aux_outputs.append(path.get_action_history_values())
-
+                const_inputs.append(map.map_1d)
+                temporal_inputs.append(path.location_history)
+                main_outputs.append(path.get_action_history_values())
 
         # And trained it via:
-        self.model.fit({'main_input': headline_data, 'aux_input': additional_data},
-            {'main_output': labels, 'aux_output': labels},
+        self.model.fit({'temporal_input': temporal_inputs, 'const_input': const_inputs},
+            {'main_output': main_outputs}, # , 'temporal_output': temporal_outputs # FMNOTE: commented out
             epochs=50, batch_size=32)

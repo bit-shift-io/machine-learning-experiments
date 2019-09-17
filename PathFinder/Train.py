@@ -10,8 +10,8 @@ from Shared import *
 
 def main():
     dataset = DataSet()
-    model = PFModel()
-    model.train(dataset)
+    model = PFModel(dataset)
+    model.train()
     
     
 
