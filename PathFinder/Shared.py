@@ -1,4 +1,4 @@
-import os
+import os, json
 from PIL import Image
 import numpy as np
 from keras.models import Sequential, Model
@@ -8,6 +8,7 @@ from keras.layers.advanced_activations import PReLU
 from keras.layers import Input, Embedding, LSTM, Dense
 import keras.layers
 import keras
+from keras.utils.vis_utils import plot_model
 import matplotlib.pyplot as plt
 import operator
 from enum import Enum
@@ -55,7 +56,10 @@ class Path:
         pos = (0, 0)
         
         location_history = []
+        location_image_history_1d = []
+
         action_history = []
+        action_history_1d = [] # actions converted into a vector
 
         image_shape = self.image.shape     
         end_pos = tuple(map(operator.add, image_shape, (-1, -1)))
@@ -79,13 +83,25 @@ class Path:
                 # we found the next pixel we haven't been too yet
                 pixel = self.image[next_pos]
                 if (pixel < 0.5):
+                    location_image = np.zeros(image_shape)
+                    location_image[pos] = 1.0
+                    location_image = location_image.reshape((-1,)) # convert from 2d to 1d array
+                    location_image_history_1d.append(location_image)
+
                     location_history.append(pos)
+
+                    action_1d = np.zeros(PathAction.MAX.value)
+                    action_1d[action.value] = 1
+                    action_history_1d.append(action_1d)
+
                     action_history.append(action)
                     pos = next_pos
                     break
 
         self.location_history = location_history
         self.action_history = action_history
+        self.action_history_1d = action_history_1d
+        self.location_image_history_1d = location_image_history_1d
         return
 
     def get_action_history_values(self):
@@ -98,7 +114,7 @@ class Map:
     def __init__(self, path):
         self.path = path
         self.map_2d = read_img(os.path.join(path, "Map.png"))
-        self.map_1d = self.map_2d.reshape((-1,)) # convert from 2d to 1d array
+        self.map_1d = self.map_2d.reshape((-1)) # convert from 2d to 1d array
 
         self.paths = []
         for o in os.listdir(path):
@@ -132,14 +148,44 @@ class DataSet:
 
 
 
+def plot_fit_history(history):
+    # Plot training & validation accuracy values
+    plt.plot(history.history['acc'])
+    #plt.plot(history.history['val_acc'])
+    plt.title('Model accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Test'], loc='upper left')
+    plt.show()
+
+    # Plot training & validation loss values
+    plt.plot(history.history['loss'])
+    #plt.plot(history.history['val_loss'])
+    plt.title('Model loss')
+    plt.ylabel('Loss')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Test'], loc='upper left')
+    plt.show()
+    return
+
+
+def save_model_weights(model, name):
+    # Save trained model weights and architecture, this will be used by the visualization code
+    h5file = "Output/" + name + ".h5"
+    json_file = "Output/" + name + ".json"
+    model.save_weights(h5file, overwrite=True)
+    with open(json_file, "w") as outfile:
+        json.dump(model.to_json(), outfile)
+
+    return
 
         
-class PFModel:
+class LSTMModel:
     def __init__(self, dataset):
-        self.dataset = dataset
-        self.model = self.build_model()        
+        self.dataset = dataset 
+        self.history_count = 2 # how many previous iterations to feed in. How many temporal inputs     
 
-    def build_model(self):
+    def build_model_lstm(self):
         # https://keras.io/getting-started/functional-api-guide/
 
         # Headline input: meant to receive sequences of 100 integers, between 1 and 10000.
@@ -194,3 +240,74 @@ class PFModel:
         self.model.fit({'temporal_input': temporal_inputs, 'const_input': const_inputs},
             {'main_output': main_outputs}, # , 'temporal_output': temporal_outputs # FMNOTE: commented out
             epochs=50, batch_size=32)
+
+
+       
+class Model1:
+    """ A dense RNN, where we handle recurrency ourself """
+
+    def __init__(self, dataset):
+        self.dataset = dataset 
+        self.history_count = 2 # how many previous iterations to feed in. How many temporal inputs     
+
+        map_size = self.dataset.get_const_input_shape()
+        self.input_size = map_size[0] * (self.history_count + 1)
+        self.output_size = PathAction.MAX.value
+
+        model = Sequential()
+        model.add(Dense(self.input_size, input_shape=(self.input_size,)))
+        model.add(PReLU())
+        model.add(Dense(self.input_size))
+        model.add(PReLU())
+        model.add(Dense(self.output_size))
+        model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
+
+        #plot_model(model, to_file='Model1.png', show_shapes=True, show_layer_names=True)
+        print(model.summary())
+        self.model = model
+        return
+
+
+    def train(self):
+        inputs = np.array([])
+        outputs = np.array([])
+
+        # compile inputs and outputs
+        # inputs consist of:
+        #   1. map
+        #   2. history vectors
+        #       - if history goes out of bounds we just use zeroes
+        for map in self.dataset.maps:
+            for path in map.paths:
+                action_history_1d = path.action_history_1d
+                for i in range(0, len(action_history_1d)):
+                    input = np.array(map.map_1d)
+                    output = action_history_1d[i]
+
+                    for h in range(0, self.history_count):
+                        history_idx = i - h
+                        if (history_idx < 0):
+                            input = np.concatenate((input, np.zeros(map.map_1d.shape)))
+                        else:
+                            input = np.concatenate((input, path.location_image_history_1d[history_idx]))
+
+                    inputs = np.append(inputs, input)
+                    outputs = np.append(outputs, output)
+
+        # reshape inputs for the model
+        inputs = inputs.reshape((-1, self.input_size))
+        outputs = outputs.reshape((-1, self.output_size))
+
+        history = self.model.fit(
+            inputs,
+            outputs,
+            epochs=30,
+            batch_size=16,
+            verbose=1
+        )
+        #print("fit complete")
+        #loss = self.model.evaluate(inputs, outputs, verbose=1)
+
+        save_model_weights(self.model, "Model1")
+        plot_fit_history(history)
+        return

@@ -10,7 +10,7 @@ from Shared import *
 
 def main():
     dataset = DataSet()
-    model = PFModel(dataset)
+    model = Model1(dataset)
     model.train()
     
     
