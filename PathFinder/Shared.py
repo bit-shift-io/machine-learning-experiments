@@ -1,4 +1,4 @@
-import os, json
+import os, json, random
 from PIL import Image
 import numpy as np
 from keras.models import Sequential, Model
@@ -16,6 +16,9 @@ from enum import Enum
 
 data_path = "./Data"
 map_size = (7, 7)
+
+def add_tuple(a, b):
+    return tuple(map(operator.add, a, b))
 
 
 # https://stackoverflow.com/questions/15612373/convert-image-png-to-matrix-and-then-to-1d-array
@@ -44,12 +47,50 @@ action_direction_map = {
     PathAction.LEFT: (-1, 0)
 }
 
+def get_action_from_vector(action_vec):
+    max_idx = np.argmax(action_vec)
+    return PathAction(max_idx)
+
+# given a shape, fill it with zeros,
+# put a 1 value at the supplied position
+def generate_location_image_vector(shape, pos):
+    location_image = np.zeros(shape)
+    location_image[pos] = 1.0
+    location_image = location_image.reshape((-1,)) # convert from 2d to 1d array
+    return location_image
+
+
+def show(map, pos_history, pause_time = 0.001):
+    plt.grid('on')
+    nrows, ncols = map.map_2d.shape
+    ax = plt.gca()
+    ax.set_xticks(np.arange(0.5, nrows, 1))
+    ax.set_yticks(np.arange(0.5, ncols, 1))
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    canvas = np.copy(map.map_2d)
+    for row, col in pos_history:
+        canvas[int(row),int(col)] = 0.6
+
+    ph_shape = pos_history.shape
+    cur_row, cur_col = pos_history[ph_shape[0] - 1]
+    canvas[int(cur_row), int(cur_col)] = 0.3   # rat cell
+    canvas[nrows-1, ncols-1] = 0.9 # cheese cell
+    img = plt.imshow(canvas, interpolation='none', cmap='gray')
+
+    #plt.ion() # https://stackoverflow.com/questions/28269157/plotting-in-a-non-blocking-way-with-matplotlib
+    plt.show(block = False)
+    plt.draw()
+    plt.pause(pause_time)
+    return img
+
 
 class Path:
-    def __init__(self, path):
-        self.path = path
-        self.image = read_img(path)
-        self.compiled_path = self.compile_from_image()
+    def __init__(self, path = None):
+        if (path):
+            self.path = path
+            self.image = read_img(path)
+            self.compiled_path = self.compile_from_image()
         return
 
     def compile_from_image(self):
@@ -62,14 +103,14 @@ class Path:
         action_history_1d = [] # actions converted into a vector
 
         image_shape = self.image.shape     
-        end_pos = tuple(map(operator.add, image_shape, (-1, -1)))
+        end_pos = add_tuple(image_shape, (-1, -1))
 
         while (pos != end_pos):
             for a in range(PathAction.UP.value, PathAction.LEFT.value):
                 action = PathAction(a)
                 direction = action_direction_map[action]
 
-                next_pos = tuple(map(operator.add, pos, direction))
+                next_pos = add_tuple(pos, direction)
 
                 # do not go backwards!
                 if (len(location_history) and location_history[-1] == next_pos):
@@ -83,9 +124,7 @@ class Path:
                 # we found the next pixel we haven't been too yet
                 pixel = self.image[next_pos]
                 if (pixel < 0.5):
-                    location_image = np.zeros(image_shape)
-                    location_image[pos] = 1.0
-                    location_image = location_image.reshape((-1,)) # convert from 2d to 1d array
+                    location_image = generate_location_image_vector(image_shape, pos)
                     location_image_history_1d.append(location_image)
 
                     location_history.append(pos)
@@ -107,7 +146,6 @@ class Path:
     def get_action_history_values(self):
         values = list(map(lambda a: a.value, self.action_history))
         return values
-
 
 
 class Map:
@@ -311,3 +349,23 @@ class Model1:
         save_model_weights(self.model, "Model1")
         plot_fit_history(history)
         return
+
+    def load_weights(self):
+        self.model.load_weights("Output/Model1.h5")
+
+    def predict(self, map, history):
+        input = np.array(map.map_1d)
+
+        i = len(history) - 1
+        for h in range(0, self.history_count):
+            history_idx = i - h
+            if (history_idx < 0):
+                input = np.concatenate((input, np.zeros(map.map_1d.shape)))
+            else:
+                input = np.concatenate((input, history[history_idx]))
+
+        # reshape inputs for the model
+        input = input.reshape((-1, self.input_size))
+
+        action_vec = self.model.predict(input)
+        return get_action_from_vector(action_vec)

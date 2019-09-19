@@ -1,59 +1,65 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Vizusalise the model 
-
-import os, sys, time, datetime, json, random
-import numpy as np
-from keras.models import Sequential
-from keras.layers.core import Dense, Activation
-from keras.optimizers import SGD , Adam, RMSprop
-from keras.layers.advanced_activations import PReLU
-import matplotlib.pyplot as plt
-
-# lets get the trained model and make an animated gif
-# https://www.mathworks.com/matlabcentral/answers/94495-how-can-i-create-animated-gif-images-in-matlab
-
-from Config import *
-from QMaze import *
-from Experience import *
+from Shared import *
 
 pause_time = 0.3
+max_iterations = 100
 
-maze = read_img("Data/Maze_1.png") #random.choice(["Data/Maze_2.png", "Data/Maze_1.png"]))
-qmaze = QMaze(maze)
+def main():
+    dataset = DataSet()
+    model = Model1(dataset)
+    model.load_weights()
+    
+    # pick a random map to run on
+    map = random.choice(dataset.maps)
+    map_1d_shape = map.map_1d.shape
+    map_2d_shape = map.map_2d.shape
 
-model = build_model(maze)
-model.load_weights("model.h5")
 
-show(qmaze, pause_time)
+    # setup a history of zeros to draw on
+    history = np.array([])
+    pos_history = np.array([])
 
-envstate = qmaze.observe()
+    for h in range(0, model.history_count):
+        history = np.append(history, np.zeros(map_1d_shape))
+        pos_history = np.append(pos_history, (0, 0))
 
-# set up null experience as we feed history into the NN
-experience = Experience(model, max_memory=1000)
-null_episode = [envstate, 0, 0, envstate, '']
-experience.remember(null_episode)
-experience.remember(null_episode)
+    # and push on the current position
+    pos = (0, 0)
+    current_location_image_vec = generate_location_image_vector(map_2d_shape, pos)
+    history = np.append(history, current_location_image_vec)
+    pos_history = np.append(pos_history, pos)
 
-while True:
-    prev_envstate = envstate
-    # get next action
-    q = experience.predict(prev_envstate) #model.predict(prev_envstate)
-    action = np.argmax(q[0])
+    # make shape useful
+    history = history.reshape((-1, map_1d_shape[0]))
 
-    # apply action, get rewards and new state
-    envstate, reward, game_status = qmaze.act(action)
+    # visualise
+    end_pos = add_tuple(map_2d_shape, (-1, -1))
 
-    # Store episode (experience)
-    episode = [prev_envstate, action, reward, envstate, '']
-    experience.remember(episode)
+    i = 0
+    while (pos != end_pos):
+        action = model.predict(map, history)
+        movement = action_direction_map[action]
+        new_pos = add_tuple(pos, movement)
 
-    show(qmaze, pause_time)
+        pos = new_pos
 
-    if game_status == 'win':
-        print(game_status)
-        break
-    elif game_status == 'lose':
-        print(game_status)
-        break
+        current_location_image_vec = generate_location_image_vector(map_2d_shape, pos)
+        history = np.append(history, current_location_image_vec)
+        pos_history = np.append(pos_history, pos)
+
+        # make shape useful
+        history = history.reshape((-1, map_1d_shape[0]))
+        pos_history = pos_history.reshape((-1, 2))
+
+        show(map, pos_history, pause_time)
+
+        i += 1
+        if (i >= max_iterations):
+            print("Failed to reach end position")
+            break; 
+    
+
+if __name__ == "__main__":
+    main()
