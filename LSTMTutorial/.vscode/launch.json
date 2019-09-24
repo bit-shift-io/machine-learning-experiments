@@ -1,0 +1,25 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Train - keras_lstm.py",
+            "type": "python",
+            "request": "launch",
+            "args": ["1"],
+            "program": "${workspaceFolder}/keras_lstm.py",
+            "console": "integratedTerminal"
+        },
+
+        {
+            "name": "Test/Run - keras_lstm.py",
+            "type": "python",
+            "request": "launch",
+            "args": ["2"],
+            "program": "${workspaceFolder}/keras_lstm.py",
+            "console": "integratedTerminal"
+        }
+    ]
+}
