@@ -7,3 +7,4 @@ sudo pip3 install matplotlib
 sudo pip3 install Pillow
 #sudo pip3 install pydot
 sudo pip3 install sklearn
+sudo pip3 install pandas

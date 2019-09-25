@@ -20,6 +20,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.feature_extraction import DictVectorizer
+import pandas as pd
 
 data_path = "./Data"
 
@@ -38,10 +39,115 @@ def add_tuple(a, b):
     return tuple(map(operator.add, a, b))
 
 
+# flatten a json tree into something like a CSV table
+def flattenjson( b, delim ):
+    val = {}
+    for i in b.keys():
+        if isinstance( b[i], dict ):
+            get = flattenjson( b[i], delim )
+            for j in get.keys():
+                val[ i + delim + j ] = get[j]
+        elif isinstance(b[i], list):
+            for li, l in enumerate(b[i]):
+                get = flattenjson(l, delim)
+                for j in get.keys():
+                    val[ i + delim + str(li) + delim + j ] = get[j]
+        else:
+            val[i] = b[i]
+
+    return val
+
+def normalize_columns(df, features_to_normalize):
+    #features_to_normalize = ['A', 'B', 'C']
+    # could be ['A','B'] 
+    df[features_to_normalize] = df[features_to_normalize].apply(lambda x:(x-x.min()) / (x.max()-x.min()))
+
+
+def replace_boolean(df):
+    for col in df:
+        df[col].replace(True, 1, inplace=True)
+        df[col].replace(False, 0, inplace=True)
+
+
+
 class Map:
     def __init__(self, map_path):
         with open(map_path, 'r') as f:
             self.json = json.load(f)
+
+            # convert json to tables
+            # then change categorical data to one-hot encoding
+            # good tut here:
+            #   http://queirozf.com/entries/one-hot-encoding-a-feature-on-a-pandas-dataframe-an-example
+
+
+
+            routes = self.json['routes']
+            routes_flat = [flattenjson(r, "__" ) for r in routes]
+            routes_df = pd.DataFrame(routes_flat)
+            print("Routes flattened:")
+            print(routes_df)
+
+            # compute a set of resources from resource_name column
+            # we will use this list to one hot encode the resources in the route and the resource nodes lists
+            self.resource_types = list(set(routes_df['resource_name'].apply(pd.Series).stack().tolist()))
+            print("Resource types:")
+            print(self.resource_types)
+
+            # this bit is redundant here but it shows what we want to achive:
+            # set the categories on the resource_name column so we can one hot encode it properly
+            resource_categories = pd.CategoricalDtype(categories=self.resource_types)
+            routes_df['resource_name'] = routes_df['resource_name'].astype(resource_categories)
+
+            # one hot encode the resource_name column
+            routes_df = pd.concat([routes_df, pd.get_dummies(routes_df['resource_name'], prefix='resource_name')], axis=1)
+            routes_df.drop(['resource_name'], axis=1, inplace=True)
+
+            # use pd.concat to join the new columns with your original dataframe
+            # then drop the original 'from__type' column (you don't need it anymore)
+            routes_df = pd.concat([routes_df, pd.get_dummies(routes_df['from__type'], prefix='from__type')], axis=1)
+            routes_df.drop(['from__type'], axis=1, inplace=True)
+            
+            routes_df = pd.concat([routes_df, pd.get_dummies(routes_df['to__type'], prefix='to__type')], axis=1)
+            routes_df.drop(['to__type'], axis=1, inplace=True)
+
+            normalize_columns(routes_df, ['distance'])
+            replace_boolean(routes_df)
+
+            self.routes_df = routes_df
+            print("Routes with one hot encoding:")
+            print(self.routes_df)
+
+
+
+
+            resource_nodes = self.json['resource_nodes']
+            resource_nodes_flat = [flattenjson(rn, "__" ) for rn in resource_nodes]
+            resource_nodes_df = pd.DataFrame(resource_nodes_flat)
+            print("Resource Nodes flattened:")
+            print(resource_nodes_df)
+
+            # set correct categories on the resource name columns (end with __resource_name)
+            for col in resource_nodes_df:
+                if (col.endswith('__resource_name')):
+                    resource_nodes_df[col] = resource_nodes_df[col].astype(resource_categories)
+
+                    # one hot encode the resource_name column
+                    resource_nodes_df = pd.concat([resource_nodes_df, pd.get_dummies(resource_nodes_df[col], prefix=col)], axis=1)
+                    resource_nodes_df.drop([col], axis=1, inplace=True)
+
+
+            replace_boolean(resource_nodes_df)
+
+            self.resource_nodes_df = resource_nodes_df
+            print("Resource Nodes with one hot encoding:")
+            print(self.resource_nodes_df)
+
+
+
+
+
+            nothing = 0
 
     def get_resource_node_as_vector(self, name):
         rn = next(rn for rn in self.json['resource_nodes'] if rn['name'] == name)
