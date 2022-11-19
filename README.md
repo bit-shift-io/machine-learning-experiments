@@ -21,7 +21,7 @@ An attempt to learn to use LSTM - long-term-short-term memory
 
 book-recommender
 ================
-Following tutorial: https://heartbeat.comet.ml/build-train-and-deploy-a-book-recommender-system-using-keras-tensorflow-js-b96944b936a7
+Just learning how to use ML to create a book recommendation system
 
 
 TODO: I realised that the possible problem with my QMaze was that the inputs were absolute, not relative. I need to give the AI the pixels around where they are located in concentric circles. This might also work to give them a history of past steps.

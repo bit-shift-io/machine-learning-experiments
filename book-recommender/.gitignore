@@ -1,1 +1,4 @@
 data/
+model/
+vecs.tsv
+meta.tsv
