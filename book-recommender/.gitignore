@@ -2,3 +2,4 @@ data/
 model/
 vecs.tsv
 meta.tsv
+web_book_data.json
