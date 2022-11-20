@@ -7,3 +7,8 @@ This way when a new movie is released or an unknown movie is feed in, it tries t
 the closest movie id's it knows about. i.e. is recommends similar movies - that have similar tags, authors etc..)
 
 Tutorial here which does something very similar: https://pub.towardsai.net/multi-label-text-classification-using-scikit-multilearn-case-study-with-stackoverflow-questions-768cb487ad12
+
+https://wandb.ai/ayush-thakur/dl-question-bank/reports/A-Guide-to-Multi-Label-Classification-on-Keras--VmlldzoyMDgyMDU
+https://pyimagesearch.com/2018/05/07/multi-label-classification-with-keras/
+
+https://medium.com/geekculture/multilabel-not-multiclass-text-classification-using-keras-fa1c7992b195
