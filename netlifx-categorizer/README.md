@@ -5,3 +5,5 @@ a movie and its fields (tags, authors, etc..) and train it to match with the mov
 
 This way when a new movie is released or an unknown movie is feed in, it tries to get
 the closest movie id's it knows about. i.e. is recommends similar movies - that have similar tags, authors etc..)
+
+Tutorial here which does something very similar: https://pub.towardsai.net/multi-label-text-classification-using-scikit-multilearn-case-study-with-stackoverflow-questions-768cb487ad12

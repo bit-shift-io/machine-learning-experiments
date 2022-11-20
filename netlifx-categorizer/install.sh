@@ -7,7 +7,10 @@ pip3 install --user kaggle
 mkdir data
 cd data
 
+# Extract data from https://www.kaggle.com/datasets/shivamb/netflix-shows?resource=download to 
+# /data
 kaggle datasets download -d shivamb/netflix-shows
+
 
 #curl -LO 'https://www.kaggle.com/datasets/shivamb/netflix-shows/download?datasetVersionNumber=5'
 #unzip goodbooks-10k.zip
