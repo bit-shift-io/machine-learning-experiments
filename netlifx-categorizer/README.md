@@ -11,4 +11,6 @@ Tutorial here which does something very similar: https://pub.towardsai.net/multi
 https://wandb.ai/ayush-thakur/dl-question-bank/reports/A-Guide-to-Multi-Label-Classification-on-Keras--VmlldzoyMDgyMDU
 https://pyimagesearch.com/2018/05/07/multi-label-classification-with-keras/
 
+There seems to good simple example here:
 https://medium.com/geekculture/multilabel-not-multiclass-text-classification-using-keras-fa1c7992b195
+
