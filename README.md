@@ -27,6 +27,10 @@ multi-class-classification
 ==========================
 Multi inputs then try to predict the output
 
+custom-fit
+==========
+Testing custom fit
+
 netflix-categorizer
 ===================
 Experimenting with self categorizing so a system can recommennd similar movies

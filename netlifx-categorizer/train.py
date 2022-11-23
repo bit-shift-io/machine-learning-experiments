@@ -16,11 +16,22 @@ from keras.utils import to_categorical
 
 # read datasets
 titles_df = pd.read_csv("data/netflix_titles.csv") 
+
+# Only grab first n rows for a smaller dataset
+titles_df = titles_df.iloc[:100]
+
 print(titles_df.head())
 
 # prepare the data
 ids = []
 listed_in = []
+out_layers = []
+
+onehot_show_ids = pd.get_dummies(titles_df.show_id)
+#print(onehot_show_ids)
+#onehot_show_ids = MultiLabelBinarizer().fit_transform(shows_ids.values)
+
+
 for index, row in titles_df.iterrows():
     id = int(row.show_id[1:])
     ids.append(id)
@@ -44,18 +55,81 @@ print(mlb.classes_)
 #train_x, test_x = train_test_split(dataset, test_size=0.2, random_state=1)
 
 # _x is the inputs, _y is the outputs
-train_x, test_x, train_y, test_y = train_test_split(encoded_listed_in, encoded_ids, test_size=0.2, random_state=1)
+#train_x, test_x, train_y, test_y = train_test_split(encoded_listed_in, encoded_ids, test_size=0.2, random_state=1)
+
+# https://stackoverflow.com/questions/57349349/using-different-sample-weights-for-each-output-in-a-multi-output-keras-model
+
+inp = keras.layers.Input(shape=(listed_in_width,))
+
+out_layers = []
+
+x = encoded_listed_in # inputs
+y_list = [] # expected outputs
+sample_weight = {} # dictionary of weights for each output layer
+
+
+
+for index, row in titles_df.iterrows():
+    onehot_id = onehot_show_ids[row.show_id]
+    sample_weight[row.show_id] = onehot_id
+    y_list.append(onehot_id)
+    
+for index, row in titles_df.iterrows():
+    out = keras.layers.Dense(1, name=row.show_id)(inp)
+    out_layers.append(out)
+
+model = keras.models.Model(inp, out_layers)
+model.compile(loss='mse',
+              optimizer='adam')
+
+
+# TODO: add validation_data - training data!
+history = model.fit(x, y_list, epochs=5, batch_size=32, verbose=1, sample_weight=sample_weight)
+
+
+#save the model
+model.save('model')
+
+'''
+inp = keras.layers.Input(shape=(5,))
+# assign names to output layers for more clarity
+out1 = keras.layers.Dense(1, name='out1')(inp)
+out2 = keras.layers.Dense(1, name='out2')(inp)
+
+model = keras.models.Model(inp, [out1, out2])
+model.compile(loss='mse',
+              optimizer='adam')
+
+
+
+# create some dummy training data as well as sample weight
+n_samples = 100
+X = np.random.rand(n_samples, 5)
+y1 = np.random.rand(n_samples,1)
+y2 = np.random.rand(n_samples,1)
+
+w1 = np.random.rand(n_samples,)
+w2 = np.random.rand(n_samples,)
+
+model.fit(X, [y1, y2], epochs=5, batch_size=16, sample_weight={'out1': w1, 'out2': w2})
+
+
+
+
+# assign names to output layers for more clarity
+#out1 = layers.Dense(1, name='out1')(inp)
+#out2 = layers.Dense(1, name='out2')(inp)
 
 model = Sequential()
-model.add(Dense(5000, activation='relu', input_dim=train_x.shape[1]))
+model.add(Dense(100, activation='relu', input_dim=listed_in_width)) #train_x.shape[1]))
 model.add(Dropout(0.1))
-model.add(Dense(600, activation='relu'))
+model.add(Dense(50, activation='relu'))
 model.add(Dropout(0.1))
-model.add(Dense(train_y.shape[1], activation='sigmoid'))
+model.add(Dense(encoded_ids.shape[1], activation='sigmoid'))
 
 model.compile(loss='binary_crossentropy', optimizer="adam", metrics=["categorical_accuracy"])
 
-history = model.fit(train_x, train_y, epochs=5, batch_size=2000)
+history = model.fit(encoded_listed_in, encoded_ids, sample_weight=encoded_ids, epochs=5, batch_size=2000)
 
 model.save('model')
 
@@ -71,5 +145,5 @@ plt.legend()
 plt.grid()
 plt.show()
 
-
+'''
 print('done')

@@ -14,29 +14,44 @@ model = keras.models.load_model('model')
 # read datasets
 titles_df = pd.read_csv("data/netflix_titles.csv") 
 
+# Only grab first n rows for a smaller dataset
+titles_df = titles_df.iloc[:100]
+
+print(titles_df.head())
+
 # prepare the data
-ids = []
+onehot_show_ids = pd.get_dummies(titles_df.show_id)
+
+# create multi-label one hot encoding of all listed_in/categories
 listed_in = []
 for index, row in titles_df.iterrows():
-    id = int(row.show_id[1:])
-    ids.append(id)
     listed_in.append(set(row.listed_in.split(', ')))
 
-#encoded_ids = to_categorical(ids) # one hot encode ids
-
 mlb = MultiLabelBinarizer() # one hot encoding for multiple labels
-encoded_listed_in = mlb.fit(listed_in)
+encoded_listed_in = mlb.fit_transform(listed_in)
+listed_in_width = encoded_listed_in.shape[1]
+print(mlb.classes_)
 
-similar_categories = ['Sci-Fi & Fantasy'] # what categry's are we interested in?
+similar_categories = [['Documentaries']] # what categry's are we interested in finding similar shows?
 encoded_categories = mlb.transform(similar_categories)
-
+print(encoded_categories)
 pred = model.predict(encoded_categories)
-pred = pred.reshape(-1) #reshape to single dimension
+#print(pred)
 
-# get 10 shows in the similar category
-pred_ids = (-pred).argsort()[0:10]
-print(pred_ids)
+# invert one hot encoding back to show id mapped against the chance this show overlaps your categories of interest
+results = {}
+for idx, x in enumerate(pred):
+    show_id = titles_df.show_id[idx]
+    results[show_id] = x[0][0]
+    
+sorted_results = sorted(results.items(), key=lambda item: -item[1])
 
-print(titles_df.iloc[pred_ids])
+# just print out the top 10
+#sorted_results = sorted_results.iloc[:10]
+for idx, x in enumerate(sorted_results):
+    row = titles_df.loc[titles_df['show_id'] == x[0]]
+    reduced_row = row[['show_id', 'listed_in']] # 'title',
+    print(reduced_row, 'PROBABILITY: ', x[1])
+    
 
 print('done')
