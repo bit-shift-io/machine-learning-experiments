@@ -23,6 +23,10 @@ book-recommender
 ================
 Just learning how to use ML to create a book recommendation system
 
+multi-class-classification
+==========================
+Multi inputs then try to predict the output
+
 netflix-categorizer
 ===================
 Experimenting with self categorizing so a system can recommennd similar movies
