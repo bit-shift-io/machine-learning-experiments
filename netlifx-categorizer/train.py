@@ -43,19 +43,30 @@ for index, row in titles_df.iterrows():
     
 
 # construct the model
-inp = keras.layers.Input(shape=(listed_in_width,))
-out_layers = []
+# each output is seperate so we can apply different sample_weights
+DENSE_LAYER_SIZE = titles_df.shape[0] # number of rows in data
 
+inp = keras.layers.Input(shape=(listed_in_width,))
+de = keras.layers.Dense(DENSE_LAYER_SIZE)(inp) #activation='relu'
+dr = keras.layers.Dropout(.3)(inp)
+
+out_layers = []
 for index, row in titles_df.iterrows():
-    out = keras.layers.Dense(1, name=row.show_id)(inp)
+    out = keras.layers.Dense(1, name=row.show_id)(dr)
     out_layers.append(out)
 
 model = keras.models.Model(inp, out_layers)
-model.compile(loss='mse', optimizer='adam')
+opt = keras.optimizers.Adam(learning_rate=0.01)
+
+# categorical_crossentropy doesnt work here. Maybe ecause I have each output on its own layer?
+# https://stackoverflow.com/questions/62075840/getting-a-valueerror-in-tensorflow-saying-that-my-shapes-are-incompatible
+#model.compile(loss=keras.losses.SparseCategoricalCrossentropy(), optimizer=opt) 
+
+model.compile(loss='mse', optimizer=opt)
 print(model.summary())
 
 # learn the data
-history = model.fit(x, y_list, epochs=500, verbose=1, sample_weight=sample_weight)
+history = model.fit(x, y_list, epochs=100, verbose=1, sample_weight=sample_weight)
 
 # run a prediction - what shows have the following categories?
 categories = [
