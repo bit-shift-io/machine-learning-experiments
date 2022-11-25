@@ -14,3 +14,9 @@ https://pyimagesearch.com/2018/05/07/multi-label-classification-with-keras/
 There seems to good simple example here:
 https://medium.com/geekculture/multilabel-not-multiclass-text-classification-using-keras-fa1c7992b195
 
+
+
+A brief summary of the different output types: https://stackoverflow.com/a/49175655/500564
+
+SO what I am doing with the 'tags' is 'multi-label' output, so here is a tutorial:
+https://machinelearningmastery.com/multi-label-classification-with-deep-learning/
