@@ -3,6 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tensorflow import keras
 from sklearn import preprocessing
+from sklearn.model_selection import RepeatedKFold
+from sklearn.metrics import accuracy_score
 
 # read datasets, then only grab first n rows for a smaller dataset
 #titles_df = pd.read_csv("data/netflix_titles.csv") 
@@ -32,51 +34,67 @@ print(mlb.classes_)
 
 # compile training data
 x = encoded_listed_in # inputs training dataset
-y_list = show_id_oh # expected outputs for training
-sample_weight = {} # dictionary of weights for each output layer for training set
+y = show_id_oh # expected outputs for training
 
-for index, row in titles_df.iterrows():
-    row_show_id_le = le.transform([row.show_id])
-    row_show_id_ohe = ohe.transform(row_show_id_le.reshape(-1, 1)).toarray()
-    print(row_show_id_le)
-    sample_weight[row.show_id] = row_show_id_ohe.reshape(-1, 1)
-    
+# get the model
+def get_model(n_inputs, n_outputs):
+    DENSE_LAYER_SIZE = 20
+    inp = keras.layers.Input(shape=(n_inputs,))
+    de = keras.layers.Dense(DENSE_LAYER_SIZE, activation='relu')(inp) #
+    dr = keras.layers.Dropout(.2)(de)
+    out = keras.layers.Dense(n_outputs, activation='sigmoid')(dr)
+    model = keras.models.Model(inp, out)
+    opt = keras.optimizers.Adam(learning_rate=0.01)
+    model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['categorical_accuracy'])
+    return model
 
-# construct the model
-# each output is seperate so we can apply different sample_weights
-DENSE_LAYER_SIZE = titles_df.shape[0] # number of rows in data
+# evaluate a model using repeated k-fold cross-validation
+def evaluate_model(X, y):
+	results = list()
+	n_inputs, n_outputs = X.shape[1], y.shape[1]
+	# define evaluation procedure
+	cv = RepeatedKFold(n_splits=4, n_repeats=3, random_state=1)
+	# enumerate folds
+	for train_ix, test_ix in cv.split(X):
+		# prepare data
+		X_train, X_test = X[train_ix], X[test_ix]
+		y_train, y_test = y[train_ix], y[test_ix]
+		# define model
+		model = get_model(n_inputs, n_outputs)
+		# fit model
+		model.fit(X_train, y_train, verbose=0, epochs=100)
+		# make a prediction on the test set
+		yhat = model.predict(X_test)
+		# round probabilities to class labels
+		yhat = yhat.round()
+		# calculate accuracy
+		acc = accuracy_score(y_test, yhat)
+		# store result
+		print('>%.3f' % acc)
+		results.append(acc)
+	return results
 
-inp = keras.layers.Input(shape=(listed_in_width,))
-de = keras.layers.Dense(DENSE_LAYER_SIZE)(inp) #activation='relu'
-dr = keras.layers.Dropout(.3)(inp)
 
-out_layers = []
-for index, row in titles_df.iterrows():
-    out = keras.layers.Dense(1, name=row.show_id)(dr)
-    out_layers.append(out)
+# evaluate model & summarize performance
+results = evaluate_model(x, y)
+print('Model Accuracy: %.3f (%.3f)' % (np.mean(results), np.std(results)))
 
-model = keras.models.Model(inp, out_layers)
-opt = keras.optimizers.Adam(learning_rate=0.01)
-
-# categorical_crossentropy doesnt work here. Maybe ecause I have each output on its own layer?
-# https://stackoverflow.com/questions/62075840/getting-a-valueerror-in-tensorflow-saying-that-my-shapes-are-incompatible
-#model.compile(loss=keras.losses.SparseCategoricalCrossentropy(), optimizer=opt) 
-
-model.compile(loss='mse', optimizer=opt)
+model = get_model(x.shape[1], y.shape[1])
 print(model.summary())
 
 # learn the data
-history = model.fit(x, y_list, epochs=100, verbose=1, sample_weight=sample_weight)
+history = model.fit(x, y, epochs=100, verbose=1)
 
-# run a prediction - what shows have the following categories?
+# run some predictions - what shows have the following categories?
 categories = [
     ['Documentaries'],
     ['Drama'],
     ['Documentaries', 'Drama']
- ] #['Documentaries'] #['Drama'] #['Documentaries', 'Drama']
+]
 categories_enc = mlb.transform(categories)
 print(categories_enc)
 print(titles_df.head())
+
 for cat_idx, cat_enc in enumerate(categories_enc):
     reshaped = cat_enc.reshape(-1, cat_enc.shape[0])
     pred = model.predict(reshaped)
@@ -96,7 +114,9 @@ model.save('model')
 
 # report
 train_loss = history.history['loss']
+cat_acc = history.history['categorical_accuracy']
 plt.plot(train_loss, color='r', label='Train Loss')
+plt.plot(cat_acc, color='g', label='Train Accuracy')
 plt.xlabel("Epochs")
 plt.title("Train and Validation Loss Curve")
 plt.legend()
