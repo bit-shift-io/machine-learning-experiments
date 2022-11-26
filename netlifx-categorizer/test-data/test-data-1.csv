@@ -1,5 +1,5 @@
-show_id,title,listed_in
-s1_doc,Dick Johnson Is Dead,Documentaries
-s2_dram,Blood & Water,Drama
-s3_doc_dram,Show 3,"Documentaries, Drama"
-s4_fant,Show 4,Fantasy
+show_id,title,listed_in,description
+s1_doc,Dick Johnson Is Dead,Documentaries,The war
+s2_dram,Blood & Water,Drama,And the aliens
+s3_doc_dram,Show 3,"Documentaries, Drama",war of the worlds
+s4_fant,Show 4,Fantasy,aliens and aliens
