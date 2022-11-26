@@ -54,7 +54,8 @@ def get_model(n_inputs_1, n_inputs_2, n_outputs):
 	de2 = keras.layers.Dense(DENSE_LAYER_SIZE, activation='relu')(inp2) #
 	dr2 = keras.layers.Dropout(.2)(de2)
 
-	conc = keras.layers.Concatenate()([dr1, dr2])
+	rs2 = keras.layers.Rescaling(0.01)(dr2) # reduce impact of input 2
+	conc = keras.layers.Concatenate()([dr1, rs2])
 
 	out = keras.layers.Dense(n_outputs, activation='sigmoid')(conc)
 	model = keras.models.Model([inp1, inp2], out)
