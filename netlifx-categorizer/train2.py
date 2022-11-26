@@ -8,8 +8,8 @@ from sklearn.metrics import accuracy_score
 from sklearn.feature_extraction.text import CountVectorizer
 
 # read datasets, then only grab first n rows for a smaller dataset
-#titles_df = pd.read_csv("data/netflix_titles.csv") 
-titles_df = pd.read_csv("test-data/test-data-1.csv")
+titles_df = pd.read_csv("data/netflix_titles.csv") 
+#titles_df = pd.read_csv("test-data/test-data-1.csv")
 titles_df = titles_df.iloc[:100]
 print(titles_df.head())
 
@@ -70,7 +70,7 @@ history = model.fit([x_1, x_2], y, epochs=100, verbose=1)
 
 
 # run some predictions - lets feed in a show we know about and see what other shows are like it...
-show_idx = 3
+show_idx = 0
 s_id_oh = y[show_idx]
 s_id = le.inverse_transform(ohe.inverse_transform([s_id_oh]))[0]
 x_test_1 = np.array(x_1[show_idx]).reshape(-1, x_1[show_idx].shape[0])

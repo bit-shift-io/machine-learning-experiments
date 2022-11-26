@@ -12,6 +12,9 @@ https://machinelearningmastery.com/multi-label-classification-with-deep-learning
 There is also a really good article here on ntext processing:
 https://realpython.com/python-keras-text-classification/
 
-In train1.py I'm just getting multi-label outputs working for the listed_in columnn.
+In train1.py I'm just getting multi-label outputs working for the listed_in columnn. 
+This works well.
 
 In train2.py I add a bag-of-words (BoW) on the description columnn to also help find related movies.
+This isn't working well, I thinkn the description is proving to much weight. How do we reduce it?
+2 seperate models then I merge the weights manually?
