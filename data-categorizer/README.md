@@ -18,3 +18,7 @@ This works well.
 In train2.py I add a bag-of-words (BoW) on the description columnn to also help find related movies.
 This isn't working well, I thinkn the description is proving to much weight. How do we reduce it?
 2 seperate models then I merge the weights manually?
+
+In train3.py I use some SS real world data. I also experiment with Data Pipelines as mentioned in this tutorial: https://www.muratkarakaya.net/2022/11/part-d-preprocessing-text-with-tf-data.html?m=1
+
+Future improvements: ingredients are sorted by most important to least, so being able to weight them would be great!

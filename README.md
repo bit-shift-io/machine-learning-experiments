@@ -31,13 +31,14 @@ custom-fit
 ==========
 Testing custom fit
 
-netflix-categorizer
+data-categorizer
 ===================
-Experimenting with self categorizing so a system can recommennd similar movies
+Experimenting with self categorizing so a system can recommennd similar movies, products or recipies for example
 
 FUTURE IDEAS:
 scheduler
 weather rain forecast - how lonng bbefore it rains
+https://github.com/e-lab/VideoSensors - predict gyroscope data from video footage
 
 
 TODO: I realised that the possible problem with my QMaze was that the inputs were absolute, not relative. I need to give the AI the pixels around where they are located in concentric circles. This might also work to give them a history of past steps.
