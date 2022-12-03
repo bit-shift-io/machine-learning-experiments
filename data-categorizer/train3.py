@@ -81,7 +81,7 @@ def get_model(category_tv, ingredients_tv, n_outputs):
 	rs2 = keras.layers.Rescaling(0.01)(dr2) # reduce impact of input 2
 	conc = keras.layers.Concatenate()([dr1, rs2])
 
-	out = keras.layers.Dense(n_outputs, activation='sigmoid')(conc)
+	out = keras.layers.Dense(n_outputs, activation='sigmoid')(conc) # softmax or sigmoid - doesnt seem to make a diff
 	model = keras.models.Model([inp1, inp2], out)
 	opt = keras.optimizers.Adam(learning_rate=0.01)
 	model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['categorical_accuracy'])
