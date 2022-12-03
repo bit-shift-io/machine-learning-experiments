@@ -35,8 +35,11 @@ data-categorizer
 ===================
 Experimenting with self categorizing so a system can recommennd similar movies, products or recipies for example
 
+schedule-generator
+===================
+Experimenting with creating a schedule from some constraints
+
 FUTURE IDEAS:
-scheduler
 weather rain forecast - how lonng bbefore it rains
 https://github.com/e-lab/VideoSensors - predict gyroscope data from video footage
 
