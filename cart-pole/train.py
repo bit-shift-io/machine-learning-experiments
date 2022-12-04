@@ -30,7 +30,7 @@ num_episodes = 100
 gamma = 0.95 # back propogate reward to previous states rate? deferred reward
 exploration_rate = 1.0
 exploration_min = 0.01
-exploration_decay = 0.9
+exploration_decay = 0.99
 
 for i in range(num_episodes):
     state, info = env.reset()
