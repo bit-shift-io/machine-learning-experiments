@@ -12,3 +12,10 @@ pip3 install scikit-learn
 pip3 install gym
 pip3 install keras_gym
 pip3 install pygame
+
+
+# https://towardsdatascience.com/accelerated-tensorflow-model-training-on-intel-mac-gpus-aa6ee691f894
+pip3 install tensorflow-macos 
+
+pip3 install --user tensorflow-metal 
+#pip3 uninstall tensorflow-metal
