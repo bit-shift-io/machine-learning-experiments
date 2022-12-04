@@ -19,6 +19,18 @@ how will we handle other constraints such as:
    bob wants to work 3 days in a row, but only 1 shift per day
    only 1 teacher can teach 1 subbject at once
  
+
+It seems reinforcement learning is the best approach to use.
+
+https://adventuresinmachinelearning.com/reinforcement-learning-tutorial-python-keras/
+https://keras-gym.readthedocs.io/en/stable/
+see tutorial1.py
+
+
+
+
+
+
 possible architectures:
    [day shift subject teacher] => yes/no to indicate we approve  
    [for each shift: yes/no indicating if the subject/teacher is availale] => [for each shift: [subject teacher]]

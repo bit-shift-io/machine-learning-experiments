@@ -35,6 +35,10 @@ data-categorizer
 ===================
 Experimenting with self categorizing so a system can recommennd similar movies, products or recipies for example
 
+cart-pole
+===================
+First step towards the schedule generator. A reinforcement learning process where we don't knnow the outputs, just a reward.
+
 schedule-generator
 ===================
 Experimenting with creating a schedule from some constraints
