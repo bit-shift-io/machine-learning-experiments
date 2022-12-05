@@ -19,3 +19,7 @@ pip3 install tensorflow-macos
 
 pip3 install --user tensorflow-metal 
 #pip3 uninstall tensorflow-metal
+
+
+pip3 install torch torchvision
+pip3 install ipython
