@@ -14,7 +14,7 @@ import time
 env = gym.envs.make("CartPole-v1", render_mode="human")
 
 
-def plot_res(values, title=''):   
+def plot_res(values, title='', rand_actions_total=[]):   
     ''' Plot the reward curve and histogram of results over time.'''
     # Update the window after each episode
     #clear_output(wait=True)
@@ -26,6 +26,9 @@ def plot_res(values, title=''):
     ax[0].axhline(195, c='red',ls='--', label='goal')
     ax[0].set_xlabel('Episodes')
     ax[0].set_ylabel('Reward')
+
+    ax[0].plot(rand_actions_total, label="rand actions per run", c='black')
+
     x = range(len(values))
     ax[0].legend()
     # Calculate the trend
@@ -66,6 +69,11 @@ class DQN():
         loss.backward()
         self.optimizer.step()
 
+        # check to make sure we are learning right, make another prediction and make sure its closer
+        #y_pred_2 = self.model(torch.Tensor(state))
+        #loss_2 = self.criterion(y_pred_2, Variable(torch.Tensor(y)))
+        #print('qwe')
+
     def predict(self, state):
         """ Compute Q values for all actions using the DQL. """
         with torch.no_grad():
@@ -74,8 +82,8 @@ class DQN():
     def replay(self, memory, size, gamma=0.9):
         """New replay function"""
         #Try to improve replay speed
-        if len(memory)>=size:
-            batch = random.sample(memory,size)
+        if len(memory) >= size:
+            batch = random.sample(memory, size)
             batch_t = list(map(list, zip(*batch))) #Transpose batch list
             states = batch_t[0]
             actions = batch_t[1]
@@ -94,29 +102,30 @@ class DQN():
             all_q_values = self.model(states) # predicted q_values of all states
             all_q_values_next = self.model(next_states) # predict next state values
 
-            #Update q values - TODO:
-            for idx, (q_v, q_v_next) in enumerate(zip(all_q_values, all_q_values_next)):
-                q_v = rewards+gamma*torch.max(q_v_next, axis=1).values
-                q_r = rewards[is_dones_indices.tolist()]
+            # Update q values
+            #
+            # this applies the forumula:
+            #   [desired action value] = reward + gamma * [highest predicted action value]
+            # to each sample in the batch to create a traning set of data for the model to learn
+            #
+            value_of_highest_next_action = torch.max(all_q_values_next, axis=1).values
+            q_v = rewards + gamma * value_of_highest_next_action
+            q_r = rewards[is_dones_indices.tolist()]
 
-                all_q_values[idx][0][actions[idx]]=q_v
-                all_q_values[is_dones_indices.tolist()[idx]][actions_tensor[is_dones].tolist()[idx]]=q_r
-
-            #all_q_values[range(len(all_q_values)), actions]=q_v
-            #all_q_values[is_dones_indices.tolist(), actions_tensor[is_dones].tolist()]=q_r
-        
+            all_q_values[range(len(all_q_values)), actions] = q_v
+            all_q_values[is_dones_indices.tolist(), actions_tensor[is_dones].tolist()] = q_r
             
             self.update(states.tolist(), all_q_values.tolist())
 
 
-def perform_episode(env, model, epsilon):
+def perform_episode(env, model, epsilon, memory, replay, replay_size, gamma):
     """ Run an episode """
 
     # Reset state
     state, info = env.reset()
-    state = np.reshape(state, [1, -1])
+    #state = np.reshape(state, [1, -1])
 
-    memory = []
+    #memory = []
     done = False
     total = 0
     rand_action_total = 0
@@ -127,36 +136,36 @@ def perform_episode(env, model, epsilon):
             action = env.action_space.sample()
             rand_action_total += 1
         else:
-            q_values = model.predict(state)
+            q_values = model.predict([state])
             action = torch.argmax(q_values).item()
         
         # Take action and add reward to total
         next_state, reward, done, _, _ = env.step(action)
-        next_state = np.reshape(next_state, [1, -1])
+        #next_state = np.reshape(next_state, [1, -1])
         
         # Update total and memory
         total += reward
         memory.append((state, action, next_state, reward, done))
-        q_values = model.predict(state).tolist()
+        q_values = model.predict([state]).tolist()
             
         if done:
-            #if not replay:
-            #    q_values[0][action] = reward
-            #    # Update network weights
-            #    model.update(state, q_values)
+            if not replay:
+                q_values[0][action] = reward
+                # Update network weights
+                model.update(state, q_values)
             break
 
-        #if replay:
-        #    t0=time.time()
-        #    # Update network weights using replay memory
-        #    model.replay(memory, replay_size, gamma)
-        #    t1=time.time()
-        #    sum_total_replay_time+=(t1-t0)
-        #else: 
-        #    # Update network weights using the last step only
-        #    q_values_next = model.predict(next_state)
-        #    q_values[0][action] = reward + gamma * torch.max(q_values_next).item()
-        #    model.update(state, q_values)
+        if replay:
+            t0=time.time()
+            # Update network weights using replay memory
+            model.replay(memory, replay_size, gamma)
+            t1=time.time()
+            #sum_total_replay_time+=(t1-t0)
+        else: 
+            # Update network weights using the last step only
+            q_values_next = model.predict(next_state)
+            q_values[0][action] = reward + gamma * torch.max(q_values_next).item()
+            model.update(state, q_values)
 
         state = next_state
 
@@ -165,11 +174,12 @@ def perform_episode(env, model, epsilon):
 
 def q_learning(env, model, episodes, gamma=0.9, 
                epsilon=0.3, eps_decay=0.99,
-               replay=False, replay_size=20, 
+               replay=False, replay_size=100, 
                title = 'DQL', double=False, 
                n_update=10, soft=False, verbose=True):
     """Deep Q Learning algorithm using the DQN. """
     final = []
+    rand_actions_total = []
     memory = []
     episode_i=0
     sum_total_replay_time=0
@@ -182,14 +192,16 @@ def q_learning(env, model, episodes, gamma=0.9,
         if double and soft:
             model.target_update()
         
-        ep_memory, total, rand_action_total = perform_episode(env, model, epsilon)
-        memory = memory + ep_memory # append new memory
+        memory_at_replay_size = len(memory) >= replay_size
+
+        ep_memory, total, rand_action_total = perform_episode(env, model, epsilon if memory_at_replay_size else 1.0, memory, replay, replay_size, gamma)
+        #memory = memory + ep_memory # append new memory
 
         # Update network weights using replay memory
-        t0=time.time()
-        model.replay(memory, replay_size, gamma)
-        t1=time.time()
-        sum_total_replay_time+=(t1-t0)
+        #t0=time.time()
+        #model.replay(memory, replay_size, gamma)
+        #t1=time.time()
+        #sum_total_replay_time+=(t1-t0)
 
 
         # Reset state
@@ -240,9 +252,10 @@ def q_learning(env, model, episodes, gamma=0.9,
         # Update epsilon
         epsilon = max(epsilon * eps_decay, 0.01)
         final.append(total)
+        rand_actions_total.append(rand_action_total)
 
 
-    plot_res(final, title)
+    plot_res(final, title, rand_actions_total)
     
     if verbose:
         print("episode: {}, total reward: {}".format(episode_i, total))
@@ -257,7 +270,7 @@ n_state = env.observation_space.shape[0]
 # Number of actions
 n_action = env.action_space.n
 # Number of episodes
-episodes = 100
+episodes = 200
 # Number of hidden nodes in the DQN
 n_hidden = 50
 # Learning rate
@@ -267,4 +280,4 @@ lr = 0.001
 
 # Get DQN results
 simple_dqn = DQN(n_state, n_action, n_hidden, lr)
-simple = q_learning(env, simple_dqn, episodes, gamma=.9, epsilon=0.3)
+simple = q_learning(env, simple_dqn, episodes, gamma=.9, epsilon=0.3, replay_size=100, replay=True)
