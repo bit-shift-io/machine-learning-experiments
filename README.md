@@ -39,6 +39,10 @@ cart-pole
 ===================
 First step towards the schedule generator. A reinforcement learning process where we don't knnow the outputs, just a reward.
 
+lunar-lander
+===================
+Continnuing on from cart-pole, another reinforcement exercise
+
 schedule-generator
 ===================
 Experimenting with creating a schedule from some constraints
