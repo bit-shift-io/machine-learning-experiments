@@ -9,26 +9,26 @@ import numpy as np
 import keras.backend as K
 import tensorflow as tf
 import math
-
-from tensorflow.keras import regularizers
-from tensorflow.keras.layers import Input, Dense, Layer, Lambda
-from tensorflow.keras.models import Model, load_model
+import random
+from keras import regularizers
+from keras.layers import Input, Dense, Layer, Lambda
+from keras.models import Model, load_model
 
 import matplotlib.pyplot as plt
 
 
 # This is just intended to generate some data for which the minima can be easily seen visually.
 # It's a bit of a toy problem, but I think it's sufficient to illustrate the point. 
-x = np.arange(0, 10000)/1000.0 - 5
+x = np.random.uniform(low=-5.0, high=5.0, size=(50,)) #np.arange(0, 1000)/1000.0 - 5
 y = x ** 4 - 20 * x ** 2 +  10 * x + 4 + np.random.rand(len(x)) * 20
-plt.plot(x, y)
+#plt.plot(x, y)
 
 
 # reshape the matrix so it's compatible with keras
 x = x.reshape(len(x), 1)
 
 
-import ipywidgets
+#import ipywidgets
 
 #this is our basic model that we're going to use to reconstruct the function
 
@@ -56,8 +56,8 @@ p = model.predict(x)
 
      
 # unsurprisingly it is able to replicate the original function
-plt.plot(x, y)
-plt.plot(x, p)
+#plt.scatter(x, y)
+#plt.scatter(x, p, color="red")
 
 
 # we're going to freeze the model
@@ -133,8 +133,8 @@ optimum_y = model.predict(np.array([optimum_x]))
      
 
 
-plt.plot(x, y)
-plt.plot(x, p)
+plt.scatter(x, y, s=2)
+plt.scatter(x, p, color="red", s=2)
 
 plt.axvline(x=optimum_x)
 plt.axhline(y=optimum_y)
