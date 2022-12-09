@@ -43,9 +43,9 @@ lunar-lander
 ===================
 Continnuing on from cart-pole, another reinforcement exercise
 
-schedule-generator
-===================
-Experimenting with creating a schedule from some constraints
+find-optimum
+==============
+Given an unknnown function, find the opimum from it
 
 FUTURE IDEAS:
 weather rain forecast - how lonng bbefore it rains
