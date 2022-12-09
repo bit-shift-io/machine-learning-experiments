@@ -55,3 +55,90 @@ p = model.predict(x)
 
 
      
+# unsurprisingly it is able to replicate the original function
+plt.plot(x, y)
+plt.plot(x, p)
+
+
+# we're going to freeze the model
+model.trainable = False
+
+
+
+
+
+# I don't really care about the input and output at this point 
+sample_input = np.ones(10000).reshape(10000, 1)
+#this doesn't matter at all, we're just going to minimize the function
+sample_output = np.zeros(10000)
+
+
+
+     
+
+
+# this loss function is just the value of the function we're trying to minimize.
+# all of the inputs are the same and so we don't really care about y_true
+def my_loss_fn(y_true, y_pred):
+    return tf.reduce_mean(y_pred, axis=-1) 
+
+
+
+     
+
+
+
+class custom_layer(Layer):
+    def  __init__(self, output_dim, **kwargs):
+        self.output_dim = output_dim
+        super(custom_layer,self).__init__(**kwargs)
+    def build(self,input_shape):
+        output_shape = self.compute_output_shape(input_shape)
+        self.W=self.add_weight(name='kernel',
+                           shape=(1,) + output_shape[1:],
+                           initializer='uniform'                              ,
+                           trainable=True)
+        self.built = True
+  # this self.built is necessary .
+    def call(self,x):
+        return x * self.W
+    def compute_output_shape(self, input_shape):
+        return(input_shape)
+
+
+
+# input layer
+new_input_layer =  Input(shape=(1,))
+l = custom_layer(1)
+# this is the layer whose weight we believe is going to be the minimum
+new_weight_layer = l(new_input_layer)
+# the model that we trained previously
+transfer = model(new_weight_layer, training=False)
+
+optimization_model = Model(new_input_layer, transfer)
+optimization_model.compile('rmsprop', loss = my_loss_fn)
+optimization_model.summary()
+# basic training framework that is used in keras
+optimization_model.fit(sample_input, sample_output, batch_size=4, epochs=5, validation_data=(x,y), verbose = 1)
+
+
+
+
+optimum_x = l.get_weights()[0][0][0]
+print(optimum_x)
+optimum_y = model.predict(np.array([optimum_x]))
+
+
+
+     
+
+
+plt.plot(x, y)
+plt.plot(x, p)
+
+plt.axvline(x=optimum_x)
+plt.axhline(y=optimum_y)
+
+
+
+     
