@@ -3,10 +3,68 @@ from optapy.score import HardSoftScore
 from optapy.constraint import ConstraintFactory, Joiners
 from timetable import Lesson
 from datetime import datetime, date, timedelta
+from dataclasses import dataclass
+from timetable import TimeTable
 
 # Trick since timedelta only works with datetime instances
 today = date.today()
 
+
+@dataclass
+class Constraints:
+    constraints: list
+
+    def __init__(self, constraints):
+        self.constraints = constraints
+
+    def test(self, timetable: TimeTable):
+        total_hard_score = 0
+        total_soft_score = 0
+        for constraint in self.constraints:
+            hard, soft = constraint.test(self, timetable)
+            total_hard_score += hard
+            total_soft_score += soft
+
+        return total_hard_score, total_soft_score
+
+    def max_score(self, timetable: TimeTable):
+        total_hard_score = 0
+        total_soft_score = 0
+        for constraint in self.constraints:
+            hard, soft = constraint.max_score(self, timetable)
+            total_hard_score += hard
+            total_soft_score += soft
+
+        return total_hard_score, total_soft_score
+
+    
+
+class Constraint:
+    def test(c: Constraints, t: TimeTable):
+        return 0, 0
+
+    def max_score(c: Constraints, t: TimeTable):
+        return 0, 0
+
+
+    
+class RoomConflict(Constraint):
+    def test(self, c: Constraints, t: TimeTable):
+        h = 0
+        s = 0
+        checked = []
+        for l in t.get_lesson_list():
+            r = list(filter(lambda l2: l2 not in checked and l != l2 and l2.timeslot == l.timeslot, t.get_lesson_list()))
+            checked += r
+            h -= len(r)
+
+        return h, s
+
+    def max_score(self, c: Constraints, t: TimeTable):
+        return len(t.get_lesson_list()), 0
+
+
+"""
 
 def within_30_minutes(lesson1: Lesson, lesson2: Lesson):
     between = datetime.combine(today, lesson1.timeslot.end_time) - datetime.combine(today, lesson2.timeslot.start_time)
@@ -102,3 +160,5 @@ def student_group_subject_variety(constraint_factory: ConstraintFactory):
               ) \
         .filter(within_30_minutes) \
         .penalize("Student group subject variety", HardSoftScore.ONE_SOFT)
+
+"""

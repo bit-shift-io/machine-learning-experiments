@@ -12,20 +12,22 @@ class TimeTableEnv(gym.Env):
     timetable: TimeTable
     constraints: list
 
-    def __init__(self, render_mode=None, timetable=generate_problem(), constraints=None):
-        self.timetable = timetable
-        self.constraints = constraints
+    def __init__(self, render_mode=None, timetable=None, constraints=None):
+        #self.timetable = timetable
+        #self.constraints = constraints
 
-        n_lessons = len(timetable.get_lesson_list())
-        n_timeslots = len(timetable.get_timeslot_list())
-        n_rooms = len(timetable.get_room_list())
+        self.timetable, self.constraints = generate_problem()
+
+        n_lessons = len(self.timetable.get_lesson_list())
+        n_timeslots = len(self.timetable.get_timeslot_list())
+        n_rooms = len(self.timetable.get_room_list())
 
         # For each Lesson we have 4 actions: "previous room", "next room", "previous timeslot", "next timeslot"
         self.action_space = spaces.Discrete(n_lessons * 4) # we cann try making this a MultiDiscrete in future to allow multiple changes in 1 step
 
         # Each lesson is 2 discreet spaces, where: which room it is inn, which timetabel slot it is in
         self.observation_space = spaces.Dict()
-        for lesson in timetable.get_lesson_list():
+        for lesson in self.timetable.get_lesson_list():
             id = f"lesson_{lesson.id}"
             space = spaces.MultiDiscrete([n_rooms + 1, n_timeslots + 1]) # 0 represents nothing
             self.observation_space[id] = space
@@ -71,8 +73,11 @@ class TimeTableEnv(gym.Env):
         #)
         # An episode is done iff the agent has reached the target
         #terminated = np.array_equal(self._agent_location, self._target_location)
+
+        hard_score, soft_score = self.constraints.test(self.timetable)
+
         terminated = False
-        reward = 1 if terminated else 0  # Binary sparse rewards
+        reward = hard_score #1 if terminated else 0  # Binary sparse rewards
         observation = self._get_obs()
         info = self._get_info()
 
