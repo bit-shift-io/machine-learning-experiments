@@ -40,7 +40,7 @@ class TimeTableEnv(gym.Env):
             id = f"lesson_{lesson.id}"
             room = lesson.get_room()
             timeslot = lesson.get_timeslot()
-            o[id] = [room.get_id() if room else 0, timeslot.get_id() if timeslot else 0] # maybe reserve 0 for invalid value
+            o[id] = np.array([room.get_id() if room else 0, timeslot.get_id() if timeslot else 0]) # maybe reserve 0 for invalid value
             #self.observation_space[id] = [room.get_id() - 1, timeslot.get_id() - 1]
 
         return o #return {"agent": self._agent_location, "target": self._target_location}
