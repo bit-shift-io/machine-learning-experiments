@@ -56,7 +56,10 @@ class RoomConflict(Constraint):
         for l in t.get_lesson_list():
             r = list(filter(lambda l2: l2 not in checked and l != l2 and l2.timeslot == l.timeslot, t.get_lesson_list()))
             checked += r
+            checked += [l]
             h -= len(r)
+            if len(r) <= 0:
+                h += 1
 
         return h, s
 

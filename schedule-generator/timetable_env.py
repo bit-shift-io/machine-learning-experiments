@@ -5,7 +5,7 @@ import gym
 from gym import spaces
 import pygame
 import numpy as np
-from problem import generate_problem
+from problem import generate_problem, generate_problem_simple
 import math
 
 # really timetable env
@@ -17,7 +17,7 @@ class TimeTableEnv(gym.Env):
         #self.timetable = timetable
         #self.constraints = constraints
 
-        self.timetable, self.constraints = generate_problem()
+        self.timetable, self.constraints = generate_problem_simple() # generate_problem()
 
         # precompute some stuff
         self.n_lessons = len(self.timetable.get_lesson_list())

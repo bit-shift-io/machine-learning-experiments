@@ -27,7 +27,7 @@ env = gym.envs.make("TimeTable-v0", render_mode="human")
 def plot_res(values, title='', actions_total=[], rand_actions_total=[]):   
     ''' Plot the reward curve and histogram of results over time.'''
     plt.plot(values, label='score per run', c='orange')
-    plt.axhline(195, c='red',ls='--', label='goal')
+    plt.axhline(env.max_hard_score, c='red',ls='--', label='goal')
     plt.axhline(0, c='black',ls='--', label='goal') # zero line
     plt.xlabel('Episodes')
     plt.ylabel('Reward')
@@ -50,7 +50,7 @@ def plot_res(values, title='', actions_total=[], rand_actions_total=[]):
 
 class DQN():
     ''' Deep Q Neural Network class. '''
-    def __init__(self, state_dim, action_dim, hidden_dim=64, lr=0.05):
+    def __init__(self, state_dim, action_dim, hidden_dim=512, lr=0.05):
             self.criterion = torch.nn.MSELoss()
             self.model = torch.nn.Sequential(
                             torch.nn.Linear(state_dim, hidden_dim),
@@ -245,7 +245,7 @@ def q_learning(env, model, episodes, gamma=0.9,
         actions_total.append(action_total)
 
         if verbose:
-            print(f"episode: {episode}, total reward: {total}")
+            print(f"episode: {episode}, total reward: {total}, actions: {action_total}")
 
 
     plot_res(final, title, actions_total, rand_actions_total)

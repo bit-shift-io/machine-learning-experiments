@@ -51,3 +51,31 @@ def generate_problem():
     ]
 
     return TimeTable(timeslot_list, room_list, lesson_list), Constraints(constraints)
+
+
+
+def generate_problem_simple():
+    timeslot_list = [
+        Timeslot(1, "MONDAY", time(hour=8, minute=30), time(hour=9, minute=30)),
+        Timeslot(2, "MONDAY", time(hour=9, minute=30), time(hour=10, minute=30)),
+        Timeslot(3, "MONDAY", time(hour=10, minute=30), time(hour=11, minute=30)),
+        Timeslot(4, "MONDAY", time(hour=13, minute=30), time(hour=14, minute=30)),
+        Timeslot(5, "MONDAY", time(hour=14, minute=30), time(hour=15, minute=30)),
+    ]
+    room_list = [
+        Room(1, "Room A"),
+        Room(2, "Room B")
+    ]
+    lesson_list = [
+        Lesson(1, "Math", "A. Turing", "9th grade"),
+        Lesson(2, "Math", "A. Turing", "9th grade"),
+        Lesson(3, "Physics", "M. Curie", "9th grade"),
+        Lesson(4, "Chemistry", "M. Curie", "9th grade"),
+        Lesson(5, "Biology", "C. Darwin", "9th grade"),
+    ]
+
+    constraints = [
+        RoomConflict()
+    ]
+
+    return TimeTable(timeslot_list, room_list, lesson_list), Constraints(constraints)
