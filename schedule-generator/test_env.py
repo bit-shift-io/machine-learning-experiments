@@ -22,3 +22,5 @@ while not done:
 
     if terminated or truncated:
         break
+
+print('Done')

@@ -16,11 +16,13 @@ import time
 
 from gym.spaces.utils import flatdim, flatten, flatten_space, unflatten
 
+from timetable_env import TimeTableEnv
 from schedule_env import GridWorldEnv
 
 #env = gym.envs.make("LunarLander-v2", render_mode="human")
 #env = gym.envs.make("FrozenLake-v1", render_mode="human")
-env = gym.envs.make("gym_examples/GridWorld-v0", render_mode="human")
+#env = gym.envs.make("gym_examples/GridWorld-v0", render_mode="human")
+env = gym.envs.make("TimeTable-v0", render_mode="human")
 
 def plot_res(values, title='', actions_total=[], rand_actions_total=[]):   
     ''' Plot the reward curve and histogram of results over time.'''
@@ -241,6 +243,9 @@ def q_learning(env, model, episodes, gamma=0.9,
         final.append(total)
         rand_actions_total.append(rand_action_total)
         actions_total.append(action_total)
+
+        if verbose:
+            print(f"episode: {episode}, total reward: {total}")
 
 
     plot_res(final, title, actions_total, rand_actions_total)

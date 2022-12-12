@@ -6,6 +6,7 @@ from gym import spaces
 import pygame
 import numpy as np
 from problem import generate_problem
+import math
 
 # really timetable env
 class TimeTableEnv(gym.Env):
@@ -18,18 +19,22 @@ class TimeTableEnv(gym.Env):
 
         self.timetable, self.constraints = generate_problem()
 
-        n_lessons = len(self.timetable.get_lesson_list())
-        n_timeslots = len(self.timetable.get_timeslot_list())
-        n_rooms = len(self.timetable.get_room_list())
+        # precompute some stuff
+        self.n_lessons = len(self.timetable.get_lesson_list())
+        self.n_timeslots = len(self.timetable.get_timeslot_list())
+        self.n_rooms = len(self.timetable.get_room_list())
 
-        # For each Lesson we have 4 actions: "previous room", "next room", "previous timeslot", "next timeslot"
-        self.action_space = spaces.Discrete(n_lessons * 4) # we cann try making this a MultiDiscrete in future to allow multiple changes in 1 step
+        self.max_hard_score, self.max_soft_score = self.constraints.max_score(self.timetable)
+
+        # For each Lesson we have 6 actions: "previous room", "next room", "previous timeslot", "next timeslot", "remove from timetale", "add to timetable"
+        self.n_actions = 6
+        self.action_space = spaces.Discrete(self.n_lessons * self.n_actions) # we cann try making this a MultiDiscrete in future to allow multiple changes in 1 step
 
         # Each lesson is 2 discreet spaces, where: which room it is inn, which timetabel slot it is in
         self.observation_space = spaces.Dict()
         for lesson in self.timetable.get_lesson_list():
             id = f"lesson_{lesson.id}"
-            space = spaces.MultiDiscrete([n_rooms + 1, n_timeslots + 1]) # 0 represents nothing
+            space = spaces.MultiDiscrete([self.n_rooms + 1, self.n_timeslots + 1]) # 0 represents nothing
             self.observation_space[id] = space
             #test = space.sample()
             #print('lesson', id)
@@ -74,9 +79,55 @@ class TimeTableEnv(gym.Env):
         # An episode is done iff the agent has reached the target
         #terminated = np.array_equal(self._agent_location, self._target_location)
 
+        # convert action into something usable
+        lesson_idx = math.floor(action / self.n_actions)
+        lesson_action = action % self.n_actions
+        lesson = self.timetable.get_lesson_list()[lesson_idx]
+
+        # "previous room", "next room", "previous timeslot", "next timeslot", "remove from timetale", "add to timetable"
+        match lesson_action:
+            case 0: # "previous room"
+                idx = lesson.get_room().get_id() - 1
+                idx -= 1
+                idx = idx % self.n_rooms
+                lesson.set_room(self.timetable.get_room_list()[idx])
+
+            case 1: # "next room"
+                idx = lesson.get_room().get_id() - 1
+                idx += 1
+                idx = idx % self.n_rooms
+                lesson.set_room(self.timetable.get_room_list()[idx])
+
+            case 2: #  "previous timeslot"
+                idx = lesson.get_timeslot().get_id() - 1
+                idx -= 1
+                idx = idx % self.n_timeslots
+                lesson.set_timeslot(self.timetable.get_timeslot_list()[idx])
+
+            case 3: # "next timeslot"
+                idx = lesson.get_timeslot().get_id() - 1
+                idx += 1
+                idx = idx % self.n_timeslots
+                lesson.set_timeslot(self.timetable.get_timeslot_list()[idx])
+
+            case 4: # "remove from timetable"
+                pass # TODO:
+
+            case 5: # "add to timetable"
+                pass # TODO:
+
+            case _: # default
+                print("Unknown lesson_action!")
+
+        # Score the new timetable
+        # TODO: handle soft score
         hard_score, soft_score = self.constraints.test(self.timetable)
 
         terminated = False
+        if hard_score == self.max_hard_score:
+            print("Solution found!")
+            terminated = True
+
         reward = hard_score #1 if terminated else 0  # Binary sparse rewards
         observation = self._get_obs()
         info = self._get_info()
