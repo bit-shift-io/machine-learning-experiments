@@ -28,20 +28,27 @@ def plot_res(values, title='', actions_total=[], rand_actions_total=[]):
     ''' Plot the reward curve and histogram of results over time.'''
     plt.plot(values, label='score per run', c='orange')
     plt.axhline(env.max_hard_score, c='red',ls='--', label='goal')
-    plt.axhline(0, c='black',ls='--', label='goal') # zero line
+    plt.axhline(0, c='black',ls='--', label='zero') # zero line
     plt.xlabel('Episodes')
-    plt.ylabel('Reward')
+    plt.ylabel('Actions to solution')
 
     plt.plot(rand_actions_total, label="rand actions per run", c='black')
     plt.plot(actions_total, label="total actions per run", c='green')
 
-    x = range(len(values))
+    x = range(len(actions_total))
     plt.legend()
     # Calculate the trend
     try:
+        z = np.polyfit(x, actions_total, 1)
+        p = np.poly1d(z)
+        plt.plot(x,p(x),"--", label='actions trend', c='green')
+    except:
+        print('')
+
+    try:
         z = np.polyfit(x, values, 1)
         p = np.poly1d(z)
-        plt.plot(x,p(x),"--", label='trend', c='orange')
+        plt.plot(x,p(x),"--", label='reward trend', c='orange')
     except:
         print('')
 

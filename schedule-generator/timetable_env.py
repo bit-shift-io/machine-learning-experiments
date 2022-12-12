@@ -17,7 +17,7 @@ class TimeTableEnv(gym.Env):
         #self.timetable = timetable
         #self.constraints = constraints
 
-        self.timetable, self.constraints = generate_problem_simple() # generate_problem()
+        self.timetable, self.constraints = generate_problem_simple()
 
         # precompute some stuff
         self.n_lessons = len(self.timetable.get_lesson_list())
@@ -148,5 +148,5 @@ from gym.envs.registration import register
 register(
     id='TimeTable-v0',
     entry_point='timetable_env:TimeTableEnv',
-    max_episode_steps=300,
+    max_episode_steps=400,
 )

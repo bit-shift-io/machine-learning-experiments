@@ -42,9 +42,6 @@ def generate_problem():
         Lesson(19, "English", "P. Cruz", "10th grade"),
         Lesson(20, "Spanish", "P. Cruz", "10th grade"),
     ]
-    lesson = lesson_list[0]
-    lesson.set_timeslot(timeslot_list[0])
-    lesson.set_room(room_list[0])
 
     constraints = [
         RoomConflict()
@@ -64,7 +61,8 @@ def generate_problem_simple():
     ]
     room_list = [
         Room(1, "Room A"),
-        Room(2, "Room B")
+        Room(2, "Room B"),
+        Room(3, "Room C")
     ]
     lesson_list = [
         Lesson(1, "Math", "A. Turing", "9th grade"),
@@ -72,6 +70,11 @@ def generate_problem_simple():
         Lesson(3, "Physics", "M. Curie", "9th grade"),
         Lesson(4, "Chemistry", "M. Curie", "9th grade"),
         Lesson(5, "Biology", "C. Darwin", "9th grade"),
+        Lesson(6, "History", "I. Jones", "9th grade"),
+        Lesson(7, "English", "I. Jones", "9th grade"),
+        Lesson(8, "English", "I. Jones", "9th grade"),
+        Lesson(9, "Spanish", "P. Cruz", "9th grade"),
+        Lesson(10, "Spanish", "P. Cruz", "9th grade"),
     ]
 
     constraints = [
