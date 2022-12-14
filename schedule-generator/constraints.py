@@ -49,17 +49,17 @@ class Constraint:
 
     
 class RoomConflict(Constraint):
+    """ Is there any other lesson booked in the same room at the same timeslot? """
     def test(self, c: Constraints, t: TimeTable):
         h = 0
         s = 0
-        checked = []
-        for l in t.get_lesson_list():
-            r = list(filter(lambda l2: l2 not in checked and l != l2 and l2.timeslot == l.timeslot, t.get_lesson_list()))
-            checked += r
-            checked += [l]
-            h -= len(r)
+        lesson_list = t.get_lesson_list()
+        for l in lesson_list:
+            r = list(filter(lambda l2: l != l2 and l2.timeslot == l.timeslot and l2.room == l.room, lesson_list))
             if len(r) <= 0:
                 h += 1
+            else:
+                h -= 1
 
         return h, s
 

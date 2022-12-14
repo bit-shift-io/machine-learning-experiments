@@ -148,12 +148,31 @@ class TimeTable:
             lesson.set_room(None)
             lesson.set_timeslot(None)
 
-    def randomize(self):
+    def randomize_layout(self):
+        """ Make it all random, shuffle everything """
         for lesson in self.lesson_list:
             room_idx = random.randint(0, len(self.room_list) - 1)
             timeslot_idx = random.randint(0, len(self.timeslot_list) - 1)
             lesson.set_room(self.room_list[room_idx])
             lesson.set_timeslot(self.timeslot_list[timeslot_idx])
+
+    def ordered_layout(self):
+        """ Do a simple layout where each lesson is just placed down in order """
+        room_idx = 0
+        timeslot_idx = 0
+        for lesson in self.lesson_list:
+            lesson.set_room(self.room_list[room_idx])
+            lesson.set_timeslot(self.timeslot_list[timeslot_idx])
+
+            room_idx += 1
+            if room_idx >= len(self.room_list):
+                room_idx = 0
+                timeslot_idx += 1
+
+            if timeslot_idx >= len(self.timeslot_list):
+                timeslot_idx = 0
+
+
 
     def print(self):
         print_timetable(self)

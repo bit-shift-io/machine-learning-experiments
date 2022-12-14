@@ -17,7 +17,7 @@ class TimeTableEnv(gym.Env):
         #self.timetable = timetable
         #self.constraints = constraints
 
-        self.timetable, self.constraints = generate_problem_simple()
+        self.timetable, self.constraints = generate_problem() #generate_problem_simple()
 
         # precompute some stuff
         self.n_lessons = len(self.timetable.get_lesson_list())
@@ -26,8 +26,8 @@ class TimeTableEnv(gym.Env):
 
         self.max_hard_score, self.max_soft_score = self.constraints.max_score(self.timetable)
 
-        # For each Lesson we have 6 actions: "previous room", "next room", "previous timeslot", "next timeslot", "remove from timetale", "add to timetable"
-        self.n_actions = 6
+        # For each Lesson we have 6 actions (just first 4 for now): "previous room", "next room", "previous timeslot", "next timeslot", "remove from timetale", "add to timetable"
+        self.n_actions = 4
         self.action_space = spaces.Discrete(self.n_lessons * self.n_actions) # we cann try making this a MultiDiscrete in future to allow multiple changes in 1 step
 
         # Each lesson is 2 discreet spaces, where: which room it is inn, which timetabel slot it is in
@@ -59,7 +59,11 @@ class TimeTableEnv(gym.Env):
         # We need the following line to seed self.np_random
         super().reset(seed=seed)
 
-        self.timetable.randomize()
+        self.timetable.randomize_layout()
+        #self.timetable.ordered_layout()
+
+        # score here if just for testing
+        hard_score, soft_score = self.constraints.test(self.timetable)
 
         observation = self._get_obs()
         info = self._get_info()
@@ -110,11 +114,11 @@ class TimeTableEnv(gym.Env):
                 idx = idx % self.n_timeslots
                 lesson.set_timeslot(self.timetable.get_timeslot_list()[idx])
 
-            case 4: # "remove from timetable"
-                pass # TODO:
+            #case 4: # "remove from timetable"
+            #    pass # TODO:
 
-            case 5: # "add to timetable"
-                pass # TODO:
+            #case 5: # "add to timetable"
+            #    pass # TODO:
 
             case _: # default
                 print("Unknown lesson_action!")
@@ -126,6 +130,9 @@ class TimeTableEnv(gym.Env):
         terminated = False
         if hard_score == self.max_hard_score:
             print("Solution found!")
+            # crank the score!
+            hard_score *= 100
+            soft_score *= 100
             terminated = True
 
         reward = hard_score #1 if terminated else 0  # Binary sparse rewards
@@ -148,5 +155,5 @@ from gym.envs.registration import register
 register(
     id='TimeTable-v0',
     entry_point='timetable_env:TimeTableEnv',
-    max_episode_steps=400,
+    max_episode_steps=100,
 )

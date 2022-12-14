@@ -57,7 +57,7 @@ def plot_res(values, title='', actions_total=[], rand_actions_total=[]):
 
 class DQN():
     ''' Deep Q Neural Network class. '''
-    def __init__(self, state_dim, action_dim, hidden_dim=512, lr=0.05):
+    def __init__(self, state_dim, action_dim, hidden_dim=64, lr=0.05):
             self.criterion = torch.nn.MSELoss()
             self.model = torch.nn.Sequential(
                             torch.nn.Linear(state_dim, hidden_dim),
@@ -205,15 +205,15 @@ def perform_episode(env, model, epsilon, memory, replay, replay_size, gamma):
         total += reward
         memory.append((state, action, next_state, reward, terminated))
         q_values = model.predict([state]).tolist()
-            
-        if terminated or truncated:
-            break
-
+         
         t0=time.time()
         # Update network weights using replay memory
         model.replay(memory, replay_size, gamma)
         t1=time.time()
         #sum_total_replay_time+=(t1-t0)
+
+        if terminated or truncated:
+            break
 
         state = next_state
 
@@ -272,9 +272,9 @@ n_action = env.action_space.n
 # Number of episodes
 episodes = 100
 # Number of hidden nodes in the DQN
-n_hidden = 50
+n_hidden = 128 #50
 # Learning rate
-lr = 0.001
+lr = 0.0005
 
 
 
