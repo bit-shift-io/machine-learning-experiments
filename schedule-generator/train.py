@@ -17,7 +17,6 @@ import time
 from gym.spaces.utils import flatdim, flatten, flatten_space, unflatten
 
 from timetable_env import TimeTableEnv
-from schedule_env import GridWorldEnv
 
 #env = gym.envs.make("LunarLander-v2", render_mode="human")
 #env = gym.envs.make("FrozenLake-v1", render_mode="human")
@@ -270,7 +269,7 @@ n_state = flatten_space(env.observation_space).shape[0]
 # Number of actions
 n_action = env.action_space.n
 # Number of episodes
-episodes = 400
+episodes = 500
 # Number of hidden nodes in the DQN
 n_hidden = 128 #50
 # Learning rate
