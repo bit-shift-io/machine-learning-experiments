@@ -1,6 +1,7 @@
 # https://www.gymlibrary.dev/content/environment_creation/
 
 from timetable import TimeTable
+from timetable_renderer import TimetableRenderer
 import gym
 from gym import spaces
 import pygame
@@ -10,6 +11,7 @@ import math
 
 # really timetable env
 class TimeTableEnv(gym.Env):
+    renderer: TimetableRenderer
     timetable: TimeTable
     constraints: list
 
@@ -18,6 +20,7 @@ class TimeTableEnv(gym.Env):
         #self.constraints = constraints
 
         self.timetable, self.constraints = generate_problem() #generate_problem_simple()
+        self.renderer = TimetableRenderer(render_mode)
 
         # precompute some stuff
         self.n_lessons = len(self.timetable.get_lesson_list())
@@ -131,7 +134,7 @@ class TimeTableEnv(gym.Env):
         if hard_score == self.max_hard_score:
             print("Solution found!")
             self.timetable.print()
-            
+
             # crank the score!
             hard_score *= 100
             soft_score *= 100
@@ -141,13 +144,20 @@ class TimeTableEnv(gym.Env):
         observation = self._get_obs()
         info = self._get_info()
 
-        #if self.render_mode == "human":
-        #    self._render_frame()
+        if self.renderer.render_mode == "human":
+            self._render_frame()
 
         return observation, reward, terminated, False, info
 
     def render(self):
-        pass
+        if self.renderer.render_mode == "rgb_array":
+            return self._render_frame()
+
+    def _render_frame(self):
+        self.renderer.render(self.timetable)
+
+    def close(self):
+        self.renderer.close()
 
 
 
