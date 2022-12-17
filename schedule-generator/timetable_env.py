@@ -59,8 +59,8 @@ class TimeTableEnv(gym.Env):
         # We need the following line to seed self.np_random
         super().reset(seed=seed)
 
-        self.timetable.randomize_layout()
-        #self.timetable.ordered_layout()
+        #self.timetable.randomize_layout()
+        self.timetable.ordered_layout()
 
         # score here if just for testing
         hard_score, soft_score = self.constraints.test(self.timetable)

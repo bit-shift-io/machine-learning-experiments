@@ -35,3 +35,23 @@ step #1 is somewhat pointless as the model then becomes: "just train this sucker
 4. try working with the code to avoid hard constraints when an action is taken. i.e. change the action from "move to next room" to "move to next free room"?
 
 5. try taking as an "action" the whole new state of the schedule to adopt. AI can then make up what ever schedule it thinks from the current one, and get a reward based on that.
+
+
+# A typical school problem
+
+Our timetable is constructed into a 35 lesson week. An additional timeslot is provided for assemblies and ‘community’ lessons on Friday and Monday, with 7 lessons Tuesday-Thursday. It is typically broken up as 2 lessons – recess – 3 (or 4) lessons – lunch – 2 lessons. Typically, a subject line is 5 lessons composed of 2 double lessons and a single lesson each week.
+
+There appear to be 33 rooms, including specialist rooms. That is a can of worms, as some of those rooms may only be used for half a week as there are no other classes able to use those rooms.
+
+There would be about 15 separate subjects, or groupings of subjects. Each student does a range of subjects, according to the year level they are in. Each subject has between 2-5 lessons per week.
+
+There are about 40 teachers, some of these are part time, others are full time.
+
+The common constraints are…
+
+    Having classrooms available for specific classes
+    Having classes grouped together at the same time (ie all year 9 maths classes taught at the same time by 4 different teachers)
+    Having the ability to vertically align classes so that students can study a year level above what they are in (ie a year 8 students studying year 9 maths)
+    Part time teachers having allocated days off (ie someone who is 0.6FTE shouldn’t be teaching 5 days a week)
+
+We use a program called ‘General Access’. It is also referred to as timetabler. The graphical interface looks like it has come from Windows XP.

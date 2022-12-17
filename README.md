@@ -49,7 +49,11 @@ Given an unknnown function, find the opimum from it
 
 FUTURE IDEAS:
 weather rain forecast - how lonng bbefore it rains
+
 https://github.com/e-lab/VideoSensors - predict gyroscope data from video footage
+
+noise cancelling with 2 microphones, to determine what is outside sound to block and what is inside sound to ignore
+
 
 
 TODO: I realised that the possible problem with my QMaze was that the inputs were absolute, not relative. I need to give the AI the pixels around where they are located in concentric circles. This might also work to give them a history of past steps.

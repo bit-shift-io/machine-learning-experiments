@@ -270,11 +270,11 @@ n_state = flatten_space(env.observation_space).shape[0]
 # Number of actions
 n_action = env.action_space.n
 # Number of episodes
-episodes = 100
+episodes = 200
 # Number of hidden nodes in the DQN
 n_hidden = 128 #50
 # Learning rate
-lr = 0.0005
+lr = 0.0008
 
 
 

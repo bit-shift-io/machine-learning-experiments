@@ -67,6 +67,44 @@ class RoomConflict(Constraint):
         return len(t.get_lesson_list()), 0
 
 
+class TeacherConflict(Constraint):
+    """ A teacher can teach at most one lesson at the same time """
+    def test(self, c: Constraints, t: TimeTable):
+        h = 0
+        s = 0
+        lesson_list = t.get_lesson_list()
+        for l in lesson_list:
+            r = list(filter(lambda l2: l != l2 and l2.timeslot == l.timeslot and l2.teacher == l.teacher, lesson_list))
+            if len(r) <= 0:
+                h += 1
+            else:
+                h -= 1
+
+        return h, s
+
+    def max_score(self, c: Constraints, t: TimeTable):
+        return len(t.get_lesson_list()), 0
+
+
+class StudentGroupConflict(Constraint):
+    """ A student can attend at most one lesson at the same time """
+    def test(self, c: Constraints, t: TimeTable):
+        h = 0
+        s = 0
+        lesson_list = t.get_lesson_list()
+        for l in lesson_list:
+            r = list(filter(lambda l2: l != l2 and l2.timeslot == l.timeslot and l2.student_group == l.student_group, lesson_list))
+            if len(r) <= 0:
+                h += 1
+            else:
+                h -= 1
+
+        return h, s
+
+    def max_score(self, c: Constraints, t: TimeTable):
+        return len(t.get_lesson_list()), 0
+
+
 """
 
 def within_30_minutes(lesson1: Lesson, lesson2: Lesson):
