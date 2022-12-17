@@ -29,9 +29,15 @@ class TrainAlgo:
         self.action_total = []
 
     def train(self, n_episodes):
+        t0 = time.time()
+
         for ei in range(n_episodes):
             self.train_episode(ei)
             self.epsilon = max(self.epsilon * self.eps_decay, 0.01)
+
+        t1 = time.time()
+        print(f"{n_episodes} episodes completed in {round((t1-t0), 1)}s") 
+            
             
     def train_episode(self, ei):
         """ Run an episode """
@@ -102,7 +108,7 @@ class TrainAlgo:
         self.action_total.append(action_total)
 
         t1 = time.time()
-        print(f"Ep {ei} completed in {(t1-t0)}") 
+        print(f"Ep {ei} completed in {round((t1-t0), 1)}s") 
 
 
     def target_update(self, TAU=0.3):
