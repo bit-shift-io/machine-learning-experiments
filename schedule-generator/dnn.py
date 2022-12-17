@@ -21,7 +21,7 @@ class DNN:
 
         y_pred = self.model(torch.Tensor(batch_x))
         loss = self.criterion(y_pred, Variable(torch.Tensor(batch_y)))
-        self.optimizer.zero_grad()
+        self.optimizer.zero_grad(set_to_none=True)
         loss.backward()
         self.optimizer.step()
 

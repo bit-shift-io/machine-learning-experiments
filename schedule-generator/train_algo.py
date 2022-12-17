@@ -36,7 +36,7 @@ class TrainAlgo:
             self.epsilon = max(self.epsilon * self.eps_decay, 0.01)
 
         t1 = time.time()
-        print(f"{n_episodes} episodes completed in {round((t1-t0), 1)}s") 
+        print(f"{n_episodes} episodes completed in {round((t1-t0)/60, 1)}min") 
             
             
     def train_episode(self, ei):
@@ -108,7 +108,7 @@ class TrainAlgo:
         self.action_total.append(action_total)
 
         t1 = time.time()
-        print(f"Ep {ei} completed in {round((t1-t0), 1)}s") 
+        print(f"Ep {ei:<3}\t{round((t1-t0), 1)}s\tr.av: {round(reward_avg, 1):<5}\tr.mx: {reward_max:<5}\tr.mn: {reward_min:<5}") 
 
 
     def target_update(self, TAU=0.3):
@@ -159,6 +159,8 @@ class TrainAlgo:
     def plot(self):
         ''' Plot the reward curve and histogram of results over time.'''
         plt.plot(self.reward_avg, label='reward avg', c='orange')
+        plt.plot(self.reward_max, label='reward max', c='green')
+        plt.plot(self.reward_min, label='reward min', c='blue')
 
         plt.axhline(self.env.max_hard_score, c='red',ls='--', label='goal')
 
@@ -187,37 +189,3 @@ class TrainAlgo:
             pass
 
         plt.show()
-
-
-""""
-def q_learning(env, model, episodes, gamma=0.9, 
-               epsilon=0.3, eps_decay=0.99,
-               replay=False, replay_size=100, 
-               title = 'DQL', double=False, 
-               n_update=10, soft=False, verbose=True):
-    "" "Deep Q Learning algorithm using the DQN. " " "
-    final = []
-    rand_actions_total = []
-    actions_total = []
-    memory = []
-    episode_i=0
-    sum_total_replay_time=0
-    for episode in range(episodes):
-        episode_i+=1
-        if double and not soft:
-            # Update target network every n_update steps
-            if episode % n_update == 0:
-                model.target_update()
-        if double and soft:
-            model.target_update()
-        
-        memory_at_replay_size = len(memory) >= replay_size
-
-        ep_memory, total, rand_action_total, action_total = perform_episode(env, model, epsilon if memory_at_replay_size else 1.0, memory, replay, replay_size, gamma)
-       
-        # Update epsilon
-        epsilon = max(epsilon * eps_decay, 0.01)
-        final.append(total)
-        rand_actions_total.append(rand_action_total)
-        actions_total.append(action_total)
-"""

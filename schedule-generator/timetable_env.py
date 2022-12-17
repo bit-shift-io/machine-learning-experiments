@@ -26,10 +26,10 @@ class TimetableEnv(gym.Env):
         # Number of actions
         return self.action_space.n
 
-    def __init__(self, render_mode=None, timetable=None, constraints=None):
+    def __init__(self, render_mode=None, timetable=None, constraints=None, max_episode_steps=100):
         #self.timetable = timetable
         #self.constraints = constraints
-        self.max_episode_steps = 100
+        self.max_episode_steps = max_episode_steps
 
         self.timetable, self.constraints = generate_problem() #generate_problem_simple()
         self.renderer = TimetableRenderer(render_mode)
