@@ -1,4 +1,4 @@
-from timetable import TimeTable
+from timetable import Timetable
 from constraints import Constraints
 import pygame
 import numpy as np
@@ -27,7 +27,7 @@ class TimetableRenderer:
         self.clock = None
 
 
-    def render(self, timetable: TimeTable, constraints: Constraints):
+    def render(self, timetable: Timetable, constraints: Constraints):
         if self.window is None and self.render_mode == "human":
             pygame.init()
             pygame.display.init()
@@ -157,7 +157,7 @@ class TimetableRenderer:
 
         lesson_height = 10
 
-        sub_timetable = TimeTable([timeslot], [room], lessons)
+        sub_timetable = Timetable([timeslot], [room], lessons)
         max_hard_score, max_soft_score = constraints.max_score(sub_timetable)
         hard_score, soft_score = constraints.test(sub_timetable)
 

@@ -4,18 +4,14 @@ from torch.autograd import Variable
 class DNN:
     """Deep Neural Nnetwork"""
 
-    def __init__(self, out_features, in_features=1, hidden_dim=64, lr=0.05) -> None:
+    def __init__(self, in_features, out_features, hidden_dim, lr) -> None:
         self.criterion = torch.nn.MSELoss()
         self.model = torch.nn.Sequential(
-                        torch.nn.Linear(in_features, 12),
+                        torch.nn.Linear(in_features, hidden_dim),
                         torch.nn.ELU(),
-                        torch.nn.Linear(12, 9),
+                        torch.nn.Linear(hidden_dim, hidden_dim * 2),
                         torch.nn.ELU(),
-                        torch.nn.Linear(9, 6),
-                        torch.nn.ELU(),
-                        torch.nn.Linear(6, 3),
-                        torch.nn.ELU(),
-                        torch.nn.Linear(3, out_features)
+                        torch.nn.Linear(hidden_dim * 2, out_features)
                 )
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr)
 

@@ -16,12 +16,12 @@ import time
 
 from gym.spaces.utils import flatdim, flatten, flatten_space, unflatten
 
-from timetable_env import TimeTableEnv
+from timetable_env import TimetableEnv
 
 #env = gym.envs.make("LunarLander-v2", render_mode="human")
 #env = gym.envs.make("FrozenLake-v1", render_mode="human")
 #env = gym.envs.make("gym_examples/GridWorld-v0", render_mode="human")
-env = gym.envs.make("TimeTable-v0", render_mode="human")
+env = gym.envs.make("Timetable-v0", render_mode="human")
 
 def plot_res(values, title='', actions_total=[], rand_actions_total=[]):   
     ''' Plot the reward curve and histogram of results over time.'''

@@ -1,4 +1,4 @@
-from timetable import TimeTable, Timeslot, Room, Lesson
+from timetable import Timetable, Timeslot, Room, Lesson
 from datetime import time
 from constraints import Constraints, RoomConflict, TeacherConflict, StudentGroupConflict
 
@@ -49,7 +49,7 @@ def generate_problem():
         StudentGroupConflict()
     ]
 
-    return TimeTable(timeslot_list, room_list, lesson_list), Constraints(constraints)
+    return Timetable(timeslot_list, room_list, lesson_list), Constraints(constraints)
 
 
 
@@ -85,4 +85,4 @@ def generate_problem_simple():
         StudentGroupConflict()
     ]
 
-    return TimeTable(timeslot_list, room_list, lesson_list), Constraints(constraints)
+    return Timetable(timeslot_list, room_list, lesson_list), Constraints(constraints)

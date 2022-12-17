@@ -4,7 +4,7 @@ from optapy.constraint import ConstraintFactory, Joiners
 from timetable import Lesson
 from datetime import datetime, date, timedelta
 from dataclasses import dataclass
-from timetable import TimeTable
+from timetable import Timetable
 
 # Trick since timedelta only works with datetime instances
 today = date.today()
@@ -17,7 +17,7 @@ class Constraints:
     def __init__(self, constraints):
         self.constraints = constraints
 
-    def test(self, timetable: TimeTable):
+    def test(self, timetable: Timetable):
         total_hard_score = 0
         total_soft_score = 0
         for constraint in self.constraints:
@@ -27,7 +27,7 @@ class Constraints:
 
         return total_hard_score, total_soft_score
 
-    def max_score(self, timetable: TimeTable):
+    def max_score(self, timetable: Timetable):
         total_hard_score = 0
         total_soft_score = 0
         for constraint in self.constraints:
@@ -40,17 +40,17 @@ class Constraints:
     
 
 class Constraint:
-    def test(c: Constraints, t: TimeTable):
+    def test(c: Constraints, t: Timetable):
         return 0, 0
 
-    def max_score(c: Constraints, t: TimeTable):
+    def max_score(c: Constraints, t: Timetable):
         return 0, 0
 
 
     
 class RoomConflict(Constraint):
     """ Is there any other lesson booked in the same room at the same timeslot? """
-    def test(self, c: Constraints, t: TimeTable):
+    def test(self, c: Constraints, t: Timetable):
         h = 0
         s = 0
         lesson_list = t.get_lesson_list()
@@ -63,13 +63,13 @@ class RoomConflict(Constraint):
 
         return h, s
 
-    def max_score(self, c: Constraints, t: TimeTable):
+    def max_score(self, c: Constraints, t: Timetable):
         return len(t.get_lesson_list()), 0
 
 
 class TeacherConflict(Constraint):
     """ A teacher can teach at most one lesson at the same time """
-    def test(self, c: Constraints, t: TimeTable):
+    def test(self, c: Constraints, t: Timetable):
         h = 0
         s = 0
         lesson_list = t.get_lesson_list()
@@ -82,13 +82,13 @@ class TeacherConflict(Constraint):
 
         return h, s
 
-    def max_score(self, c: Constraints, t: TimeTable):
+    def max_score(self, c: Constraints, t: Timetable):
         return len(t.get_lesson_list()), 0
 
 
 class StudentGroupConflict(Constraint):
     """ A student can attend at most one lesson at the same time """
-    def test(self, c: Constraints, t: TimeTable):
+    def test(self, c: Constraints, t: Timetable):
         h = 0
         s = 0
         lesson_list = t.get_lesson_list()
@@ -101,7 +101,7 @@ class StudentGroupConflict(Constraint):
 
         return h, s
 
-    def max_score(self, c: Constraints, t: TimeTable):
+    def max_score(self, c: Constraints, t: Timetable):
         return len(t.get_lesson_list()), 0
 
 

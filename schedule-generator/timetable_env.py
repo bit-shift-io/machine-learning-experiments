@@ -1,6 +1,6 @@
 # https://www.gymlibrary.dev/content/environment_creation/
 
-from timetable import TimeTable
+from timetable import Timetable
 from timetable_renderer import TimetableRenderer
 import gym
 from gym import spaces
@@ -8,16 +8,28 @@ import pygame
 import numpy as np
 from problem import generate_problem, generate_problem_simple
 import math
+from gym.spaces.utils import flatdim, flatten, flatten_space, unflatten
 
 # really timetable env
-class TimeTableEnv(gym.Env):
+class TimetableEnv(gym.Env):
+    """ Timetable Environment bbasically turns the timetable problem into a game """
+
     renderer: TimetableRenderer
-    timetable: TimeTable
+    timetable: Timetable
     constraints: list
+
+    def state_size(self):
+        # Number of states
+        return flatten_space(self.observation_space).shape[0]
+
+    def action_size(self):
+        # Number of actions
+        return self.action_space.n
 
     def __init__(self, render_mode=None, timetable=None, constraints=None):
         #self.timetable = timetable
         #self.constraints = constraints
+        self.max_episode_steps = 100
 
         self.timetable, self.constraints = generate_problem() #generate_problem_simple()
         self.renderer = TimetableRenderer(render_mode)
@@ -71,6 +83,8 @@ class TimeTableEnv(gym.Env):
         observation = self._get_obs()
         info = self._get_info()
 
+        self.n_step = 0
+
         #if self.render_mode == "human":
         #    self._render_frame()
 
@@ -85,6 +99,8 @@ class TimeTableEnv(gym.Env):
         #)
         # An episode is done iff the agent has reached the target
         #terminated = np.array_equal(self._agent_location, self._target_location)
+
+        self.n_step += 1
 
         # convert action into something usable
         lesson_idx = math.floor(action / self.n_actions)
@@ -147,7 +163,12 @@ class TimeTableEnv(gym.Env):
         if self.renderer.render_mode == "human":
             self._render_frame()
 
-        return observation, reward, terminated, False, info
+        # stop if we reach to many steps... failure
+        truncated = False
+        if self.n_step > self.max_episode_steps:
+            truncated = True
+
+        return observation, reward, terminated, truncated, info
 
     def render(self):
         if self.renderer.render_mode == "rgb_array":
@@ -165,7 +186,7 @@ class TimeTableEnv(gym.Env):
 from gym.envs.registration import register
 
 register(
-    id='TimeTable-v0',
-    entry_point='timetable_env:TimeTableEnv',
+    id='Timetable-v0',
+    entry_point='timetable_env:TimetableEnv',
     max_episode_steps=100,
 )

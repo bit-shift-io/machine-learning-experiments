@@ -106,7 +106,7 @@ def format_list(a_list):
 
 
 @dataclass
-class TimeTable:
+class Timetable:
     timeslot_list: list[Timeslot]
     room_list: list[Room]
     lesson_list: list[Lesson]
@@ -135,7 +135,7 @@ class TimeTable:
     
     def __str__(self):
         return (
-            f"TimeTable("
+            f"Timetable("
             f"timeslot_list={format_list(self.timeslot_list)},\n"
             f"room_list={format_list(self.room_list)},\n"
             f"lesson_list={format_list(self.lesson_list)},\n"
@@ -180,7 +180,7 @@ class TimeTable:
 
 
 
-def print_timetable(timetable: TimeTable):
+def print_timetable(timetable: Timetable):
     room_list = timetable.room_list
     lesson_list = timetable.lesson_list
     timeslot_room_lesson_triple_list = list(map(lambda the_lesson: (the_lesson.timeslot, the_lesson.room, the_lesson),
