@@ -130,6 +130,8 @@ class TimeTableEnv(gym.Env):
         terminated = False
         if hard_score == self.max_hard_score:
             print("Solution found!")
+            self.timetable.print()
+            
             # crank the score!
             hard_score *= 100
             soft_score *= 100
