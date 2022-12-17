@@ -154,7 +154,7 @@ class TimeTableEnv(gym.Env):
             return self._render_frame()
 
     def _render_frame(self):
-        self.renderer.render(self.timetable)
+        self.renderer.render(self.timetable, self.constraints)
 
     def close(self):
         self.renderer.close()

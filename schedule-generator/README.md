@@ -15,6 +15,8 @@ https://www.linkedin.com/pulse/finding-optimum-unknown-function-neural-networks-
 
 # Future Ideas
 
+-1. Instead of a single score, why not a score per cell? let the ai try to maximize the per cell, then provide an action per cell. I might need to break out of the gym structure for this
+
 0. open ai 5 dota bot: https://github.com/llSourcell/OpenAI_Five_vs_Dota2_Explained
 
 1. change to a predictable starting layout. try to layout each lesson in each room and timeslot as best as can

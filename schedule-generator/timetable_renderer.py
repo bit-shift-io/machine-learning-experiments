@@ -1,12 +1,17 @@
 from timetable import TimeTable
+from constraints import Constraints
 import pygame
 import numpy as np
+
+RED = (100, 0, 0)
+GREEN = (0, 100, 0)
+BLUE = (0, 0, 100)
 
 class TimetableRenderer:
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
     def __init__(self, render_mode):
-        self.window_size = 512  # The size of the PyGame window
+        self.window_size = 800  # The size of the PyGame window
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
@@ -22,12 +27,12 @@ class TimetableRenderer:
         self.clock = None
 
 
-    def render(self, timetable: TimeTable):
+    def render(self, timetable: TimeTable, constraints: Constraints):
         if self.window is None and self.render_mode == "human":
             pygame.init()
             pygame.display.init()
             self.window = pygame.display.set_mode((self.window_size, self.window_size))
-            self.font = pygame.font.SysFont(None, 14)
+            self.font = pygame.font.SysFont(None, 16)
         if self.clock is None and self.render_mode == "human":
             self.clock = pygame.time.Clock()
 
@@ -81,14 +86,14 @@ class TimetableRenderer:
         
         # Draw room labels
         for ri in range(len(room_list)):
-            img = self.font.render(room_list[ri].name, False, 0)
+            img = self.font.render(room_list[ri].name, True, 0)
             canvas.blit(img, (header_size[0] + (pix_square_size[0] * ri), 0))
 
         # Draw timetable labels
         for ti in range(len(timeslot_list)):
             timeslot = timeslot_list[ti]
             label = (timeslot.day_of_week[0:2] + " " + str(timeslot.start_time))[0:8]
-            img = self.font.render(label, False, 0)
+            img = self.font.render(label, True, 0)
             canvas.blit(img, (0, header_size[1] + (pix_square_size[1] * ti)))
 
 
@@ -121,8 +126,15 @@ class TimetableRenderer:
                 room = room_list[ri]
                 timeslot = timeslot_list[ti]
                 #lessons = lesson_map[ti][ri]
-                self.draw_room_timeslot(timetable, canvas, room, timeslot, start_pos, pix_square_size)
+                self.draw_room_timeslot(timetable, constraints, canvas, room, timeslot, start_pos, pix_square_size)
 
+
+        # draw score
+        max_hard_score, max_soft_score = constraints.max_score(timetable)
+        hard_score, soft_score = constraints.test(timetable)
+        label = str(hard_score) + " / " + str(max_hard_score)
+        img = self.font.render(label, True, GREEN if hard_score == max_hard_score else RED)
+        canvas.blit(img, (0, 0))
 
 
         if self.render_mode == "human":
@@ -133,22 +145,31 @@ class TimetableRenderer:
 
             # We need to ensure that human-rendering occurs at the predefined framerate.
             # The following line will automatically add a delay to keep the framerate stable.
-            self.clock.tick(self.metadata["render_fps"])
+            #self.clock.tick(self.metadata["render_fps"])
         else:  # rgb_array
             return np.transpose(
                 np.array(pygame.surfarray.pixels3d(canvas)), axes=(1, 0, 2)
             )
 
-    def draw_room_timeslot(self, timetable, canvas, room, timeslot, start_pos, size):
+    def draw_room_timeslot(self, timetable, constraints, canvas, room, timeslot, start_pos, size):
         lesson_list = timetable.lesson_list
         lessons = list(filter(lambda l: l.room == room and l.timeslot == timeslot, lesson_list))
 
         lesson_height = 10
 
+        sub_timetable = TimeTable([timeslot], [room], lessons)
+        max_hard_score, max_soft_score = constraints.max_score(sub_timetable)
+        hard_score, soft_score = constraints.test(sub_timetable)
+
         for li, lesson in enumerate(lessons):
             label = lesson.subject + " | " + lesson.teacher + " | " + lesson.student_group
-            img = self.font.render(label, False, 0)
+            img = self.font.render(label, True, 0)
             canvas.blit(img, (start_pos[0], start_pos[1] + (lesson_height * li)))
+
+        # draw the score for this cell
+        label = str(hard_score)# + " | " + str(max_hard_score)
+        img = self.font.render(label, True, GREEN if hard_score == max_hard_score else RED)
+        canvas.blit(img, (start_pos[0], start_pos[1] + size[1] - lesson_height))
 
 
     def close(self):
