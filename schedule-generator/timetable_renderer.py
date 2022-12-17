@@ -31,7 +31,7 @@ class TimetableRenderer:
         if self.clock is None and self.render_mode == "human":
             self.clock = pygame.time.Clock()
 
-        timetable.print()
+        #timetable.print()
 
         canvas = pygame.Surface((self.window_size, self.window_size))
         canvas.fill((255, 255, 255))
@@ -55,83 +55,76 @@ class TimetableRenderer:
             else:
                 lesson_map[timeslot] = {room: [lesson]}
 
+        header_size = (40, 10)
+
         pix_square_size = (
-            self.window_size / (len(room_list) + 1),
-            self.window_size / (len(timeslot_list) + 1)
+            (self.window_size - header_size[0]) / len(room_list),
+            (self.window_size - header_size[1]) / len(timeslot_list)
         )  # The size of a single grid square in pixels
 
+        pygame.draw.line(
+                    canvas,
+                    0,
+                    (0, header_size[1]),
+                    (self.window_size, header_size[1]),
+                    width=1,
+                )
+
+        pygame.draw.line(
+                    canvas,
+                    0,
+                    (header_size[0], 0),
+                    (header_size[0], self.window_size),
+                    width=1,
+                )
+
+        
         # Draw room labels
         for ri in range(len(room_list)):
             img = self.font.render(room_list[ri].name, False, 0)
-            canvas.blit(img, (pix_square_size[0] * (ri + 1), 0))
+            canvas.blit(img, (header_size[0] + (pix_square_size[0] * ri), 0))
 
         # Draw timetable labels
         for ti in range(len(timeslot_list)):
             timeslot = timeslot_list[ti]
-            label = (timeslot.day_of_week[0:3] + " " + str(timeslot.start_time))[0:10]
+            label = (timeslot.day_of_week[0:2] + " " + str(timeslot.start_time))[0:8]
             img = self.font.render(label, False, 0)
-            canvas.blit(img, (0, pix_square_size[1] * (ti + 1)))
+            canvas.blit(img, (0, header_size[1] + (pix_square_size[1] * ti)))
+
 
 
         # vertical lines
-        for x in range(1, len(room_list) + 1):
+        for x in range(len(room_list)):
             pygame.draw.line(
                     canvas,
                     0,
-                    (pix_square_size[0] * x, 0),
-                    (pix_square_size[0] * x, self.window_size),
+                    (header_size[0] + (pix_square_size[0] * x), 0),
+                    (header_size[0] + (pix_square_size[0] * x), self.window_size),
                     width=1,
                 )
-
+        
         # horizontal lines
-        for y in range(1, len(timeslot_list) + 1):
+        for y in range(len(timeslot_list)):
             pygame.draw.line(
                     canvas,
                     0,
-                    (0, pix_square_size[1] * y),
-                    (self.window_size, pix_square_size[1] * y),
+                    (0, header_size[1] + (pix_square_size[1] * y)),
+                    (self.window_size, header_size[1] + (pix_square_size[1] * y)),
                     width=1,
                 )
 
-        """
-        pix_square_size = (
-            self.window_size / self.size
-        )  # The size of a single grid square in pixels
+        # draw contents of each cell
+        for ri in range(len(room_list)):
+            for ti in range(len(timeslot_list)):
+                start_pos = (header_size[0] + (pix_square_size[0] * ri), 
+                            header_size[1] + (pix_square_size[1] * ti))
+                room = room_list[ri]
+                timeslot = timeslot_list[ti]
+                #lessons = lesson_map[ti][ri]
+                self.draw_room_timeslot(timetable, canvas, room, timeslot, start_pos, pix_square_size)
 
-        # First we draw the target
-        pygame.draw.rect(
-            canvas,
-            (255, 0, 0),
-            pygame.Rect(
-                pix_square_size * self._target_location,
-                (pix_square_size, pix_square_size),
-            ),
-        )
-        # Now we draw the agent
-        pygame.draw.circle(
-            canvas,
-            (0, 0, 255),
-            (self._agent_location + 0.5) * pix_square_size,
-            pix_square_size / 3,
-        )
 
-        # Finally, add some gridlines
-        for x in range(self.size + 1):
-            pygame.draw.line(
-                canvas,
-                0,
-                (0, pix_square_size * x),
-                (self.window_size, pix_square_size * x),
-                width=3,
-            )
-            pygame.draw.line(
-                canvas,
-                0,
-                (pix_square_size * x, 0),
-                (pix_square_size * x, self.window_size),
-                width=3,
-            )
-"""
+
         if self.render_mode == "human":
             # The following line copies our drawings from `canvas` to the visible window
             self.window.blit(canvas, canvas.get_rect())
@@ -145,6 +138,17 @@ class TimetableRenderer:
             return np.transpose(
                 np.array(pygame.surfarray.pixels3d(canvas)), axes=(1, 0, 2)
             )
+
+    def draw_room_timeslot(self, timetable, canvas, room, timeslot, start_pos, size):
+        lesson_list = timetable.lesson_list
+        lessons = list(filter(lambda l: l.room == room and l.timeslot == timeslot, lesson_list))
+
+        lesson_height = 10
+
+        for li, lesson in enumerate(lessons):
+            label = lesson.subject + " | " + lesson.teacher + " | " + lesson.student_group
+            img = self.font.render(label, False, 0)
+            canvas.blit(img, (start_pos[0], start_pos[1] + (lesson_height * li)))
 
 
     def close(self):
