@@ -55,7 +55,7 @@ class RoomConflict(Constraint):
     def test(self, c: Constraints, t: Timetable):
         h = 0
         s = 0
-        lesson_list = t.get_lesson_list()
+        lesson_list = t.lesson_list
         for l in lesson_list:
             r = list(filter(lambda l2: l != l2 and l2.timeslot == l.timeslot and l2.room == l.room, lesson_list))
             if len(r) <= 0:
@@ -66,7 +66,7 @@ class RoomConflict(Constraint):
         return h, s
 
     def max_score(self, c: Constraints, t: Timetable):
-        return len(t.get_lesson_list()), 0
+        return len(t.lesson_list), 0
 
 
 class TeacherConflict(Constraint):
@@ -74,7 +74,7 @@ class TeacherConflict(Constraint):
     def test(self, c: Constraints, t: Timetable):
         h = 0
         s = 0
-        lesson_list = t.get_lesson_list()
+        lesson_list = t.lesson_list
         for l in lesson_list:
             r = list(filter(lambda l2: l != l2 and l2.timeslot == l.timeslot and l2.teacher == l.teacher, lesson_list))
             if len(r) <= 0:
@@ -85,7 +85,7 @@ class TeacherConflict(Constraint):
         return h, s
 
     def max_score(self, c: Constraints, t: Timetable):
-        return len(t.get_lesson_list()), 0
+        return len(t.lesson_list), 0
 
 
 class StudentGroupConflict(Constraint):
@@ -93,7 +93,7 @@ class StudentGroupConflict(Constraint):
     def test(self, c: Constraints, t: Timetable):
         h = 0
         s = 0
-        lesson_list = t.get_lesson_list()
+        lesson_list = t.lesson_list
         for l in lesson_list:
             r = list(filter(lambda l2: l != l2 and l2.timeslot == l.timeslot and l2.student_group == l.student_group, lesson_list))
             if len(r) <= 0:
@@ -104,7 +104,7 @@ class StudentGroupConflict(Constraint):
         return h, s
 
     def max_score(self, c: Constraints, t: Timetable):
-        return len(t.get_lesson_list()), 0
+        return len(t.lesson_list), 0
 
 
 """

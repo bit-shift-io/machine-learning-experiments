@@ -6,6 +6,18 @@ from functools import reduce
 import random
 
 @dataclass
+class Teacher:
+    id: int
+    name: str
+
+
+@dataclass
+class StudentGroup:
+    id: int
+    name: str
+
+
+@dataclass
 class Room:
     id: int
     name: str
@@ -16,9 +28,6 @@ class Room:
     def __init__(self, id, name):
         self.id = id
         self.name = name
-
-    def get_id(self):
-        return self.id
 
     def __str__(self):
         return f"Room(id={self.id}, name={self.name})"
@@ -40,9 +49,6 @@ class Timeslot:
         self.start_time = start_time
         self.end_time = end_time
 
-    def get_id(self):
-        return self.id
-
     def __str__(self):
         return (
                 f"Timeslot("
@@ -57,13 +63,13 @@ class Timeslot:
 class Lesson:
     id: int
     subject: str
-    teacher: str
-    student_group: str
+    teacher: Teacher
+    student_group: StudentGroup
     timeslot: Timeslot
     room: Room
 
-    constraints_pass: list
-    constraints_fail: list
+    #constraints_pass: list
+    #constraints_fail: list
 
     def __hash__(self):
         return self.id
@@ -78,17 +84,8 @@ class Lesson:
         self.constraints_fail = []
         self.constraints_pass = []
 
-    def get_id(self):
-        return self.id
-
-    def get_timeslot(self):
-        return self.timeslot
-
     def set_timeslot(self, new_timeslot):
         self.timeslot = new_timeslot
-
-    def get_room(self):
-        return self.room
 
     def set_room(self, new_room):
         self.room = new_room
@@ -115,29 +112,16 @@ class Timetable:
     timeslot_list: list[Timeslot]
     room_list: list[Room]
     lesson_list: list[Lesson]
-    #score: HardSoftScore
+    teacher_list: list[Teacher]
+    student_group_list: list[StudentGroup]
 
-    def __init__(self, timeslot_list, room_list, lesson_list, score=None):
+    def __init__(self, timeslot_list, room_list, lesson_list, teacher_list, student_group_list):
         self.timeslot_list = timeslot_list
         self.room_list = room_list
         self.lesson_list = lesson_list
-       #self.score = score
+        self.teacher_list = teacher_list
+        self.student_group_list = student_group_list
 
-    def get_timeslot_list(self):
-        return self.timeslot_list
-
-    def get_room_list(self):
-        return self.room_list
-
-    def get_lesson_list(self):
-        return self.lesson_list
-
-    #def get_score(self):
-    #    return self.score
-
-    #def set_score(self, score):
-    #    self.score = score
-    
     def __str__(self):
         return (
             f"Timetable("
@@ -163,6 +147,7 @@ class Timetable:
 
     def ordered_layout(self):
         """ Do a simple layout where each lesson is just placed down in order """
+        # TODO: change this do default to filling each timeslot by student group
         room_idx = 0
         timeslot_idx = 0
         for lesson in self.lesson_list:
@@ -176,8 +161,6 @@ class Timetable:
 
             if timeslot_idx >= len(self.timeslot_list):
                 timeslot_idx = 0
-
-
 
     def print(self):
         print_timetable(self)

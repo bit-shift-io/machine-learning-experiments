@@ -5,9 +5,7 @@ from timetable_renderer import TimetableRenderer
 from timetable_env_v0 import TimetableEnvV0
 import gym
 from gym import spaces
-import pygame
 import numpy as np
-from problem import generate_problem, generate_problem_simple
 import math
 from gym.spaces.utils import flatdim, flatten, flatten_space, unflatten
 
@@ -21,18 +19,18 @@ class TimetableEnvV1(TimetableEnvV0):
         # Each lesson is 3 discreet spaces, where: which room it is in, which timetable slot it is in
         # we now also include which constraints are being violated = 1 or 0 for pass
         self.observation_space = spaces.Dict()
-        for lesson in self.timetable.get_lesson_list():
+        for lesson in self.timetable.lesson_list:
             id = f"lesson_{lesson.id}"
 
-            const_arr = np.empty(self.n_constraints)
-            const_arr.fill(1)
+            #const_arr = np.empty(self.n_constraints)
+            #const_arr.fill(1)
 
             # TODO: setup constraint voliaitions in lessons
             # TODO: also add in here Teacher and StudentGroups so AI can map issues so we might nnot even nneed constraints
             #       as currenntly the AI knows nnothing about teachers or student groups so can only guess!
-            arr = np.array([self.n_rooms, self.n_timeslots])
+            arr = np.array([self.n_rooms, self.n_timeslots, self.n_teachers, self.n_student_groups])
 
-            arr = np.concatenate((arr, const_arr), axis=0)
+            #arr = np.concatenate((arr, const_arr), axis=0)
             space = spaces.MultiDiscrete(arr) # 0 represents nothing
             self.observation_space[id] = space
 
@@ -40,19 +38,17 @@ class TimetableEnvV1(TimetableEnvV0):
     def _get_obs(self):
         """Convert timetable to the oservation_space"""
         o = {}
-        for lesson in self.timetable.get_lesson_list():
+        for lesson in self.timetable.lesson_list:
             id = f"lesson_{lesson.id}"
-            room = lesson.get_room()
-            timeslot = lesson.get_timeslot()
 
             # calc constraint state
-            const_arr = np.empty(self.n_constraints)
-            const_arr.fill(0)
-            for const in lesson.constraints_fail:
-                const_arr[const.id] = 1
+            #const_arr = np.empty(self.n_constraints)
+            #const_arr.fill(0)
+            #for const in lesson.constraints_fail:
+            #    const_arr[const.id] = 1
 
-            np.array([room.get_id(), timeslot.get_id()])
-            arr = np.concatenate((arr, const_arr), axis=0)
+            arr = np.array([lesson.room.id, lesson.timeslot.id, lesson.teacher.id, lesson.student_group.id])
+            #arr = np.concatenate((arr, const_arr), axis=0)
             o[id] = arr
             
         return o

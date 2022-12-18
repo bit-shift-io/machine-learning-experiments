@@ -157,12 +157,12 @@ class TimetableRenderer:
 
         lesson_height = 10
 
-        sub_timetable = Timetable([timeslot], [room], lessons)
+        sub_timetable = Timetable([timeslot], [room], lessons, [], [])
         max_hard_score, max_soft_score = constraints.max_score(sub_timetable)
         hard_score, soft_score = constraints.test(sub_timetable)
 
         for li, lesson in enumerate(lessons):
-            label = lesson.subject + " | " + lesson.teacher + " | " + lesson.student_group
+            label = lesson.subject + " | " + lesson.teacher.name + " | " + lesson.student_group.name
             img = self.font.render(label, True, 0)
             canvas.blit(img, (start_pos[0], start_pos[1] + (lesson_height * li)))
 

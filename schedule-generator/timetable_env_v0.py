@@ -4,9 +4,7 @@ from timetable import Timetable
 from timetable_renderer import TimetableRenderer
 import gym
 from gym import spaces
-import pygame
 import numpy as np
-from problem import generate_problem, generate_problem_simple
 import math
 from gym.spaces.utils import flatdim, flatten, flatten_space, unflatten
 
@@ -36,9 +34,11 @@ class TimetableEnvV0(gym.Env):
 
         # precompute some stuff
         self.n_constraints = len(self.constraints.constraints)
-        self.n_lessons = len(self.timetable.get_lesson_list())
-        self.n_timeslots = len(self.timetable.get_timeslot_list())
-        self.n_rooms = len(self.timetable.get_room_list())
+        self.n_lessons = len(self.timetable.lesson_list)
+        self.n_timeslots = len(self.timetable.timeslot_list)
+        self.n_rooms = len(self.timetable.room_list)
+        self.n_teachers = len(self.timetable.teacher_list)
+        self.n_student_groups = len(self.timetable.student_group_list)
 
         self.max_hard_score, self.max_soft_score = self.constraints.max_score(self.timetable)
 
@@ -48,7 +48,7 @@ class TimetableEnvV0(gym.Env):
 
         # Each lesson is 2 discreet spaces, where: which room it is inn, which timetabel slot it is in
         self.observation_space = spaces.Dict()
-        for lesson in self.timetable.get_lesson_list():
+        for lesson in self.timetable.lesson_list:
             id = f"lesson_{lesson.id}"
             space = spaces.MultiDiscrete([self.n_rooms, self.n_timeslots])
             self.observation_space[id] = space
@@ -63,8 +63,8 @@ class TimetableEnvV0(gym.Env):
             id = f"lesson_{lesson.id}"
             room = lesson.get_room()
             timeslot = lesson.get_timeslot()
-            o[id] = np.array([room.get_id(), timeslot.get_id()]) # maybe reserve 0 for invalid value
-            #self.observation_space[id] = [room.get_id() - 1, timeslot.get_id() - 1]
+            o[id] = np.array([room.id, timeslot.id]) # maybe reserve 0 for invalid value
+            #self.observation_space[id] = [room.id - 1, timeslot.id - 1]
 
         return o #return {"agent": self._agent_location, "target": self._target_location}
 
@@ -106,33 +106,33 @@ class TimetableEnvV0(gym.Env):
         # convert action into something usable
         lesson_idx = math.floor(action / self.n_actions)
         lesson_action = action % self.n_actions
-        lesson = self.timetable.get_lesson_list()[lesson_idx]
+        lesson = self.timetable.lesson_list[lesson_idx]
 
         # "previous room", "next room", "previous timeslot", "next timeslot", "remove from timetale", "add to timetable"
         match lesson_action:
             case 0: # "previous room"
-                idx = lesson.get_room().get_id() - 1
+                idx = lesson.room.id
                 idx -= 1
                 idx = idx % self.n_rooms
-                lesson.set_room(self.timetable.get_room_list()[idx])
+                lesson.set_room(self.timetable.room_list[idx])
 
             case 1: # "next room"
-                idx = lesson.get_room().get_id() - 1
+                idx = lesson.room.id
                 idx += 1
                 idx = idx % self.n_rooms
-                lesson.set_room(self.timetable.get_room_list()[idx])
+                lesson.set_room(self.timetable.room_list[idx])
 
             case 2: #  "previous timeslot"
-                idx = lesson.get_timeslot().get_id() - 1
+                idx = lesson.timeslot.id
                 idx -= 1
                 idx = idx % self.n_timeslots
-                lesson.set_timeslot(self.timetable.get_timeslot_list()[idx])
+                lesson.set_timeslot(self.timetable.timeslot_list[idx])
 
             case 3: # "next timeslot"
-                idx = lesson.get_timeslot().get_id() - 1
+                idx = lesson.timeslot.id
                 idx += 1
                 idx = idx % self.n_timeslots
-                lesson.set_timeslot(self.timetable.get_timeslot_list()[idx])
+                lesson.set_timeslot(self.timetable.timeslot_list[idx])
 
             #case 4: # "remove from timetable"
             #    pass # TODO:
