@@ -18,6 +18,7 @@ https://www.linkedin.com/pulse/finding-optimum-unknown-function-neural-networks-
 -1. Instead of a single score, why not a score per cell? let the ai try to maximize the per cell, then provide an action per cell. I might need to break out of the gym structure for this
 
 0. open ai 5 dota bot: https://github.com/llSourcell/OpenAI_Five_vs_Dota2_Explained
+ppo: https://openai.com/blog/openai-baselines-ppo/
 
 1. change to a predictable starting layout. try to layout each lesson in each room and timeslot as best as can
 consistent start might make easier to learn. this gives consistencey in learning and exploration.
@@ -38,6 +39,11 @@ step #1 is somewhat pointless as the model then becomes: "just train this sucker
 
 5. try taking as an "action" the whole new state of the schedule to adopt. AI can then make up what ever schedule it thinks from the current one, and get a reward based on that.
 
+# Learning
+
+1. Simple deep q learning is faster than double soft q learning ~50% but is more unstable. For the schedule problem that might not be a problem as we just want to first solution that is valid.
+
+2. Simply supplying the state and expecting a good action doesn't help the model know where the probblem is that it is trying to solve. It also means the model is prone to repeat its actions in a loop until randomnness breaks it out of it.
 
 # A typical school problem
 
