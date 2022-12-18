@@ -209,7 +209,7 @@ def print_timetable(timetable: Timetable):
                 out += "           | "
             else:
                 out += "{:<10}".format(reduce(lambda a, b: a + "," + b,
-                                              map(lambda assigned_lesson: assigned_lesson.teacher,
+                                              map(lambda assigned_lesson: assigned_lesson.teacher.name,
                                                   cell)))[0:10] + " | "
         print(out)
         out = "|            | "
@@ -218,7 +218,7 @@ def print_timetable(timetable: Timetable):
                 out += "           | "
             else:
                 out += "{:<10}".format(reduce(lambda a, b: a + "," + b,
-                                              map(lambda assigned_lesson: assigned_lesson.student_group,
+                                              map(lambda assigned_lesson: assigned_lesson.student_group.name,
                                                   cell)))[0:10] + " | "
         print(out)
         print("|" + ("------------|" * (len(room_list) + 1)))

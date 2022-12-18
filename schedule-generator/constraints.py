@@ -74,13 +74,19 @@ class TeacherConflict(Constraint):
     def test(self, c: Constraints, t: Timetable):
         h = 0
         s = 0
+
+        p = 0
+        f = 0
+
         lesson_list = t.lesson_list
         for l in lesson_list:
             r = list(filter(lambda l2: l != l2 and l2.timeslot == l.timeslot and l2.teacher == l.teacher, lesson_list))
             if len(r) <= 0:
                 h += 1
+                p += 1
             else:
                 h -= 1
+                f += 1
 
         return h, s
 
