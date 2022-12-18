@@ -38,8 +38,10 @@ class Constraints:
         return total_hard_score, total_soft_score
 
     
-
+@dataclass
 class Constraint:
+    id: int
+    
     def test(c: Constraints, t: Timetable):
         return 0, 0
 

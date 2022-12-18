@@ -11,7 +11,7 @@ import math
 from gym.spaces.utils import flatdim, flatten, flatten_space, unflatten
 
 # really timetable env
-class TimetableEnv(gym.Env):
+class TimetableEnvV0(gym.Env):
     """ Timetable Environment bbasically turns the timetable problem into a game """
 
     renderer: TimetableRenderer
@@ -30,11 +30,12 @@ class TimetableEnv(gym.Env):
         #self.timetable = timetable
         #self.constraints = constraints
         self.max_episode_steps = max_episode_steps
-
-        self.timetable, self.constraints = generate_problem() #generate_problem_simple()
         self.renderer = TimetableRenderer(render_mode)
+        self.timetable = timetable
+        self.constraints = constraints
 
         # precompute some stuff
+        self.n_constraints = len(self.constraints.constraints)
         self.n_lessons = len(self.timetable.get_lesson_list())
         self.n_timeslots = len(self.timetable.get_timeslot_list())
         self.n_rooms = len(self.timetable.get_room_list())
@@ -49,7 +50,7 @@ class TimetableEnv(gym.Env):
         self.observation_space = spaces.Dict()
         for lesson in self.timetable.get_lesson_list():
             id = f"lesson_{lesson.id}"
-            space = spaces.MultiDiscrete([self.n_rooms + 1, self.n_timeslots + 1]) # 0 represents nothing
+            space = spaces.MultiDiscrete([self.n_rooms, self.n_timeslots])
             self.observation_space[id] = space
             #test = space.sample()
             #print('lesson', id)
@@ -62,7 +63,7 @@ class TimetableEnv(gym.Env):
             id = f"lesson_{lesson.id}"
             room = lesson.get_room()
             timeslot = lesson.get_timeslot()
-            o[id] = np.array([room.get_id() if room else 0, timeslot.get_id() if timeslot else 0]) # maybe reserve 0 for invalid value
+            o[id] = np.array([room.get_id(), timeslot.get_id()]) # maybe reserve 0 for invalid value
             #self.observation_space[id] = [room.get_id() - 1, timeslot.get_id() - 1]
 
         return o #return {"agent": self._agent_location, "target": self._target_location}
@@ -187,6 +188,6 @@ from gym.envs.registration import register
 
 register(
     id='Timetable-v0',
-    entry_point='timetable_env:TimetableEnv',
+    entry_point='timetable_env:TimetableEnvV0',
     max_episode_steps=100,
 )

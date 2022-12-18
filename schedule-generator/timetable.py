@@ -62,6 +62,9 @@ class Lesson:
     timeslot: Timeslot
     room: Room
 
+    constraints_pass: list
+    constraints_fail: list
+
     def __hash__(self):
         return self.id
 
@@ -72,6 +75,8 @@ class Lesson:
         self.student_group = student_group
         self.timeslot = timeslot
         self.room = room
+        self.constraints_fail = []
+        self.constraints_pass = []
 
     def get_id(self):
         return self.id
