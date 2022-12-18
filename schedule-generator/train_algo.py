@@ -5,20 +5,35 @@ import copy
 import matplotlib.pyplot as plt
 import numpy as np
 import time
+from collections import deque
 
-class TrainAlgo:
-    """ Trains a DNN on an Env using Deep Q Learning """
+class TrainAlgo_Base:
+    """ Base class for training algorithm """
 
     def __init__(self, dnn, env):
         self.dnn = dnn
-        self.target = copy.deepcopy(self.dnn.model)
-
         self.env = env
+
+    def train(self, n_episodes):
+        pass
+
+    def plot(self):
+        pass
+
+
+
+class TA_QL_Base(TrainAlgo_Base):
+    """ Base class for qlearning training algorithm """
+
+    def __init__(self, dnn, env, memory_maxlen=10000):
+        self.dnn = dnn
+        self.env = env
+
         self.gamma=.9
         self.epsilon=0.3
         self.eps_decay=0.99
         self.replay_size=100
-        self.memory = []
+        self.memory = deque(maxlen=memory_maxlen)
 
         # stats for plotting
         self.reward_total = []
@@ -43,7 +58,7 @@ class TrainAlgo:
         """ Run an episode """
         t0 = time.time()
             
-        self.target_update()
+        self.train_episode_start()
 
         # Reset state
         state, info = self.env.reset()
@@ -82,11 +97,8 @@ class TrainAlgo:
             self.memory.append((state, action, next_state, reward, terminated))
             q_values = self.dnn.predict([state]).tolist()
             
-            #t0=time.time()
             # Update network weights using replay memory
             self.replay()
-            #t1=time.time()
-            #sum_total_replay_time+=(t1-t0)
 
             if terminated:
                 print("success, finish traning")
@@ -111,49 +123,12 @@ class TrainAlgo:
         print(f"Ep {ei:<3}\t{round((t1-t0), 1)}s\tr.av: {round(reward_avg, 1):<5}\tr.mx: {reward_max:<5}\tr.mn: {reward_min:<5}") 
 
 
-    def target_update(self, TAU=0.3):
-        ''' Update the targer gradually. '''
-        updated_params = dict(self.target.named_parameters())
-        for model_name, model_param in self.dnn.model.named_parameters():
-            for target_name, target_param in self.target.named_parameters():
-                if target_name == model_name:
-                    # Update parameter
-                    updated_params[model_name].data.copy_((TAU)*model_param.data + (1-TAU)*target_param.data)
-
-        self.target.load_state_dict(updated_params)
+    def train_episode_start(self):
+        pass
 
     
     def replay(self):
-        ''' Add experience replay to the DQL network class.'''
-        memory = self.memory
-        size = self.replay_size
-        gamma = self.gamma
-        if len(memory) >= size:
-            # Sample experiences from the agent's memory
-            data = random.sample(memory, size)
-            states = []
-            targets = []
-            # Extract datapoints from the data
-            for state, action, next_state, reward, done in data:
-                states.append(state)
-                q_values = self.dnn.predict(state).tolist()
-                if done:
-                    q_values[action] = reward
-                else:
-                    # The only difference between the simple replay is in this line
-                    # It ensures that next q values are predicted with the target network.
-                    q_values_next = self.target_predict(next_state)
-                    q_values[action] = reward + gamma * torch.max(q_values_next).item()
-
-                targets.append(q_values)
-
-            self.dnn.train(states, targets)
-
-
-    def target_predict(self, s):
-        ''' Use target network to make predicitons.'''
-        with torch.no_grad():
-            return self.target(torch.Tensor(s))
+        pass
 
 
     def plot(self):
@@ -166,21 +141,11 @@ class TrainAlgo:
 
         plt.axhline(0, c='black',ls='--', label='zero') # zero line
         plt.xlabel('Episodes')
-        #plt.ylabel('Actions to solution')
-
-        #plt.plot(rand_actions_total, label="rand actions per run", c='black')
-        #plt.plot(actions_total, label="total actions per run", c='green')
 
         x = range(len(self.reward_avg))
         plt.legend()
-        # Calculate the trend
-        #try:
-        #    z = np.polyfit(x, actions_total, 1)
-        #    p = np.poly1d(z)
-        #    plt.plot(x,p(x),"--", label='actions trend', c='green')
-        #except:
-        #    print('')
 
+        # Calculate the trend
         try:
             z = np.polyfit(x, self.reward_avg, 1)
             p = np.poly1d(z)
