@@ -12,10 +12,10 @@ env = TimetableEnvV1(None, timetable, constraints, max_episode_steps=100)
 dnn = DNN(env.state_size(), env.action_size(), hidden_dim=128, lr=0.0008)
 
 # choose a training algorithm
-#trainer = TA_QL_DoubleSoft(dnn, env, TAU=1.0)
+#trainer = TA_QL_DoubleSoft(dnn, env, TAU=0.7)
 trainer = TA_QL(dnn, env)
 
-trainer.train(n_episodes=500)
+trainer.train(n_episodes=1000)
 
 beepy.beep(sound='ping')
 trainer.plot() # this blocks
@@ -23,4 +23,4 @@ trainer.plot() # this blocks
 # run a few epochs in human mode for seeing how things look
 env.renderer.render_mode = "human"
 trainer.train(n_episodes=1)
-env.timetable.print()
+#env.timetable.print()

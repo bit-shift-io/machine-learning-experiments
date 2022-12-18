@@ -30,8 +30,8 @@ class TA_QL_Base(TrainAlgo_Base):
         self.env = env
 
         self.gamma=.9
-        self.epsilon=0.3
-        self.eps_decay=0.99
+        self.epsilon=0.4
+        self.eps_decay=0.995
         self.replay_size=100
         self.memory = deque(maxlen=memory_maxlen)
 
