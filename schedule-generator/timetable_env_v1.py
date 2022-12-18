@@ -27,6 +27,9 @@ class TimetableEnvV1(TimetableEnvV0):
             const_arr = np.empty(self.n_constraints)
             const_arr.fill(1)
 
+            # TODO: setup constraint voliaitions in lessons
+            # TODO: also add in here Teacher and StudentGroups so AI can map issues so we might nnot even nneed constraints
+            #       as currenntly the AI knows nnothing about teachers or student groups so can only guess!
             arr = np.array([self.n_rooms, self.n_timeslots])
 
             arr = np.concatenate((arr, const_arr), axis=0)
