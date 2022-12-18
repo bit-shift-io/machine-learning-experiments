@@ -15,7 +15,7 @@ dnn = DNN(env.state_size(), env.action_size(), hidden_dim=128, lr=0.0008)
 #trainer = TA_QL_DoubleSoft(dnn, env, TAU=0.7)
 trainer = TA_QL(dnn, env)
 
-trainer.train(n_episodes=1)
+trainer.train(n_episodes=300)
 
 beepy.beep(sound='ping')
 trainer.plot() # this blocks

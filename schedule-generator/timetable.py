@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import datetime
 from functools import reduce
 import random
+import itertools
 
 @dataclass
 class Teacher:
@@ -150,17 +151,30 @@ class Timetable:
         # TODO: change this do default to filling each timeslot by student group
         room_idx = 0
         timeslot_idx = 0
-        for lesson in self.lesson_list:
-            lesson.set_room(self.room_list[room_idx])
-            lesson.set_timeslot(self.timeslot_list[timeslot_idx])
 
-            room_idx += 1
-            if room_idx >= len(self.room_list):
-                room_idx = 0
-                timeslot_idx += 1
+        student_group_lessons = [(k, list(g)) for k, g in itertools.groupby(self.lesson_list, lambda l: l.student_group)]
+        for gi, group in enumerate(student_group_lessons):
+            student_group, lessons = group
+            for li, lesson in enumerate(lessons):
+                lesson.set_room(self.room_list[gi])
+                lesson.set_timeslot(self.timeslot_list[li])
 
-            if timeslot_idx >= len(self.timeslot_list):
-                timeslot_idx = 0
+                #timeslot_idx += 1
+                #if timeslot_idx >= len(self.timeslot_list):
+                #    timeslot_idx = 0
+
+
+        #for lesson in self.lesson_list:
+        #    lesson.set_room(self.room_list[room_idx])
+        #    lesson.set_timeslot(self.timeslot_list[timeslot_idx])
+        #
+        #    room_idx += 1
+        #    if room_idx >= len(self.room_list):
+        #        room_idx = 0
+        #        timeslot_idx += 1
+        #
+        #    if timeslot_idx >= len(self.timeslot_list):
+        #        timeslot_idx = 0
 
     def print(self):
         print_timetable(self)

@@ -5,8 +5,8 @@ from constraints import Constraints, RoomConflict, TeacherConflict, StudentGroup
 def constraint_list():
     constraints = [
         RoomConflict(0),
-        TeacherConflict(1),
-        StudentGroupConflict(2)
+        StudentGroupConflict(1), # this is killing the learning.... how can we improve it? we should do an initial layout based on student group. maybe AI actions are swap actions instead of move?!
+        TeacherConflict(2),
     ]
     return Constraints(constraints)
 

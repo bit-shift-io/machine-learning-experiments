@@ -47,7 +47,10 @@ class TA_QL_Base(TrainAlgo_Base):
         t0 = time.time()
 
         for ei in range(n_episodes):
-            self.train_episode(ei)
+            terminated = self.train_episode(ei)
+            if terminated:
+                break
+
             self.epsilon = max(self.epsilon * self.eps_decay, 0.01)
 
         t1 = time.time()
@@ -64,6 +67,7 @@ class TA_QL_Base(TrainAlgo_Base):
         state, info = self.env.reset()
         state = flatten(self.env.observation_space, state)
 
+        result = False
         done = False
         reward_total = 0
         reward_max = None
@@ -102,6 +106,7 @@ class TA_QL_Base(TrainAlgo_Base):
 
             if terminated:
                 print("success, finish traning")
+                result = True
                 break
 
             if truncated:
@@ -121,7 +126,7 @@ class TA_QL_Base(TrainAlgo_Base):
 
         t1 = time.time()
         print(f"Ep {ei:<3}\t{round((t1-t0), 1)}s\tr.av: {round(reward_avg, 1):<5}\tr.mx: {reward_max:<5}\tr.mn: {reward_min:<5}") 
-
+        return result
 
     def train_episode_start(self):
         pass
