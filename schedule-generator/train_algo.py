@@ -57,7 +57,7 @@ class TA_QL_Base(TrainAlgo_Base):
         print(f"{n_episodes} episodes completed in {round((t1-t0)/60, 1)}min") 
             
             
-    def train_episode(self, ei):
+    def train_episode(self, ei=0):
         """ Run an episode """
         t0 = time.time()
             

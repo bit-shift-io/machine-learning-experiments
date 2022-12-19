@@ -91,6 +91,37 @@ class TimetableEnvV0(gym.Env):
 
         return observation, info
 
+
+    def action_swap_room(self, lesson, offset):
+        idx = lesson.room.id
+        idx += offset
+        idx = idx % self.n_rooms
+
+        cur_room = lesson.room
+        next_room = self.timetable.room_list[idx]
+
+        other_lesson = next(filter(lambda l: l.room == next_room and l.timeslot == lesson.timeslot, self.timetable.lesson_list), None)
+        if other_lesson:
+            other_lesson.set_room(cur_room)
+
+        lesson.set_room(next_room)
+
+
+    def action_swap_timeslot(self, lesson, offset):
+        idx = lesson.timeslot.id
+        idx += offset
+        idx = idx % self.n_timeslots
+
+        cur_timeslot = lesson.timeslot
+        next_timeslot = self.timetable.timeslot_list[idx]
+
+        other_lesson = next(filter(lambda l: l.timeslot == next_timeslot and l.room == lesson.room, self.timetable.lesson_list), None)
+        if other_lesson:
+            other_lesson.set_timeslot(cur_timeslot)
+
+        lesson.set_timeslot(next_timeslot)
+
+
     def step(self, action):
          # Map the action (element of {0,1,2,3}) to the direction we walk in
         #direction = self._action_to_direction[action]
@@ -111,28 +142,16 @@ class TimetableEnvV0(gym.Env):
         # "previous room", "next room", "previous timeslot", "next timeslot", "remove from timetale", "add to timetable"
         match lesson_action:
             case 0: # "previous room"
-                idx = lesson.room.id
-                idx -= 1
-                idx = idx % self.n_rooms
-                lesson.set_room(self.timetable.room_list[idx])
+                self.action_swap_room(lesson, -1)
 
             case 1: # "next room"
-                idx = lesson.room.id
-                idx += 1
-                idx = idx % self.n_rooms
-                lesson.set_room(self.timetable.room_list[idx])
+                self.action_swap_room(lesson, 1)
 
             case 2: #  "previous timeslot"
-                idx = lesson.timeslot.id
-                idx -= 1
-                idx = idx % self.n_timeslots
-                lesson.set_timeslot(self.timetable.timeslot_list[idx])
+                self.action_swap_timeslot(lesson, -1)
 
             case 3: # "next timeslot"
-                idx = lesson.timeslot.id
-                idx += 1
-                idx = idx % self.n_timeslots
-                lesson.set_timeslot(self.timetable.timeslot_list[idx])
+                self.action_swap_timeslot(lesson, 1)
 
             #case 4: # "remove from timetable"
             #    pass # TODO:
@@ -151,10 +170,6 @@ class TimetableEnvV0(gym.Env):
         if hard_score == self.max_hard_score:
             print("Solution found!")
             self.timetable.print()
-
-            # crank the score!
-            hard_score *= 100
-            soft_score *= 100
             terminated = True
 
         reward = hard_score #1 if terminated else 0  # Binary sparse rewards
