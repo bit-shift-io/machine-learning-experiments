@@ -46,6 +46,8 @@ class Timeslot:
     day_of_week: str
     start_time: datetime.time
     end_time: datetime.time
+    label: str
+    is_locked: bool
 
     def __hash__(self):
         return self.id
@@ -55,6 +57,7 @@ class Timeslot:
         self.day_of_week = day_of_week
         self.start_time = start_time
         self.end_time = end_time
+        self.is_locked = False
 
     def __str__(self):
         return (
@@ -72,22 +75,21 @@ class Lesson:
     subject: str
     teacher: Teacher
     student_group: StudentGroup
-    timeslot: Timeslot
+    timeslots: list[Timeslot]
+    n_timeslots: int # how many timeslots this lesson must occupy
     room: Room
-
-    #constraints_pass: list
-    #constraints_fail: list
 
     def __hash__(self):
         return self.id
 
-    def __init__(self, id, subject, teacher, student_group, timeslot=None, room=None):
+    def __init__(self, id, subject, teacher, student_group, n_timeslots):
         self.id = id
         self.subject = subject
         self.teacher = teacher
         self.student_group = student_group
-        self.timeslot = timeslot
-        self.room = room
+        self.timeslots = []
+        self.n_timeslots = n_timeslots
+        self.room = None
         self.constraints_fail = []
         self.constraints_pass = []
 
@@ -154,7 +156,6 @@ class Timetable:
 
     def ordered_layout(self):
         """ Do a simple layout where each lesson is just placed down in order """
-        # TODO: change this do default to filling each timeslot by student group
         room_idx = 0
         timeslot_idx = 0
 
@@ -163,6 +164,9 @@ class Timetable:
             student_group, lessons = group
             for li, lesson in enumerate(lessons):
                 lesson.set_room(self.room_list[gi])
+
+                # TODO: fill up the timeslots without the lesson taking N slots bridging any locked timeslots (eg. recess and lunch)
+                n_timeslots = lesson.n_timeslots
                 lesson.set_timeslot(self.timeslot_list[li])
 
                 #timeslot_idx += 1
