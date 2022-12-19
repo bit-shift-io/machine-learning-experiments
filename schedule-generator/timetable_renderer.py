@@ -11,7 +11,7 @@ class TimetableRenderer:
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
     def __init__(self, render_mode):
-        self.window_size = 800  # The size of the PyGame window
+        self.window_size = (1500, 900)  # The size of the PyGame window
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
@@ -31,14 +31,14 @@ class TimetableRenderer:
         if self.window is None and self.render_mode == "human":
             pygame.init()
             pygame.display.init()
-            self.window = pygame.display.set_mode((self.window_size, self.window_size))
+            self.window = pygame.display.set_mode(self.window_size)
             self.font = pygame.font.SysFont(None, 16)
         if self.clock is None and self.render_mode == "human":
             self.clock = pygame.time.Clock()
 
         #timetable.print()
 
-        canvas = pygame.Surface((self.window_size, self.window_size))
+        canvas = pygame.Surface(self.window_size)
         canvas.fill((255, 255, 255))
 
         room_list = timetable.room_list
@@ -63,15 +63,15 @@ class TimetableRenderer:
         header_size = (40, 10)
 
         pix_square_size = (
-            (self.window_size - header_size[0]) / len(room_list),
-            (self.window_size - header_size[1]) / len(timeslot_list)
+            (self.window_size[0] - header_size[0]) / len(room_list),
+            (self.window_size[1] - header_size[1]) / len(timeslot_list)
         )  # The size of a single grid square in pixels
 
         pygame.draw.line(
                     canvas,
                     0,
                     (0, header_size[1]),
-                    (self.window_size, header_size[1]),
+                    (self.window_size[0], header_size[1]),
                     width=1,
                 )
 
@@ -79,7 +79,7 @@ class TimetableRenderer:
                     canvas,
                     0,
                     (header_size[0], 0),
-                    (header_size[0], self.window_size),
+                    (header_size[0], self.window_size[1]),
                     width=1,
                 )
 
@@ -104,7 +104,7 @@ class TimetableRenderer:
                     canvas,
                     0,
                     (header_size[0] + (pix_square_size[0] * x), 0),
-                    (header_size[0] + (pix_square_size[0] * x), self.window_size),
+                    (header_size[0] + (pix_square_size[0] * x), self.window_size[1]),
                     width=1,
                 )
         
@@ -114,7 +114,7 @@ class TimetableRenderer:
                     canvas,
                     0,
                     (0, header_size[1] + (pix_square_size[1] * y)),
-                    (self.window_size, header_size[1] + (pix_square_size[1] * y)),
+                    (self.window_size[0], header_size[1] + (pix_square_size[1] * y)),
                     width=1,
                 )
 
@@ -155,21 +155,25 @@ class TimetableRenderer:
         lesson_list = timetable.lesson_list
         lessons = list(filter(lambda l: l.room == room and l.timeslot == timeslot, lesson_list))
 
-        lesson_height = 10
+        line_height = 10
 
-        sub_timetable = Timetable([timeslot], [room], lessons, [], [])
-        max_hard_score, max_soft_score = constraints.max_score(sub_timetable)
-        hard_score, soft_score = constraints.test(sub_timetable)
+        #sub_timetable = Timetable([timeslot], [room], lessons, [], [])
+        #max_hard_score, max_soft_score = constraints.max_score(sub_timetable)
+        #hard_score, soft_score = constraints.test(sub_timetable)
 
         for li, lesson in enumerate(lessons):
-            label = lesson.subject + " | " + lesson.teacher.name + " | " + lesson.student_group.name
+            label = lesson.subject
             img = self.font.render(label, True, 0)
-            canvas.blit(img, (start_pos[0], start_pos[1] + (lesson_height * li)))
+            canvas.blit(img, (start_pos[0], start_pos[1] + (line_height * li)))
+
+            label = lesson.teacher.name
+            img = self.font.render(label, True, 0)
+            canvas.blit(img, (start_pos[0], start_pos[1] + (line_height * (li + 1))))
 
         # draw the score for this cell
-        label = str(hard_score)# + " | " + str(max_hard_score)
-        img = self.font.render(label, True, GREEN if hard_score == max_hard_score else RED)
-        canvas.blit(img, (start_pos[0], start_pos[1] + size[1] - lesson_height))
+        #label = str(hard_score)# + " | " + str(max_hard_score)
+        #img = self.font.render(label, True, GREEN if hard_score == max_hard_score else RED)
+        #canvas.blit(img, (start_pos[0], start_pos[1] + size[1] - line_height))
 
 
     def close(self):

@@ -11,11 +11,17 @@ class Teacher:
     id: int
     name: str
 
+    def __hash__(self):
+        return self.id
+
 
 @dataclass
 class StudentGroup:
     id: int
     name: str
+
+    def __hash__(self):
+        return self.id
 
 
 @dataclass

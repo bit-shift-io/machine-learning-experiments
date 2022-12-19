@@ -1,6 +1,7 @@
 from timetable import Timetable, Timeslot, Room, Lesson, Teacher, StudentGroup
 from datetime import time
 from constraints import Constraints, RoomConflict, TeacherConflict, StudentGroupConflict
+import math
 
 def constraint_list():
     constraints = [
@@ -22,24 +23,24 @@ def day_timeslots_7(day, start_idx):
     ]
 
 def generate_problem_large():
-    teacher_list = [Teacher(i, f"Teacher {i}") for i in range(40)]
-    student_group_list = [StudentGroup(i, f"Grade {i+8}") for i in range(5)]
+    n_teachers = 40
+    n_rooms = 10 #33 # cut down so we can view all the rooms
+    n_student_groups = 5
+
+    teacher_list = [Teacher(i, f"Teacher {i}") for i in range(n_teachers)]
+    student_group_list = [StudentGroup(i, f"Grade {i+8}") for i in range(n_student_groups)]
     timeslot_list = [] + day_timeslots_7('MON', 0) + day_timeslots_7('TUES', 7) + day_timeslots_7('WED', 14) + day_timeslots_7('THURS', 21) + day_timeslots_7('FRI', 28)
-    room_list = [StudentGroup(i, f"Room {i}") for i in range(33)]
+    room_list = [StudentGroup(i, f"Room {i}") for i in range(n_rooms)]
 
     # each grade (student group) needs 15 subjects
     subjects = ['Math 1', 'Math 2', 'Physics', 'English', 'Chemistry', 'Biology', 'Geography', 'Economics', 'Tech Studies', 'Gym', 'Home Ec', 'Religion', 'Phsycology', 'I.T.', 'French']
     lesson_list = []
-    tii = 0
     ti = 0
-    ti_inc = len(teacher_list) / len(subjects) # how many subjects does each teacher need to teach to cover every lesson?
     for sgi, sg in enumerate(student_group_list):
         for si in range(len(subjects)):
-            lesson_list.append(Lesson(0, f"{subjects[si]} for Grade {si}", teacher_list[ti], student_group_list[sgi]))
-            tii += 1
-            if tii >= ti_inc:
-                tii = 0
-                ti += 1
+            lesson_list.append(Lesson(0, f"G{sgi+8} {subjects[si]} ", teacher_list[ti], student_group_list[sgi]))
+            ti += 1
+            ti = ti % len(teacher_list)
 
     return Timetable(timeslot_list, room_list, lesson_list, teacher_list, student_group_list)
 
