@@ -28,10 +28,13 @@ class TimetableEnvV1(TimetableEnvV0):
             # TODO: setup constraint voliaitions in lessons
             # TODO: also add in here Teacher and StudentGroups so AI can map issues so we might nnot even nneed constraints
             #       as currenntly the AI knows nnothing about teachers or student groups so can only guess!
-            arr = np.array([self.n_rooms, self.n_timeslots, self.n_teachers, self.n_student_groups])
+            arr = np.array([self.n_rooms, self.n_teachers, self.n_student_groups])
+            space = spaces.MultiDiscrete(arr)
+            self.observation_space[id] = space
 
-            #arr = np.concatenate((arr, const_arr), axis=0)
-            space = spaces.MultiDiscrete(arr) # 0 represents nothing
+            # lessons can take up multiple timeslots
+            id = f"lesson_{lesson.id}_timeslots"
+            space = spaces.MultiBinary([self.n_timeslots]) 
             self.observation_space[id] = space
 
 
@@ -47,10 +50,18 @@ class TimetableEnvV1(TimetableEnvV0):
             #for const in lesson.constraints_fail:
             #    const_arr[const.id] = 1
 
-            arr = np.array([lesson.room.id, lesson.timeslots.id, lesson.teacher.id, lesson.student_group.id])
+            arr = np.array([lesson.room.id, lesson.teacher.id, lesson.student_group.id])
             #arr = np.concatenate((arr, const_arr), axis=0)
             o[id] = arr
-            
+
+            # lessons can take up multiple timeslots
+            id = f"lesson_{lesson.id}_timeslots"
+            arr = np.zeros(self.n_timeslots)
+            for t in lesson.timeslots:
+                arr[t.id] = 1
+
+            o[id] = arr
+ 
         return o
 
 
