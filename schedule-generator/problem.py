@@ -17,9 +17,9 @@ def day_timeslots_7(day, start_idx):
         Timeslot(start_idx+1, day, time(hour=9, minute=0), time(hour=10, minute=0)),
         Timeslot(start_idx+2, day, time(hour=10, minute=0), time(hour=11, minute=0)),
         Timeslot(start_idx+3, day, time(hour=11, minute=0), time(hour=12, minute=0)),
-        Timeslot(start_idx+4, day, time(hour=12, minute=0), time(hour=14, minute=0)),
-        Timeslot(start_idx+5, day, time(hour=13, minute=0), time(hour=15, minute=0)),
-        Timeslot(start_idx+6, day, time(hour=14, minute=0), time(hour=16, minute=0)),
+        Timeslot(start_idx+4, day, time(hour=12, minute=0), time(hour=13, minute=0)),
+        Timeslot(start_idx+5, day, time(hour=13, minute=0), time(hour=14, minute=0)),
+        Timeslot(start_idx+6, day, time(hour=14, minute=0), time(hour=15, minute=0)),
     ]
 
 # 3 lessons over 5 hours
@@ -33,7 +33,7 @@ def subject_lessons_3_in_5(start_idx, subject_name, teacher, student_group):
 
 def generate_problem_large():
     n_teachers = 40
-    n_rooms = 10 #33 # cut down so we can view all the rooms
+    n_rooms = 12 #33 # cut down so we can view all the rooms
     n_student_groups = 5
 
     teacher_list = [Teacher(i, f"Teacher {i}") for i in range(n_teachers)]
@@ -41,8 +41,9 @@ def generate_problem_large():
     timeslot_list = [] + day_timeslots_7('MON', 0) + day_timeslots_7('TUES', 7) + day_timeslots_7('WED', 14) + day_timeslots_7('THURS', 21) + day_timeslots_7('FRI', 28)
     room_list = [StudentGroup(i, f"Room {i}") for i in range(n_rooms)]
 
-    # each grade (student group) needs 15 subjects
-    subjects = ['Math 1', 'Math 2', 'Physics', 'English', 'Chemistry', 'Biology', 'Geography', 'Economics', 'Tech Studies', 'Gym', 'Home Ec', 'Religion', 'Phsycology', 'I.T.', 'French']
+    # only 7 subjects fit into 35 lessons per week with 5 each subject taking 5 lessons! each grade (student group) needs 15 subjects
+    subjects = ['Math', 'Geography', 'Physics', 'English', 'Elective A', 'Elective B', 'Elective C']
+    #subjects = ['Math 1', 'Math 2', 'Physics', 'English', 'Chemistry', 'Biology', 'Geography', 'Economics', 'Tech Studies', 'Gym', 'Home Ec', 'Religion', 'Phsycology', 'I.T.', 'French']
     lesson_list = []
     ti = 0
     for sgi, sg in enumerate(student_group_list):

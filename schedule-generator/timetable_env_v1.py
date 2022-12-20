@@ -47,7 +47,7 @@ class TimetableEnvV1(TimetableEnvV0):
             #for const in lesson.constraints_fail:
             #    const_arr[const.id] = 1
 
-            arr = np.array([lesson.room.id, lesson.timeslot.id, lesson.teacher.id, lesson.student_group.id])
+            arr = np.array([lesson.room.id, lesson.timeslots.id, lesson.teacher.id, lesson.student_group.id])
             #arr = np.concatenate((arr, const_arr), axis=0)
             o[id] = arr
             

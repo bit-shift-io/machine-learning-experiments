@@ -45,21 +45,6 @@ class TimetableRenderer:
         lesson_list = timetable.lesson_list
         timeslot_list = timetable.timeslot_list
 
-        timeslot_room_lesson_triple_list = list(map(lambda the_lesson: (the_lesson.timeslot, the_lesson.room, the_lesson),
-                                            filter(lambda the_lesson:
-                                                    the_lesson.timeslot is not None and
-                                                    the_lesson.room is not None,
-                                            lesson_list)))
-        lesson_map = dict()
-        for timeslot, room, lesson in timeslot_room_lesson_triple_list:
-            if timeslot in lesson_map:
-                if room in lesson_map[timeslot]:
-                    lesson_map[timeslot][room].append(lesson)
-                else:
-                    lesson_map[timeslot][room] = [lesson]
-            else:
-                lesson_map[timeslot] = {room: [lesson]}
-
         header_size = (40, 10)
 
         pix_square_size = (
@@ -125,7 +110,6 @@ class TimetableRenderer:
                             header_size[1] + (pix_square_size[1] * ti))
                 room = room_list[ri]
                 timeslot = timeslot_list[ti]
-                #lessons = lesson_map[ti][ri]
                 self.draw_room_timeslot(timetable, constraints, canvas, room, timeslot, start_pos, pix_square_size)
 
 

@@ -49,15 +49,19 @@ class Constraint:
         return 0, 0
 
 
+def intersection(a, b):
+    return (bool(set(a) & set(b)))
+
     
 class RoomConflict(Constraint):
-    """ Is there any other lesson booked in the same room at the same timeslot? """
+    """ Is there any other lesson booked in the same room using the same timeslot(s)? """
     def test(self, c: Constraints, t: Timetable):
         h = 0
         s = 0
         lesson_list = t.lesson_list
         for l in lesson_list:
-            r = list(filter(lambda l2: l != l2 and l2.timeslot == l.timeslot and l2.room == l.room, lesson_list))
+            # https://stackoverflow.com/questions/69445252/check-if-an-array-contains-any-element-of-another-array-in-python
+            r = list(filter(lambda l2: l != l2 and l2.room == l.room and intersection(l.timeslots, l2.timeslots), lesson_list))
             if len(r) <= 0:
                 h += 1
             else:
@@ -80,7 +84,7 @@ class TeacherConflict(Constraint):
 
         lesson_list = t.lesson_list
         for l in lesson_list:
-            r = list(filter(lambda l2: l != l2 and l2.timeslot == l.timeslot and l2.teacher == l.teacher, lesson_list))
+            r = list(filter(lambda l2: l != l2 and l2.teacher == l.teacher and intersection(l.timeslots, l2.timeslots), lesson_list))
             if len(r) <= 0:
                 h += 1
                 p += 1
@@ -101,7 +105,7 @@ class StudentGroupConflict(Constraint):
         s = 0
         lesson_list = t.lesson_list
         for l in lesson_list:
-            r = list(filter(lambda l2: l != l2 and l2.timeslot == l.timeslot and l2.student_group == l.student_group, lesson_list))
+            r = list(filter(lambda l2: l != l2 and l2.student_group == l.student_group and intersection(l.timeslots, l2.timeslots), lesson_list))
             if len(r) <= 0:
                 h += 1
             else:

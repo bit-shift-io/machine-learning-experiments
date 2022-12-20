@@ -47,7 +47,7 @@ class Timeslot:
     start_time: datetime.time
     end_time: datetime.time
     label: str
-    is_locked: bool
+    locked: bool
 
     def __hash__(self):
         return self.id
@@ -57,7 +57,8 @@ class Timeslot:
         self.day_of_week = day_of_week
         self.start_time = start_time
         self.end_time = end_time
-        self.is_locked = False
+        self.label = None
+        self.locked = False
 
     def __str__(self):
         return (
@@ -93,8 +94,8 @@ class Lesson:
         self.constraints_fail = []
         self.constraints_pass = []
 
-    def set_timeslot(self, new_timeslot):
-        self.timeslot = new_timeslot
+    def set_timeslots(self, new_timeslots):
+        self.timeslots = new_timeslots
 
     def set_room(self, new_room):
         self.room = new_room
@@ -146,45 +147,82 @@ class Timetable:
             lesson.set_room(None)
             lesson.set_timeslot(None)
 
+    """
     def randomize_layout(self):
-        """ Make it all random, shuffle everything """
+        "" " Make it all random, shuffle everything "" "
         for lesson in self.lesson_list:
             room_idx = random.randint(0, len(self.room_list) - 1)
             timeslot_idx = random.randint(0, len(self.timeslot_list) - 1)
             lesson.set_room(self.room_list[room_idx])
             lesson.set_timeslot(self.timeslot_list[timeslot_idx])
+    """
+
+    def find_consecutive_timeslots(self, n_timeslots, timeslot_list):
+        """ Given a list of timeslots, find N in a row that are connected without breaks or locked """
+        len_timeslots_list = len(timeslot_list)
+        for ti in range(len_timeslots_list):
+            t = timeslot_list[ti]
+            if t.locked:
+                continue
+
+            r = [t]
+            if len(r) == n_timeslots:
+                return r
+
+            for ni in range(ti + 1, len_timeslots_list):
+                next_t = timeslot_list[ni]
+                if next_t.locked:
+                    break
+
+                if t.day_of_week != next_t.day_of_week:
+                    break
+
+                if t.end_time != next_t.start_time:
+                    break
+
+                # so these 2 timeslots are consecutive!
+                t = next_t
+                r.append(t)
+
+                if len(r) == n_timeslots:
+                    return r
+
+        return None
+
+
+    def find_free_timeslots_for_room(self, room):
+        """ Given a room, find any vacant timeslots """
+        timeslots = self.timeslot_list
+        room_lessons = list(filter(lambda l: l.room == room, self.lesson_list))
+
+        room_timeslots = []
+        for lesson in room_lessons:
+            room_timeslots += lesson.timeslots
+
+        free_timeslots = list(filter(lambda t: t not in room_timeslots, timeslots))
+        return free_timeslots
+
 
     def ordered_layout(self):
         """ Do a simple layout where each lesson is just placed down in order """
-        room_idx = 0
-        timeslot_idx = 0
+        for lesson in self.lesson_list:
+            n_timeslots = lesson.n_timeslots
+            found = False
+            for ri, room in enumerate(self.room_list):
+                free_timeslots = self.find_free_timeslots_for_room(room)
+                consecutive_timeslots = self.find_consecutive_timeslots(n_timeslots, free_timeslots)
+                if consecutive_timeslots:
+                    lesson.set_timeslots(consecutive_timeslots)
+                    lesson.set_room(room)
+                    found = True
+                    break
 
-        student_group_lessons = [(k, list(g)) for k, g in itertools.groupby(self.lesson_list, lambda l: l.student_group)]
-        for gi, group in enumerate(student_group_lessons):
-            student_group, lessons = group
-            for li, lesson in enumerate(lessons):
-                lesson.set_room(self.room_list[gi])
+            if not found:
+                print("Not enough rooms to fit the lessons in. Try breaking down subjects into smaller lessons?")
+                return
+        
+        return
 
-                # TODO: fill up the timeslots without the lesson taking N slots bridging any locked timeslots (eg. recess and lunch)
-                n_timeslots = lesson.n_timeslots
-                lesson.set_timeslot(self.timeslot_list[li])
-
-                #timeslot_idx += 1
-                #if timeslot_idx >= len(self.timeslot_list):
-                #    timeslot_idx = 0
-
-
-        #for lesson in self.lesson_list:
-        #    lesson.set_room(self.room_list[room_idx])
-        #    lesson.set_timeslot(self.timeslot_list[timeslot_idx])
-        #
-        #    room_idx += 1
-        #    if room_idx >= len(self.room_list):
-        #        room_idx = 0
-        #        timeslot_idx += 1
-        #
-        #    if timeslot_idx >= len(self.timeslot_list):
-        #        timeslot_idx = 0
 
     def print(self):
         print_timetable(self)
