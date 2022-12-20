@@ -137,7 +137,7 @@ class TimetableRenderer:
 
     def draw_room_timeslot(self, timetable, constraints, canvas, room, timeslot, start_pos, size):
         lesson_list = timetable.lesson_list
-        lessons = list(filter(lambda l: l.room == room and l.timeslot == timeslot, lesson_list))
+        lessons = list(filter(lambda l: l.room == room and timeslot in l.timeslots, lesson_list))
 
         line_height = 10
 
