@@ -6,6 +6,11 @@ from functools import reduce
 import random
 import itertools
 
+# Used to test for intersection of 2 arrays of timeslots
+def intersection(a, b):
+    return (bool(set(a) & set(b)))
+
+
 @dataclass
 class Teacher:
     id: int
@@ -157,6 +162,7 @@ class Timetable:
             lesson.set_timeslot(self.timeslot_list[timeslot_idx])
     """
 
+    
     def find_consecutive_timeslots(self, n_timeslots, timeslot_list):
         """ Given a list of timeslots, find N in a row that are connected without breaks or locked """
         len_timeslots_list = len(timeslot_list)
@@ -188,6 +194,10 @@ class Timetable:
                     return r
 
         return None
+
+    def find_consecutive_timeslots_reverse(self, n_timeslots, timeslot_list):
+        """ Same as find_consecutive_timeslots but searches in the reverse direction """
+        return self.find_consecutive_timeslots(n_timeslots, timeslot_list) # just do this for now....
 
 
     def find_free_timeslots_for_room(self, room):
@@ -225,7 +235,8 @@ class Timetable:
 
 
     def print(self):
-        print_timetable(self)
+        #print_timetable(self) # TODO: support multiple timeslots
+        pass
 
 
 

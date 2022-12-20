@@ -11,9 +11,9 @@ timetable = generate_problem_large()
 constraints = constraint_list()
 
 # debug the initial layout of the timetable
-timetable.ordered_layout()
-timetable_renderer = TimetableRenderer(render_mode='human')
-timetable_renderer.render(timetable, constraints)
+#timetable.ordered_layout()
+#timetable_renderer = TimetableRenderer(render_mode='human')
+#timetable_renderer.render(timetable, constraints)
 
 env = TimetableEnvV1(None, timetable, constraints, max_episode_steps=100)
 dnn = DNN(env.state_size(), env.action_size(), hidden_dim=128, lr=0.0008)

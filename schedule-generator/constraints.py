@@ -4,7 +4,7 @@ from optapy.constraint import ConstraintFactory, Joiners
 from timetable import Lesson
 from datetime import datetime, date, timedelta
 from dataclasses import dataclass
-from timetable import Timetable
+from timetable import Timetable, intersection
 
 # Trick since timedelta only works with datetime instances
 today = date.today()
@@ -49,10 +49,7 @@ class Constraint:
         return 0, 0
 
 
-def intersection(a, b):
-    return (bool(set(a) & set(b)))
 
-    
 class RoomConflict(Constraint):
     """ Is there any other lesson booked in the same room using the same timeslot(s)? """
     def test(self, c: Constraints, t: Timetable):

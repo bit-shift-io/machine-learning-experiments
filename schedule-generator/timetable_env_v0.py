@@ -1,6 +1,6 @@
 # https://www.gymlibrary.dev/content/environment_creation/
 
-from timetable import Timetable
+from timetable import Timetable, intersection
 from timetable_renderer import TimetableRenderer
 import gym
 from gym import spaces
@@ -93,6 +93,8 @@ class TimetableEnvV0(gym.Env):
 
 
     def action_swap_room(self, lesson, offset):
+        # TODO: support multiple timeslots
+
         idx = lesson.room.id
         idx += offset
         idx = idx % self.n_rooms
@@ -100,14 +102,44 @@ class TimetableEnvV0(gym.Env):
         cur_room = lesson.room
         next_room = self.timetable.room_list[idx]
 
-        other_lesson = next(filter(lambda l: l.room == next_room and l.timeslot == lesson.timeslot, self.timetable.lesson_list), None)
-        if other_lesson:
-            other_lesson.set_room(cur_room)
+        other_lessons = list(filter(lambda l: l.room == next_room and intersection(l.timeslots, lesson.timeslots), self.timetable.lesson_list))
+        if (len(other_lessons) > 1):
+            print("oh dear, we cant swap rooms! unless the two lessons are the same size together, or one of them is the same size as this lesson")
+            return
+
+        if (len(other_lessons) == 1):
+            other_lessons[0].set_room(cur_room)
 
         lesson.set_room(next_room)
 
 
     def action_swap_timeslot(self, lesson, offset):
+        # TODO: support multiple timeslots
+
+        next_timeslots = None
+        while True:
+            if offset > 0:
+                timeslot_list = list(filter(lambda t: t.id > lesson.timeslots[-1].id, self.timetable.timeslot_list))
+                next_timeslots = self.timetable.find_consecutive_timeslots(lesson.n_timeslots, timeslot_list)
+            else:
+                timeslot_list = list(filter(lambda t: t.id < lesson.timeslots[0].id, self.timetable.timeslot_list))
+                next_timeslots = self.timetable.find_consecutive_timeslots_reverse(lesson.n_timeslots, timeslot_list)
+
+            if next_timeslots:
+                # TODO: check if this holds a single lesson... for now assume it does
+                break
+
+        other_lessons = list(filter(lambda l: intersection(l.timeslots, next_timeslots) and l.room == lesson.room, self.timetable.lesson_list))
+        if (len(other_lessons) > 1):
+            print("oh dear, we cant swap timeslots! unless the two lessons are the same size together, or one of them is the same size as this lesson")
+            return
+
+        if (len(other_lessons) == 1):
+            other_lessons[0].set_timeslots(lesson.timeslots)
+
+        lesson.set_timeslots(next_timeslots)
+
+        """
         idx = lesson.timeslot.id
         idx += offset
         idx = idx % self.n_timeslots
@@ -120,6 +152,7 @@ class TimetableEnvV0(gym.Env):
             other_lesson.set_timeslot(cur_timeslot)
 
         lesson.set_timeslot(next_timeslot)
+        """
 
 
     def step(self, action):
