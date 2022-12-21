@@ -25,15 +25,15 @@ def day_timeslots_7(day, start_idx):
 # 3 lessons over 5 hours
 def subject_lessons_3_in_5(start_idx, subject_name, teacher, student_group):
     return [
-        Lesson(start_idx+0, f"G{student_group.id+8} {subject_name} (1/3)", teacher, student_group, 2),
-        Lesson(start_idx+1, f"G{student_group.id+8} {subject_name} (2/3)", teacher, student_group, 2),
-        Lesson(start_idx+2, f"G{student_group.id+8} {subject_name} (3/3)", teacher, student_group, 1)
+        Lesson(start_idx+0, f"G{student_group.id+8} {subject_name} (1/3) DBL", teacher, student_group, 2),
+        Lesson(start_idx+1, f"G{student_group.id+8} {subject_name} (2/3) DBL", teacher, student_group, 2),
+        Lesson(start_idx+2, f"G{student_group.id+8} {subject_name} (3/3) SGL", teacher, student_group, 1)
     ]
 
 
 def generate_problem_large():
     n_teachers = 40
-    n_rooms = 12 #33 # cut down so we can view all the rooms
+    n_rooms = 6 #33 # cut down so we can view all the rooms
     n_student_groups = 5
 
     teacher_list = [Teacher(i, f"Teacher {i}") for i in range(n_teachers)]

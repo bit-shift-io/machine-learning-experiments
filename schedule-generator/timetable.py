@@ -150,7 +150,7 @@ class Timetable:
     def clear(self):
         for lesson in self.lesson_list:
             lesson.set_room(None)
-            lesson.set_timeslot(None)
+            lesson.set_timeslots([])
 
     """
     def randomize_layout(self):
@@ -215,6 +215,7 @@ class Timetable:
 
     def ordered_layout(self):
         """ Do a simple layout where each lesson is just placed down in order """
+        self.clear()
         for lesson in self.lesson_list:
             n_timeslots = lesson.n_timeslots
             found = False

@@ -14,7 +14,7 @@ constraints = constraint_list()
 #timetable_renderer = TimetableRenderer(render_mode='human')
 #timetable_renderer.render(timetable, constraints)
 
-env = TimetableEnvV0(None, timetable, constraints, max_episode_steps=100)
+env = TimetableEnvV0('human', timetable, constraints, max_episode_steps=100)
 dnn = DNN(env.state_size(), env.action_size(), hidden_dim=128, lr=0.0008)
 
 # choose a training algorithm

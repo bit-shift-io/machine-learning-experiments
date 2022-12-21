@@ -134,13 +134,19 @@ class TimetableEnvV0(gym.Env):
             return
 
         if (len(other_lessons) == 1):
-            other_lessons[0].set_room(cur_room)
+            other_lesson = other_lessons[0]
+            if other_lesson.n_timeslots != lesson.n_timeslots:
+                print("oh dear, we couldn't swap rooms!... need more work to handle swapping")
+                return
+
+            other_lesson.set_room(cur_room)
 
         lesson.set_room(next_room)
 
 
     def action_swap_timeslot(self, lesson, offset):
         # TODO: support multiple timeslots
+        return
 
         next_timeslots = None
         while True:
@@ -157,11 +163,26 @@ class TimetableEnvV0(gym.Env):
 
         other_lessons = list(filter(lambda l: intersection(l.timeslots, next_timeslots) and l.room == lesson.room, self.timetable.lesson_list))
         if (len(other_lessons) > 1):
-            print("oh dear, we cant swap timeslots! unless the two lessons are the same size together, or one of them is the same size as this lesson")
-            return
+            # here if multiple lessons overlap where we wre trying to move, see if 
+            # any of them are the same n_timeslots as us - we will just swap with them!
+            found = False
+            for other_lesson in other_lessons:
+                if other_lesson.n_timeslots == lesson.n_timeslots:
+                    other_lesson.set_timeslots(lesson.timeslots)
+                    found = True
+                    break
+
+            if not found:
+                print("oh dear, we couldn't swap timeslots!... need more work to handle swapping + not cross a break or locked timeslot!")
+                return
 
         if (len(other_lessons) == 1):
-            other_lessons[0].set_timeslots(lesson.timeslots)
+            other_lesson = other_lessons[0]
+            if other_lesson.n_timeslots != lesson.n_timeslots:
+                print("oh dear, we couldn't swap timeslots!... need more work to handle swapping + not cross a break or locked timeslot!")
+                return
+
+            other_lesson.set_timeslots(lesson.timeslots)
 
         lesson.set_timeslots(next_timeslots)
 
@@ -226,10 +247,10 @@ class TimetableEnvV0(gym.Env):
         hard_score, soft_score = self.constraints.test(self.timetable)
 
         terminated = False
-        if hard_score == self.max_hard_score:
-            print("Solution found!")
-            self.timetable.print()
-            terminated = True
+        #if hard_score == self.max_hard_score:
+        #    print("Solution found!")
+        #    self.timetable.print()
+        #    terminated = True
 
         reward = hard_score #1 if terminated else 0  # Binary sparse rewards
         observation = self._get_obs()
