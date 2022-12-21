@@ -1,6 +1,6 @@
 # https://www.gymlibrary.dev/content/environment_creation/
 
-from timetable import Timetable, intersection
+from timetable import Timetable, intersection, assign_ids
 from timetable_renderer import TimetableRenderer
 import gym
 from gym import spaces
@@ -149,6 +149,19 @@ class TimetableEnvV0(gym.Env):
         # swap timeslots in same room
         # TODO: support multiple timeslots
 
+        # keep it simple, swap the lessons in the timetable and just called ordered_layout again!
+        lesson_id = lesson.id
+        next_lesson_id = (lesson_id + offset) % len(self.timetable.lesson_list)
+
+        # swap
+        self.timetable.lesson_list[lesson_id], self.timetable.lesson_list[next_lesson_id] = self.timetable.lesson_list[next_lesson_id], self.timetable.lesson_list[lesson_id]
+
+        # update id's
+        assign_ids(self.timetable.lesson_list)
+
+        self.timetable.ordered_layout()
+
+        """
         if offset > 0:
             last_timeslot = lesson.timeslots[-1]
             at_end = (last_timeslot.id + 1) == len(self.timetable.timeslot_list)
@@ -206,6 +219,7 @@ class TimetableEnvV0(gym.Env):
 
             else:
                 print("unhandled scenario")
+        """
 
         return
 

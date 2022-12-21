@@ -250,6 +250,8 @@ class Timetable:
     def ordered_layout(self):
         """ Do a simple layout where each lesson is just placed down in order """
         self.clear()
+
+        # TODO: handle lesson groups to ensure electives(lesson groups) all get the same timeslot just with different rooms
         for lesson in self.lesson_list:
             n_timeslots = lesson.n_timeslots
             found = False
