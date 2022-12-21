@@ -71,3 +71,36 @@ The common constraints are…
     Part time teachers having allocated days off (ie someone who is 0.6FTE shouldn’t be teaching 5 days a week)
 
 We use a program called ‘General Access’. It is also referred to as timetabler. The graphical interface looks like it has come from Windows XP.
+
+
+
+
+You say there are 15 subjects per which I have assumed are just 5 lessons per week, which would give me a need for 75 time slots per week, which doesn't fit into the 35 per week (7 per day).
+
+I have assumed you have some kind of elective system to deal with this?
+
+Yes, you are correct, it does run off an elective scheme, it also runs such that there is non-equal allocation of lessons per subject that varies from year to year.
+
+ 
+
+Year 7: 5 lessons each for English, Maths, Science, Humanities, 3 lessons each for German, PE, 2 for Christian living. That is 28 lessons so far. 2 for an arts elective line (music or drama, the class is split in to and will do one semester of each, but essentially requires 2 class rooms with 2 teachers for the year), then there is another elective line which has 5 lessons. This is split between design tech, home ec, art and digital tech. They do digital tech / art for a term each, then home ec and tech for term each. The digital tech/art and home ec/design tech semesters swap over with year 8 (as year 7 digital tech/art happens, year 8s do home ec/design tech, then they switch over). So you would need to be running this elective at the same time as a year 8 class. (there are 3 classes per year level).
+
+ 
+
+Year 8: Essentially mirror what happens with year 7, as far as I can see. (there are 3 classes per year level).
+
+ 
+
+Year 9: 5 lessons each for Maths, English, Science, Humanities, elective A, elective B, then 3 for PE, 2 for Christian living. Elective A and B basically, students choose from a pool of available options, there are typically 6 choices that all year 9 students have access to at the same time. The rest of their core subjects are done with the same class (there are 3 classes per year level).
+
+ 
+
+Year 10: 5 lessons each for Maths, English, Science, Elective A and Elective B, 3 for PE and PLP (the most useless subject in existence, but a SACE requirement), then 4 for history or geography (a semester of each). Operates off a similar premise as other years. (there are 3 classes per year level).
+
+ 
+
+Year 11: 7 lines with 5 lessons. One of these lines is split, 3 lessons of research project and 2 lessons of Christian living. One line is a study line (they share this with year 12s in the same room with the same teacher, class size can be as high as the mid 40s dependent on subject combinations).
+
+ 
+
+Year 12: 7 lines with 5 lessons. One of these lines is split, 3 lessons of Christian living and 2 lessons as early departure. Two lines are a study line (they share this with year 11s in the same room with the same teacher, class size can be as high as the mid 40s dependent on subject combinations). 
