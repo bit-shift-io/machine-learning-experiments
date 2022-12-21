@@ -22,22 +22,34 @@ def day_timeslots_7(day, start_idx):
         Timeslot(start_idx+6, day, time(hour=14, minute=0), time(hour=15, minute=0)),
     ]
 
-# 3 lessons over 5 hours
-def subject_lessons_3_in_5(start_idx, subject_name, teacher, student_group):
+# 5 hours of lessons in 3 sessions
+def subject_lessons_5(start_idx, subject_name, teacher, student_group):
     return [
-        Lesson(start_idx+0, f"G{student_group.id+8} {subject_name} (1/3) DBL", teacher, student_group, 2),
-        Lesson(start_idx+1, f"G{student_group.id+8} {subject_name} (2/3) DBL", teacher, student_group, 2),
-        Lesson(start_idx+2, f"G{student_group.id+8} {subject_name} (3/3) SGL", teacher, student_group, 1)
+        Lesson(start_idx+0, f"G{student_group.id+7} {subject_name} (1/3) DBL", teacher, student_group, 2),
+        Lesson(start_idx+1, f"G{student_group.id+7} {subject_name} (2/3) DBL", teacher, student_group, 2),
+        Lesson(start_idx+2, f"G{student_group.id+7} {subject_name} (3/3) SGL", teacher, student_group, 1)
     ]
 
+# 3 hours worth of lessons
+def subject_lessons_3(start_idx, subject_name, teacher, student_group):
+    return [
+        Lesson(start_idx+0, f"G{student_group.id+7} {subject_name} (1/2) DBL", teacher, student_group, 2),
+        Lesson(start_idx+1, f"G{student_group.id+7} {subject_name} (2/2) SGL", teacher, student_group, 1)
+    ]
+
+# 2 hours worth of lessons
+def subject_lessons_2(start_idx, subject_name, teacher, student_group):
+    return [
+        Lesson(start_idx+0, f"G{student_group.id+7} {subject_name} (1/1) DBL", teacher, student_group, 2)
+    ]
 
 def generate_problem_large():
     n_teachers = 40
     n_rooms = 6 #33 # cut down so we can view all the rooms
-    n_student_groups = 5
+    n_student_groups = 6
 
     teacher_list = [Teacher(i, f"Teacher {i}") for i in range(n_teachers)]
-    student_group_list = [StudentGroup(i, f"Grade {i+8}") for i in range(n_student_groups)]
+    student_group_list = [StudentGroup(i, f"Grade {i+7}") for i in range(n_student_groups)]
     timeslot_list = [] + day_timeslots_7('MON', 0) + day_timeslots_7('TUES', 7) + day_timeslots_7('WED', 14) + day_timeslots_7('THURS', 21) + day_timeslots_7('FRI', 28)
     room_list = [StudentGroup(i, f"Room {i}") for i in range(n_rooms)]
 
@@ -46,12 +58,32 @@ def generate_problem_large():
     #subjects = ['Math 1', 'Math 2', 'Physics', 'English', 'Chemistry', 'Biology', 'Geography', 'Economics', 'Tech Studies', 'Gym', 'Home Ec', 'Religion', 'Phsycology', 'I.T.', 'French']
     lesson_list = []
     ti = 0
+
+
+    # Year 7: 5 lessons each for English, Maths, Science, Humanities, 3 lessons each for German, PE, 2 for Christian living. That is 28 lessons so far. 2 for an arts elective line (music or drama, the class is split in to and will do one semester of each, 
+    # but essentially requires 2 class rooms with 2 teachers for the year), then there is another elective line which has 5 lessons. This is split between design tech, home ec, art and digital tech. They do digital tech / art for a term each, then home ec 
+    # and tech for term each. The digital tech/art and home ec/design tech semesters swap over with year 8 (as year 7 digital tech/art happens, year 8s do home ec/design tech, then they switch over). So you would need to be running this elective at the same 
+    # time as a year 8 class. (there are 3 classes per year level).
+    lesson_list += subject_lessons_5(len(lesson_list), 'English', teacher_list[0], student_group_list[0])
+    lesson_list += subject_lessons_5(len(lesson_list), 'Maths', teacher_list[0], student_group_list[0])
+    lesson_list += subject_lessons_5(len(lesson_list), 'Science', teacher_list[0], student_group_list[0])
+    lesson_list += subject_lessons_5(len(lesson_list), 'Humanities', teacher_list[0], student_group_list[0])
+
+    lesson_list += subject_lessons_3(len(lesson_list), 'German', teacher_list[0], student_group_list[0])
+    lesson_list += subject_lessons_3(len(lesson_list), 'PE', teacher_list[0], student_group_list[0])
+
+    lesson_list += subject_lessons_2(len(lesson_list), 'Christian Living', teacher_list[0], student_group_list[0])
+
+    lesson_list += subject_lessons_2(len(lesson_list), 'Arts Elective', teacher_list[0], student_group_list[0]) # this needs to consume multiple teachers and rooms, that all moves together!
+
+    """
     for sgi, sg in enumerate(student_group_list):
         for si in range(len(subjects)):
-            subject_lessons = subject_lessons_3_in_5(len(lesson_list), subjects[si], teacher_list[ti], student_group_list[sgi])
+            subject_lessons = subject_lessons_5(len(lesson_list), subjects[si], teacher_list[ti], student_group_list[sgi])
             lesson_list += subject_lessons
             ti += 1
             ti = ti % len(teacher_list)
+    """
 
     return Timetable(timeslot_list, room_list, lesson_list, teacher_list, student_group_list)
 
