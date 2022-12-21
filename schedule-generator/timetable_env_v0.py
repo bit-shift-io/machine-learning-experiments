@@ -119,6 +119,7 @@ class TimetableEnvV0(gym.Env):
 
 
     def action_swap_room(self, lesson, offset):
+        # swap to another room with the same timeslots
         # TODO: support multiple timeslots
 
         idx = lesson.room.id
@@ -145,61 +146,69 @@ class TimetableEnvV0(gym.Env):
 
 
     def action_swap_timeslot(self, lesson, offset):
+        # swap timeslots in same room
         # TODO: support multiple timeslots
+
+        if offset > 0:
+            last_timeslot = lesson.timeslots[-1]
+            at_end = (last_timeslot.id + 1) == len(self.timetable.timeslot_list)
+            next_timeslot = self.timetable.timeslot_list[last_timeslot.id + 1] if not at_end else self.timetable.timeslot_list[0]
+            is_consecutive = next_timeslot.start_time == last_timeslot.end_time
+            next_lesson = next(filter(lambda l: intersection([next_timeslot], l.timeslots) and l.room == lesson.room, self.timetable.lesson_list), None)
+
+            # next timeslot is consecutive and no lesson below us, so move down 1 timeslot
+            if is_consecutive and not next_lesson:
+                temp = lesson.timeslots + [next_timeslot]
+                lesson.set_timeslots(temp[-lesson.n_timeslots:])
+
+            # do a straight swap with the next lesson
+            elif next_lesson and next_lesson.n_timeslots == lesson.n_timeslots:
+                temp = lesson.timeslots
+                lesson.set_timeslots(next_lesson.timeslots)
+                next_lesson.set_timeslots(temp)
+
+            # do some weird swap
+            elif is_consecutive and next_lesson:
+                temp = lesson.timeslots + next_lesson.timeslots
+                lesson_timeslots = temp[-lesson.n_timeslots:]
+                next_lesson_timeslots = temp[:next_lesson.n_timeslots]
+                lesson.set_timeslots(lesson_timeslots)
+                next_lesson.set_timeslots(next_lesson_timeslots)
+
+            else:
+                print("unhandled scenario")
+
+        elif offset < 0:
+            last_timeslot = lesson.timeslots[0]
+            at_end = last_timeslot.id == 0
+            next_timeslot = self.timetable.timeslot_list[last_timeslot.id - 1] if not at_end else self.timetable.timeslot_list[-1]
+            is_consecutive = next_timeslot.end_time == last_timeslot.start_time
+            next_lesson = next(filter(lambda l: intersection([next_timeslot], l.timeslots) and l.room == lesson.room, self.timetable.lesson_list), None)
+
+            # next timeslot is consecutive and no lesson below us, so move up 1 timeslot
+            if is_consecutive and not next_lesson:
+                temp = [next_timeslot] + lesson.timeslots
+                lesson.set_timeslots(temp[:lesson.n_timeslots])
+
+            # do a straight swap with the next lesson
+            elif next_lesson and next_lesson.n_timeslots == lesson.n_timeslots:
+                temp = lesson.timeslots
+                lesson.set_timeslots(next_lesson.timeslots)
+                next_lesson.set_timeslots(temp)
+
+            # do some weird swap
+            elif is_consecutive and next_lesson:
+                temp = next_lesson.timeslots + lesson.timeslots
+                lesson_timeslots = temp[:lesson.n_timeslots]
+                next_lesson_timeslots = temp[-next_lesson.n_timeslots:] 
+                lesson.set_timeslots(lesson_timeslots)
+                next_lesson.set_timeslots(next_lesson_timeslots)
+
+            else:
+                print("unhandled scenario")
+
         return
 
-        next_timeslots = None
-        while True:
-            if offset > 0:
-                timeslot_list = list(filter(lambda t: t.id > lesson.timeslots[-1].id, self.timetable.timeslot_list))
-                next_timeslots = self.timetable.find_consecutive_timeslots(lesson.n_timeslots, timeslot_list)
-            else:
-                timeslot_list = list(filter(lambda t: t.id < lesson.timeslots[0].id, self.timetable.timeslot_list))
-                next_timeslots = self.timetable.find_consecutive_timeslots_reverse(lesson.n_timeslots, timeslot_list)
-
-            if next_timeslots:
-                # TODO: check if this holds a single lesson... for now assume it does
-                break
-
-        other_lessons = list(filter(lambda l: intersection(l.timeslots, next_timeslots) and l.room == lesson.room, self.timetable.lesson_list))
-        if (len(other_lessons) > 1):
-            # here if multiple lessons overlap where we wre trying to move, see if 
-            # any of them are the same n_timeslots as us - we will just swap with them!
-            found = False
-            for other_lesson in other_lessons:
-                if other_lesson.n_timeslots == lesson.n_timeslots:
-                    other_lesson.set_timeslots(lesson.timeslots)
-                    found = True
-                    break
-
-            if not found:
-                print("oh dear, we couldn't swap timeslots!... need more work to handle swapping + not cross a break or locked timeslot!")
-                return
-
-        if (len(other_lessons) == 1):
-            other_lesson = other_lessons[0]
-            if other_lesson.n_timeslots != lesson.n_timeslots:
-                print("oh dear, we couldn't swap timeslots!... need more work to handle swapping + not cross a break or locked timeslot!")
-                return
-
-            other_lesson.set_timeslots(lesson.timeslots)
-
-        lesson.set_timeslots(next_timeslots)
-
-        """
-        idx = lesson.timeslot.id
-        idx += offset
-        idx = idx % self.n_timeslots
-
-        cur_timeslot = lesson.timeslot
-        next_timeslot = self.timetable.timeslot_list[idx]
-
-        other_lesson = next(filter(lambda l: l.timeslot == next_timeslot and l.room == lesson.room, self.timetable.lesson_list), None)
-        if other_lesson:
-            other_lesson.set_timeslot(cur_timeslot)
-
-        lesson.set_timeslot(next_timeslot)
-        """
 
 
     def step(self, action):
