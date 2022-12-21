@@ -46,27 +46,53 @@ class TimetableEnvV0(gym.Env):
         self.n_actions = 4
         self.action_space = spaces.Discrete(self.n_lessons * self.n_actions) # we cann try making this a MultiDiscrete in future to allow multiple changes in 1 step
 
-        # Each lesson is 2 discreet spaces, where: which room it is inn, which timetabel slot it is in
+                # Each lesson is 3 discreet spaces, where: which room it is in, which timetable slot it is in
+        # we now also include which constraints are being violated = 1 or 0 for pass
         self.observation_space = spaces.Dict()
         for lesson in self.timetable.lesson_list:
             id = f"lesson_{lesson.id}"
-            space = spaces.MultiDiscrete([self.n_rooms, self.n_timeslots])
+
+            #const_arr = np.empty(self.n_constraints)
+            #const_arr.fill(1)
+
+            # TODO: setup constraint voliaitions in lessons
+            # TODO: also add in here Teacher and StudentGroups so AI can map issues so we might nnot even nneed constraints
+            #       as currenntly the AI knows nnothing about teachers or student groups so can only guess!
+            arr = np.array([self.n_rooms, self.n_teachers, self.n_student_groups])
+            space = spaces.MultiDiscrete(arr)
             self.observation_space[id] = space
-            #test = space.sample()
-            #print('lesson', id)
+
+            # lessons can take up multiple timeslots
+            id = f"lesson_{lesson.id}_timeslots"
+            space = spaces.MultiBinary([self.n_timeslots]) 
+            self.observation_space[id] = space
 
 
     def _get_obs(self):
         """Convert timetable to the oservation_space"""
         o = {}
-        for lesson in self.timetable.get_lesson_list():
+        for lesson in self.timetable.lesson_list:
             id = f"lesson_{lesson.id}"
-            room = lesson.get_room()
-            timeslot = lesson.get_timeslot()
-            o[id] = np.array([room.id, timeslot.id]) # maybe reserve 0 for invalid value
-            #self.observation_space[id] = [room.id - 1, timeslot.id - 1]
 
-        return o #return {"agent": self._agent_location, "target": self._target_location}
+            # calc constraint state
+            #const_arr = np.empty(self.n_constraints)
+            #const_arr.fill(0)
+            #for const in lesson.constraints_fail:
+            #    const_arr[const.id] = 1
+
+            arr = np.array([lesson.room.id, lesson.teacher.id, lesson.student_group.id])
+            #arr = np.concatenate((arr, const_arr), axis=0)
+            o[id] = arr
+
+            # lessons can take up multiple timeslots
+            id = f"lesson_{lesson.id}_timeslots"
+            arr = np.zeros(self.n_timeslots)
+            for t in lesson.timeslots:
+                arr[t.id] = 1
+
+            o[id] = arr
+ 
+        return o
 
     def _get_info(self):
         return {}

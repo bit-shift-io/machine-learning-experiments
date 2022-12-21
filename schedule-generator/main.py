@@ -1,5 +1,4 @@
 from timetable_env_v0 import TimetableEnvV0
-from timetable_env_v1 import TimetableEnvV1
 from timetable_renderer import TimetableRenderer
 from problem import generate_problem_large, constraint_list
 from ta_ql_double_soft import TA_QL_DoubleSoft
@@ -15,7 +14,7 @@ constraints = constraint_list()
 #timetable_renderer = TimetableRenderer(render_mode='human')
 #timetable_renderer.render(timetable, constraints)
 
-env = TimetableEnvV1(None, timetable, constraints, max_episode_steps=100)
+env = TimetableEnvV0(None, timetable, constraints, max_episode_steps=100)
 dnn = DNN(env.state_size(), env.action_size(), hidden_dim=128, lr=0.0008)
 
 # choose a training algorithm
