@@ -153,7 +153,7 @@ class TimetableEnvV0(gym.Env):
             last_timeslot = lesson.timeslots[-1]
             at_end = (last_timeslot.id + 1) == len(self.timetable.timeslot_list)
             next_timeslot = self.timetable.timeslot_list[last_timeslot.id + 1] if not at_end else self.timetable.timeslot_list[0]
-            is_consecutive = next_timeslot.start_time == last_timeslot.end_time
+            is_consecutive = next_timeslot.is_consecutive(last_timeslot)
             next_lesson = next(filter(lambda l: intersection([next_timeslot], l.timeslots) and l.room == lesson.room, self.timetable.lesson_list), None)
 
             # next timeslot is consecutive and no lesson below us, so move down 1 timeslot
@@ -182,7 +182,7 @@ class TimetableEnvV0(gym.Env):
             last_timeslot = lesson.timeslots[0]
             at_end = last_timeslot.id == 0
             next_timeslot = self.timetable.timeslot_list[last_timeslot.id - 1] if not at_end else self.timetable.timeslot_list[-1]
-            is_consecutive = next_timeslot.end_time == last_timeslot.start_time
+            is_consecutive = next_timeslot.is_consecutive(last_timeslot)
             next_lesson = next(filter(lambda l: intersection([next_timeslot], l.timeslots) and l.room == lesson.room, self.timetable.lesson_list), None)
 
             # next timeslot is consecutive and no lesson below us, so move up 1 timeslot

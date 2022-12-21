@@ -11,10 +11,21 @@ def intersection(a, b):
     return (bool(set(a) & set(b)))
 
 
+# Assign id's based on index in list
+def assign_ids(list):
+    for i, l in enumerate(list):
+        l.id = i
+
+    return list
+
+
 @dataclass
 class Teacher:
     id: int
     name: str
+
+    def __init__(self, name):
+        self.name = name
 
     def __hash__(self):
         return self.id
@@ -24,6 +35,9 @@ class Teacher:
 class StudentGroup:
     id: int
     name: str
+
+    def __init__(self, name):
+        self.name = name
 
     def __hash__(self):
         return self.id
@@ -37,8 +51,7 @@ class Room:
     def __hash__(self):
         return self.id
 
-    def __init__(self, id, name):
-        self.id = id
+    def __init__(self, name):
         self.name = name
 
     def __str__(self):
@@ -54,11 +67,17 @@ class Timeslot:
     label: str
     locked: bool
 
+    # are these 2 timeslots consecutive - connected at the start/end ?
+    def is_consecutive(self, other_timeslot):
+        if other_timeslot.day_of_week != self.day_of_week:
+            return False
+
+        return self.start_time == other_timeslot.end_time or self.end_time == other_timeslot.start_time
+
     def __hash__(self):
         return self.id
 
-    def __init__(self, id, day_of_week, start_time, end_time):
-        self.id = id
+    def __init__(self, day_of_week, start_time, end_time):
         self.day_of_week = day_of_week
         self.start_time = start_time
         self.end_time = end_time
@@ -88,8 +107,7 @@ class Lesson:
     def __hash__(self):
         return self.id
 
-    def __init__(self, id, subject, teacher, student_group, n_timeslots):
-        self.id = id
+    def __init__(self, subject, teacher, student_group, n_timeslots):
         self.subject = subject
         self.teacher = teacher
         self.student_group = student_group
@@ -118,6 +136,20 @@ class Lesson:
         )
 
 
+# Group of lessons that must occupy the same timeslot
+# this is for Electives
+@dataclass
+class LessonGroup:
+    id: int
+    lessons: list[Lesson]
+    label: str
+
+    def __init__(self, lessons, label):
+        self.lessons = lessons
+        self.label = label
+
+
+
 def format_list(a_list):
     return ',\n'.join(map(str, a_list))
 
@@ -129,13 +161,15 @@ class Timetable:
     lesson_list: list[Lesson]
     teacher_list: list[Teacher]
     student_group_list: list[StudentGroup]
+    lesson_groups: list[LessonGroup]
 
-    def __init__(self, timeslot_list, room_list, lesson_list, teacher_list, student_group_list):
+    def __init__(self, timeslot_list, room_list, lesson_list, teacher_list, student_group_list, lesson_groups=[]):
         self.timeslot_list = timeslot_list
         self.room_list = room_list
         self.lesson_list = lesson_list
         self.teacher_list = teacher_list
         self.student_group_list = student_group_list
+        self.lesson_groups = lesson_groups
 
     def __str__(self):
         return (
