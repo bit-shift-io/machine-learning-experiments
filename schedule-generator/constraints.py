@@ -55,10 +55,10 @@ class RoomConflict(Constraint):
     def test(self, c: Constraints, t: Timetable):
         h = 0
         s = 0
-        lesson_list = t.lesson_list
-        for l in lesson_list:
+        lessons = t.lessons
+        for l in lessons:
             # https://stackoverflow.com/questions/69445252/check-if-an-array-contains-any-element-of-another-array-in-python
-            r = list(filter(lambda l2: l != l2 and l2.room == l.room and intersection(l.timeslots, l2.timeslots), lesson_list))
+            r = list(filter(lambda l2: l != l2 and l2.room == l.room and intersection(l.timeslots, l2.timeslots), lessons))
             if len(r) <= 0:
                 h += 1
             else:
@@ -67,7 +67,7 @@ class RoomConflict(Constraint):
         return h, s
 
     def max_score(self, c: Constraints, t: Timetable):
-        return len(t.lesson_list), 0
+        return len(t.lessons), 0
 
 
 class TeacherConflict(Constraint):
@@ -79,9 +79,9 @@ class TeacherConflict(Constraint):
         p = 0
         f = 0
 
-        lesson_list = t.lesson_list
-        for l in lesson_list:
-            r = list(filter(lambda l2: l != l2 and l2.teacher == l.teacher and intersection(l.timeslots, l2.timeslots), lesson_list))
+        lessons = t.lessons
+        for l in lessons:
+            r = list(filter(lambda l2: l != l2 and l2.teacher == l.teacher and intersection(l.timeslots, l2.timeslots), lessons))
             if len(r) <= 0:
                 h += 1
                 p += 1
@@ -92,7 +92,7 @@ class TeacherConflict(Constraint):
         return h, s
 
     def max_score(self, c: Constraints, t: Timetable):
-        return len(t.lesson_list), 0
+        return len(t.lessons), 0
 
 
 class StudentGroupConflict(Constraint):
@@ -100,9 +100,9 @@ class StudentGroupConflict(Constraint):
     def test(self, c: Constraints, t: Timetable):
         h = 0
         s = 0
-        lesson_list = t.lesson_list
-        for l in lesson_list:
-            r = list(filter(lambda l2: l != l2 and l2.student_group == l.student_group and intersection(l.timeslots, l2.timeslots), lesson_list))
+        lessons = t.lessons
+        for l in lessons:
+            r = list(filter(lambda l2: l != l2 and l2.student_group == l.student_group and intersection(l.timeslots, l2.timeslots), lessons))
             if len(r) <= 0:
                 h += 1
             else:
@@ -111,7 +111,7 @@ class StudentGroupConflict(Constraint):
         return h, s
 
     def max_score(self, c: Constraints, t: Timetable):
-        return len(t.lesson_list), 0
+        return len(t.lessons), 0
 
 
 """

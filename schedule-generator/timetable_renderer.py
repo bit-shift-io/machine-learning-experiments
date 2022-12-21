@@ -41,15 +41,15 @@ class TimetableRenderer:
         canvas = pygame.Surface(self.window_size)
         canvas.fill((255, 255, 255))
 
-        room_list = timetable.room_list
-        lesson_list = timetable.lesson_list
-        timeslot_list = timetable.timeslot_list
+        rooms = timetable.rooms
+        lessons = timetable.lessons
+        timeslots = timetable.timeslots
 
         header_size = (40, 10)
 
         pix_square_size = (
-            (self.window_size[0] - header_size[0]) / len(room_list),
-            (self.window_size[1] - header_size[1]) / len(timeslot_list)
+            (self.window_size[0] - header_size[0]) / len(rooms),
+            (self.window_size[1] - header_size[1]) / len(timeslots)
         )  # The size of a single grid square in pixels
 
         pygame.draw.line(
@@ -70,13 +70,13 @@ class TimetableRenderer:
 
         
         # Draw room labels
-        for ri in range(len(room_list)):
-            img = self.font.render(room_list[ri].name, True, 0)
+        for ri in range(len(rooms)):
+            img = self.font.render(rooms[ri].name, True, 0)
             canvas.blit(img, (header_size[0] + (pix_square_size[0] * ri), 0))
 
         # Draw timetable labels
-        for ti in range(len(timeslot_list)):
-            timeslot = timeslot_list[ti]
+        for ti in range(len(timeslots)):
+            timeslot = timeslots[ti]
             label = (timeslot.day_of_week[0:2] + " " + str(timeslot.start_time))[0:8]
             img = self.font.render(label, True, 0)
             canvas.blit(img, (0, header_size[1] + (pix_square_size[1] * ti)))
@@ -84,7 +84,7 @@ class TimetableRenderer:
 
 
         # vertical lines
-        for x in range(len(room_list)):
+        for x in range(len(rooms)):
             pygame.draw.line(
                     canvas,
                     0,
@@ -94,7 +94,7 @@ class TimetableRenderer:
                 )
         
         # horizontal lines
-        for y in range(len(timeslot_list)):
+        for y in range(len(timeslots)):
             pygame.draw.line(
                     canvas,
                     0,
@@ -104,12 +104,12 @@ class TimetableRenderer:
                 )
 
         # draw contents of each cell
-        for ri in range(len(room_list)):
-            for ti in range(len(timeslot_list)):
+        for ri in range(len(rooms)):
+            for ti in range(len(timeslots)):
                 start_pos = (header_size[0] + (pix_square_size[0] * ri), 
                             header_size[1] + (pix_square_size[1] * ti))
-                room = room_list[ri]
-                timeslot = timeslot_list[ti]
+                room = rooms[ri]
+                timeslot = timeslots[ti]
                 self.draw_room_timeslot(timetable, constraints, canvas, room, timeslot, start_pos, pix_square_size)
 
 
@@ -136,8 +136,8 @@ class TimetableRenderer:
             )
 
     def draw_room_timeslot(self, timetable, constraints, canvas, room, timeslot, start_pos, size):
-        lesson_list = timetable.lesson_list
-        lessons = list(filter(lambda l: l.room == room and timeslot in l.timeslots, lesson_list))
+        lessons = timetable.lessons
+        lessons = list(filter(lambda l: l.room == room and timeslot in l.timeslots, lessons))
 
         line_height = 10
 

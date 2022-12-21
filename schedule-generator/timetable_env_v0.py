@@ -34,11 +34,11 @@ class TimetableEnvV0(gym.Env):
 
         # precompute some stuff
         self.n_constraints = len(self.constraints.constraints)
-        self.n_lessons = len(self.timetable.lesson_list)
-        self.n_timeslots = len(self.timetable.timeslot_list)
-        self.n_rooms = len(self.timetable.room_list)
-        self.n_teachers = len(self.timetable.teacher_list)
-        self.n_student_groups = len(self.timetable.student_group_list)
+        self.n_lessons = len(self.timetable.lessons)
+        self.n_timeslots = len(self.timetable.timeslots)
+        self.n_rooms = len(self.timetable.rooms)
+        self.n_teachers = len(self.timetable.teachers)
+        self.n_student_groups = len(self.timetable.student_groups)
 
         self.max_hard_score, self.max_soft_score = self.constraints.max_score(self.timetable)
 
@@ -49,7 +49,7 @@ class TimetableEnvV0(gym.Env):
                 # Each lesson is 3 discreet spaces, where: which room it is in, which timetable slot it is in
         # we now also include which constraints are being violated = 1 or 0 for pass
         self.observation_space = spaces.Dict()
-        for lesson in self.timetable.lesson_list:
+        for lesson in self.timetable.lessons:
             id = f"lesson_{lesson.id}"
 
             #const_arr = np.empty(self.n_constraints)
@@ -71,7 +71,7 @@ class TimetableEnvV0(gym.Env):
     def _get_obs(self):
         """Convert timetable to the oservation_space"""
         o = {}
-        for lesson in self.timetable.lesson_list:
+        for lesson in self.timetable.lessons:
             id = f"lesson_{lesson.id}"
 
             # calc constraint state
@@ -127,9 +127,9 @@ class TimetableEnvV0(gym.Env):
         idx = idx % self.n_rooms
 
         cur_room = lesson.room
-        next_room = self.timetable.room_list[idx]
+        next_room = self.timetable.rooms[idx]
 
-        other_lessons = list(filter(lambda l: l.room == next_room and intersection(l.timeslots, lesson.timeslots), self.timetable.lesson_list))
+        other_lessons = list(filter(lambda l: l.room == next_room and intersection(l.timeslots, lesson.timeslots), self.timetable.lessons))
         if (len(other_lessons) > 1):
             print("oh dear, we cant swap rooms! unless the two lessons are the same size together, or one of them is the same size as this lesson")
             return
@@ -151,23 +151,23 @@ class TimetableEnvV0(gym.Env):
 
         # keep it simple, swap the lessons in the timetable and just called ordered_layout again!
         lesson_id = lesson.id
-        next_lesson_id = (lesson_id + offset) % len(self.timetable.lesson_list)
+        next_lesson_id = (lesson_id + offset) % len(self.timetable.lessons)
 
         # swap
-        self.timetable.lesson_list[lesson_id], self.timetable.lesson_list[next_lesson_id] = self.timetable.lesson_list[next_lesson_id], self.timetable.lesson_list[lesson_id]
+        self.timetable.lessons[lesson_id], self.timetable.lessons[next_lesson_id] = self.timetable.lessons[next_lesson_id], self.timetable.lessons[lesson_id]
 
         # update id's
-        assign_ids(self.timetable.lesson_list)
+        assign_ids(self.timetable.lessons)
 
         self.timetable.ordered_layout()
 
         """
         if offset > 0:
             last_timeslot = lesson.timeslots[-1]
-            at_end = (last_timeslot.id + 1) == len(self.timetable.timeslot_list)
-            next_timeslot = self.timetable.timeslot_list[last_timeslot.id + 1] if not at_end else self.timetable.timeslot_list[0]
+            at_end = (last_timeslot.id + 1) == len(self.timetable.timeslots)
+            next_timeslot = self.timetable.timeslots[last_timeslot.id + 1] if not at_end else self.timetable.timeslots[0]
             is_consecutive = next_timeslot.is_consecutive(last_timeslot)
-            next_lesson = next(filter(lambda l: intersection([next_timeslot], l.timeslots) and l.room == lesson.room, self.timetable.lesson_list), None)
+            next_lesson = next(filter(lambda l: intersection([next_timeslot], l.timeslots) and l.room == lesson.room, self.timetable.lessons), None)
 
             # next timeslot is consecutive and no lesson below us, so move down 1 timeslot
             if is_consecutive and not next_lesson:
@@ -194,9 +194,9 @@ class TimetableEnvV0(gym.Env):
         elif offset < 0:
             last_timeslot = lesson.timeslots[0]
             at_end = last_timeslot.id == 0
-            next_timeslot = self.timetable.timeslot_list[last_timeslot.id - 1] if not at_end else self.timetable.timeslot_list[-1]
+            next_timeslot = self.timetable.timeslots[last_timeslot.id - 1] if not at_end else self.timetable.timeslots[-1]
             is_consecutive = next_timeslot.is_consecutive(last_timeslot)
-            next_lesson = next(filter(lambda l: intersection([next_timeslot], l.timeslots) and l.room == lesson.room, self.timetable.lesson_list), None)
+            next_lesson = next(filter(lambda l: intersection([next_timeslot], l.timeslots) and l.room == lesson.room, self.timetable.lessons), None)
 
             # next timeslot is consecutive and no lesson below us, so move up 1 timeslot
             if is_consecutive and not next_lesson:
@@ -240,7 +240,7 @@ class TimetableEnvV0(gym.Env):
         # convert action into something usable
         lesson_idx = math.floor(action / self.n_actions)
         lesson_action = action % self.n_actions
-        lesson = self.timetable.lesson_list[lesson_idx]
+        lesson = self.timetable.lessons[lesson_idx]
 
         # "previous room", "next room", "previous timeslot", "next timeslot", "remove from timetale", "add to timetable"
         match lesson_action:
