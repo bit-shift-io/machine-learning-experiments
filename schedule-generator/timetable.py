@@ -94,25 +94,37 @@ class Timeslot:
         )
 
 
+@dataclass 
+class Timeslotable:
+    timeslots: list[Timeslot]
+    n_timeslots: int # how many timeslots this lesson must occupy
+
+    def __init__(self, n_timeslots):
+        self.timeslots = []
+        self.n_timeslots = n_timeslots
+
+    def set_timeslots(self, new_timeslots):
+        self.timeslots = new_timeslots
+
+
 @dataclass
-class Lesson:
+class Lesson(Timeslotable):
     id: int
     subject: str
     teacher: Teacher
     student_group: StudentGroup
-    timeslots: list[Timeslot]
-    n_timeslots: int # how many timeslots this lesson must occupy
+    #timeslots: list[Timeslot]
+    #n_timeslots: int # how many timeslots this lesson must occupy
     room: Room
-    
+
     def __hash__(self):
         return self.id
 
     def __init__(self, subject, teacher, student_group, n_timeslots):
+        super().__init__(n_timeslots)
         self.subject = subject
         self.teacher = teacher
         self.student_group = student_group
-        self.timeslots = []
-        self.n_timeslots = n_timeslots
         self.room = None
         self.constraints_fail = []
         self.constraints_pass = []
@@ -135,11 +147,15 @@ class Lesson:
             f")"
         )
 
+    def clear(self):
+        super().set_timeslots(None)
+        self.set_room(None)
+
 
 # Group of lessons that must occupy the same timeslot
-# this is for Electives
+# this is for Electives. Maybe call this LessonsTimeslot ? and wrap all Lessons in one of these?
 @dataclass
-class LessonGroup:
+class Elective(Timeslotable):
     id: int
     lessons: list[Lesson]
     label: str
@@ -147,6 +163,25 @@ class LessonGroup:
     def __init__(self, lessons, label):
         self.lessons = lessons
         self.label = label
+        super().__init__(lessons[0].n_timeslots)
+
+    # shortcut to create multiple Electives for a set of Lessons
+    def zipLessons(lesson_arr, label):
+        electives = []
+        for lessons in zip(*lesson_arr):
+            electives.append(Elective(list(lessons), label))
+
+        return electives
+
+    def set_timeslots(self, new_timeslots):
+        super().set_timeslots(new_timeslots)
+        for lesson in self.lessons:
+            lesson.set_timeslots(new_timeslots)
+
+    def clear(self):
+        super().set_timeslots(None)
+        for lesson in self.lessons:
+            lesson.clear()
 
 
 
@@ -158,10 +193,9 @@ def format_list(a_list):
 class Timetable:
     timeslots: list[Timeslot]
     rooms: list[Room]
-    lessons: list[Lesson]
+    lessons: list[Timeslotable]
     teachers: list[Teacher]
     student_groups: list[StudentGroup]
-    lesson_groups: list[LessonGroup]
 
     def __init__(self, timeslots, rooms, lessons, teachers, student_groups, lesson_groups=[]):
         self.timeslots = timeslots
@@ -183,8 +217,7 @@ class Timetable:
 
     def clear(self):
         for lesson in self.lessons:
-            lesson.set_room(None)
-            lesson.set_timeslots([])
+            lesson.clear()
 
     """
     def randomize_layout(self):

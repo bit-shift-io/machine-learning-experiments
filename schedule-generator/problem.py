@@ -1,4 +1,4 @@
-from timetable import Timetable, Timeslot, Room, Lesson, Teacher, StudentGroup, LessonGroup, assign_ids
+from timetable import Timetable, Timeslot, Room, Lesson, Teacher, StudentGroup, Elective, assign_ids
 from datetime import time
 from constraints import Constraints, RoomConflict, TeacherConflict, StudentGroupConflict
 import math
@@ -58,8 +58,7 @@ def generate_problem_large():
     # only 7 subjects fit into 35 lessons per week with 5 each subject taking 5 lessons! each grade (student group) needs 15 subjects
     subjects = ['Math', 'Geography', 'Physics', 'English', 'Elective A', 'Elective B', 'Elective C']
     #subjects = ['Math 1', 'Math 2', 'Physics', 'English', 'Chemistry', 'Biology', 'Geography', 'Economics', 'Tech Studies', 'Gym', 'Home Ec', 'Religion', 'Phsycology', 'I.T.', 'French']
-    lessons = []
-    lesson_groups = []
+    lessons = [] # Lessons + Electives (anything Timetableable)
     ti = 0
 
 
@@ -80,18 +79,12 @@ def generate_problem_large():
     # art elective
     drama = subject_lessons_2('Drama - Art E.', teachers[0], student_groups[0])
     music = subject_lessons_2('Music - Art E.', teachers[0], student_groups[0])
-
-    lessons += drama + music
-    for (drama_lesson, music_lesson) in zip(drama, music):
-        lesson_groups.append(LessonGroup([drama_lesson, music_lesson], "G7 Art Elective"))
+    lessons += Elective.zipLessons([drama, music], "G7 Elective A")
 
     # another elective
     design_tech = subject_lessons_5("Design Tech / Art", teachers[0], student_groups[0])
     home_ec = subject_lessons_5("Home Ec / Tech", teachers[0], student_groups[0])
-    lessons += drama + music
-    for (design_tech_lesson, home_ec_lesson) in zip(design_tech, home_ec):
-        lesson_groups.append(LessonGroup([design_tech_lesson, home_ec_lesson], "G7 Elective B"))
-        
+    lessons += Elective.zipLessons([design_tech, home_ec], "G7 Elective B")
 
     """
     for sgi, sg in enumerate(student_groups):
@@ -102,7 +95,7 @@ def generate_problem_large():
             ti = ti % len(teachers)
     """
 
-    return Timetable(assign_ids(timeslots), assign_ids(rooms), assign_ids(lessons), assign_ids(teachers), student_groups, assign_ids(lesson_groups))
+    return Timetable(assign_ids(timeslots), assign_ids(rooms), assign_ids(lessons), assign_ids(teachers), student_groups)
 
 
 def generate_problem_medium():
