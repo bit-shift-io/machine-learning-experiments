@@ -73,17 +73,16 @@ def generate_problem_large():
 
     lessons += subject_lessons_3('German', teachers[0], student_groups[0])
     lessons += subject_lessons_3('PE', teachers[0], student_groups[0])
-
     lessons += subject_lessons_2('Christian Living', teachers[0], student_groups[0])
 
     # art elective
-    drama = subject_lessons_2('Drama - Art E.', teachers[0], student_groups[0])
-    music = subject_lessons_2('Music - Art E.', teachers[0], student_groups[0])
+    drama = subject_lessons_2('Drama - El A', teachers[0], student_groups[0])
+    music = subject_lessons_2('Music - El A', teachers[1], student_groups[0])
     lessons += Elective.zipLessons([drama, music], "G7 Elective A")
 
     # another elective
-    design_tech = subject_lessons_5("Design Tech / Art", teachers[0], student_groups[0])
-    home_ec = subject_lessons_5("Home Ec / Tech", teachers[0], student_groups[0])
+    design_tech = subject_lessons_5("Design Tech/Art - El B", teachers[0], student_groups[0])
+    home_ec = subject_lessons_5("Home Ec/Tech - El B", teachers[1], student_groups[0])
     lessons += Elective.zipLessons([design_tech, home_ec], "G7 Elective B")
 
     """
@@ -95,7 +94,7 @@ def generate_problem_large():
             ti = ti % len(teachers)
     """
 
-    return Timetable(assign_ids(timeslots), assign_ids(rooms), assign_ids(lessons), assign_ids(teachers), student_groups)
+    return Timetable(timeslots, rooms, lessons, teachers, student_groups)
 
 
 def generate_problem_medium():

@@ -4,7 +4,7 @@ from optapy.constraint import ConstraintFactory, Joiners
 from timetable import Lesson
 from datetime import datetime, date, timedelta
 from dataclasses import dataclass
-from timetable import Timetable, intersection
+from timetable import Timetable, is_intersection
 
 # Trick since timedelta only works with datetime instances
 today = date.today()
@@ -58,7 +58,7 @@ class RoomConflict(Constraint):
         lessons = t.lessons
         for l in lessons:
             # https://stackoverflow.com/questions/69445252/check-if-an-array-contains-any-element-of-another-array-in-python
-            r = list(filter(lambda l2: l != l2 and l2.room == l.room and intersection(l.timeslots, l2.timeslots), lessons))
+            r = list(filter(lambda l2: l != l2 and l2.room == l.room and is_intersection(l.timeslots, l2.timeslots), lessons))
             if len(r) <= 0:
                 h += 1
             else:
@@ -81,7 +81,7 @@ class TeacherConflict(Constraint):
 
         lessons = t.lessons
         for l in lessons:
-            r = list(filter(lambda l2: l != l2 and l2.teacher == l.teacher and intersection(l.timeslots, l2.timeslots), lessons))
+            r = list(filter(lambda l2: l != l2 and l2.teacher == l.teacher and is_intersection(l.timeslots, l2.timeslots), lessons))
             if len(r) <= 0:
                 h += 1
                 p += 1
@@ -96,13 +96,13 @@ class TeacherConflict(Constraint):
 
 
 class StudentGroupConflict(Constraint):
-    """ A student can attend at most one lesson at the same time """
+    """ A student can attend at most one lesson at the same time, with the exceptionn of electives """
     def test(self, c: Constraints, t: Timetable):
         h = 0
         s = 0
         lessons = t.lessons
         for l in lessons:
-            r = list(filter(lambda l2: l != l2 and l2.student_group == l.student_group and intersection(l.timeslots, l2.timeslots), lessons))
+            r = list(filter(lambda l2: l != l2 and not l.is_same_elective(l2) and l2.student_group == l.student_group and is_intersection(l.timeslots, l2.timeslots), lessons))
             if len(r) <= 0:
                 h += 1
             else:

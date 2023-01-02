@@ -7,8 +7,12 @@ import random
 import itertools
 
 # Used to test for intersection of 2 arrays of timeslots
-def intersection(a, b):
+def is_intersection(a, b):
     return (bool(set(a) & set(b)))
+
+# Get the inntersectionn of 2 arrays
+def intersection(a, b):
+    return set(a) & set(b)
 
 
 # Assign id's based on index in list
@@ -97,7 +101,7 @@ class Timeslot:
 @dataclass 
 class Timeslotable:
     timeslots: list[Timeslot]
-    n_timeslots: int # how many timeslots this lesson must occupy
+    n_timeslots: int # how many timeslots this timeslotable must occupy
 
     def __init__(self, n_timeslots):
         self.timeslots = []
@@ -105,6 +109,12 @@ class Timeslotable:
 
     def set_timeslots(self, new_timeslots):
         self.timeslots = new_timeslots
+
+    def clear(self):
+        self.set_timeslots(None)
+
+    def is_elective(self):
+        return False
 
 
 @dataclass
@@ -116,6 +126,14 @@ class Lesson(Timeslotable):
     #timeslots: list[Timeslot]
     #n_timeslots: int # how many timeslots this lesson must occupy
     room: Room
+    elective: "Elective" # https://stackoverflow.com/questions/55320236/does-python-evaluate-type-hinting-of-a-forward-reference
+
+    # Is this lesson in the same elective group as the other lesson?
+    def is_same_elective(self, other):
+        if self.elective == None or other.elective == None:
+            return False
+
+        return self.elective == other.elective
 
     def __hash__(self):
         return self.id
@@ -126,6 +144,7 @@ class Lesson(Timeslotable):
         self.teacher = teacher
         self.student_group = student_group
         self.room = None
+        self.elective = None
         self.constraints_fail = []
         self.constraints_pass = []
 
@@ -148,21 +167,27 @@ class Lesson(Timeslotable):
         )
 
     def clear(self):
-        super().set_timeslots(None)
+        super().clear()
         self.set_room(None)
 
 
 # Group of lessons that must occupy the same timeslot
-# this is for Electives. Maybe call this LessonsTimeslot ? and wrap all Lessons in one of these?
 @dataclass
 class Elective(Timeslotable):
     id: int
     lessons: list[Lesson]
     label: str
 
+    def __hash__(self):
+        return self.id
+
     def __init__(self, lessons, label):
         self.lessons = lessons
         self.label = label
+
+        for lesson in self.lessons:
+            lesson.elective = self
+            
         super().__init__(lessons[0].n_timeslots)
 
     # shortcut to create multiple Electives for a set of Lessons
@@ -179,10 +204,25 @@ class Elective(Timeslotable):
             lesson.set_timeslots(new_timeslots)
 
     def clear(self):
-        super().set_timeslots(None)
+        super().clear()
         for lesson in self.lessons:
             lesson.clear()
 
+    def is_elective(self):
+        return True
+
+
+
+# flatten an array of timeslotables into a list of lessons
+def get_lessons(timeslotables):
+    lessons = []
+    for timeslotable in timeslotables:
+        if (timeslotable.is_elective()):
+            lessons += timeslotable.lessons
+        else:
+            lessons += [timeslotable]
+
+    return lessons
 
 
 def format_list(a_list):
@@ -192,42 +232,34 @@ def format_list(a_list):
 @dataclass
 class Timetable:
     timeslots: list[Timeslot]
+    timeslotables: list[Timeslotable]
+    lessons: list[Lesson]
+
     rooms: list[Room]
-    lessons: list[Timeslotable]
     teachers: list[Teacher]
     student_groups: list[StudentGroup]
 
-    def __init__(self, timeslots, rooms, lessons, teachers, student_groups, lesson_groups=[]):
-        self.timeslots = timeslots
-        self.rooms = rooms
-        self.lessons = lessons
-        self.teachers = teachers
-        self.student_groups = student_groups
-        self.lesson_groups = lesson_groups
+    def __init__(self, timeslots, rooms, timeslotables, teachers, student_groups):
+        self.timeslots = assign_ids(timeslots)
+        self.rooms = assign_ids(rooms)
+        self.timeslotables = assign_ids(timeslotables)
+        self.lessons = assign_ids(get_lessons(timeslotables))
+        self.teachers = assign_ids(teachers)
+        self.student_groups = assign_ids(student_groups)
 
     def __str__(self):
         return (
             f"Timetable("
             f"timeslots={format_list(self.timeslots)},\n"
             f"rooms={format_list(self.rooms)},\n"
-            f"lessons={format_list(self.lessons)},\n"
+            f"timeslotables={format_list(self.timeslotables)},\n"
             f"score={str(self.score.toString()) if self.score is not None else 'None'}"
             f")"
         )
 
     def clear(self):
-        for lesson in self.lessons:
-            lesson.clear()
-
-    """
-    def randomize_layout(self):
-        "" " Make it all random, shuffle everything "" "
-        for lesson in self.lessons:
-            room_idx = random.randint(0, len(self.rooms) - 1)
-            timeslot_idx = random.randint(0, len(self.timeslots) - 1)
-            lesson.set_room(self.rooms[room_idx])
-            lesson.set_timeslot(self.timeslots[timeslot_idx])
-    """
+        for timeslotable in self.timeslotables:
+            timeslotable.clear()
 
     
     def find_consecutive_timeslots(self, n_timeslots, timeslots):
@@ -280,26 +312,74 @@ class Timetable:
         return free_timeslots
 
 
+    def find_rooms_with_free_consecutive_timeslots_resursive(self, n_rooms, n_timeslots, rooms, timeslots, depth):
+        for ri, room in enumerate(rooms):
+            free_timeslots = self.find_free_timeslots_for_room(room)
+            consecutive_timeslots = self.find_consecutive_timeslots(n_timeslots, free_timeslots)
+            if consecutive_timeslots:
+                self.find_rooms_with_free_consecutive_timeslots_resursive(n_rooms, n_timeslots, rooms[ri:], timeslots, depth + 1)
+
+        pass
+
+    def find_rooms_with_free_timeslots(self, timeslots):
+        rooms = []
+        for ri, room in enumerate(self.rooms):
+            free_timeslots = self.find_free_timeslots_for_room(room)
+            intersect = intersection(free_timeslots, timeslots)
+            if len(intersect) == len(timeslots):
+                rooms.append(room)
+
+        return rooms
+
+
+    # Find N rooms all that have T free timeslots in common
+    def find_rooms_with_free_consecutive_timeslots(self, n_rooms, n_timeslots):
+        for ri, room in enumerate(self.rooms):
+            free_timeslots = self.find_free_timeslots_for_room(room)
+            consecutive_timeslots = self.find_consecutive_timeslots(n_timeslots, free_timeslots)
+            if consecutive_timeslots:
+                rooms = self.find_rooms_with_free_timeslots(consecutive_timeslots)
+                if len(rooms) >= n_rooms:
+                    return rooms[:n_rooms], consecutive_timeslots
+
+        print("Oh dear, need to improve code in find_rooms_with_free_consecutive_timeslots")
+        return [], []
+
     def ordered_layout(self):
-        """ Do a simple layout where each lesson is just placed down in order """
+        """ Do a simple layout where each timeslotable is just placed down in order """
         self.clear()
 
-        # TODO: handle lesson groups to ensure electives(lesson groups) all get the same timeslot just with different rooms
-        for lesson in self.lessons:
-            n_timeslots = lesson.n_timeslots
-            found = False
-            for ri, room in enumerate(self.rooms):
-                free_timeslots = self.find_free_timeslots_for_room(room)
-                consecutive_timeslots = self.find_consecutive_timeslots(n_timeslots, free_timeslots)
-                if consecutive_timeslots:
-                    lesson.set_timeslots(consecutive_timeslots)
-                    lesson.set_room(room)
-                    found = True
-                    break
+        #self.lessons = get_lessons(self.timeslotables)
 
-            if not found:
-                print("Not enough rooms to fit the lessons in. Try breaking down subjects into smaller lessons?")
-                return
+        for timeslotable in self.timeslotables:
+            n_timeslots = timeslotable.n_timeslots
+            found = False
+
+            lessons = []
+            if timeslotable.is_elective():
+                lessons = timeslotable.lessons
+            else:
+                lessons = [timeslotable]
+
+            n_lessons = len(lessons)
+            rooms, timeslots = self.find_rooms_with_free_consecutive_timeslots(n_lessons, lessons[0].n_timeslots)
+            for (lesson, room) in zip(lessons, rooms):
+                lesson.set_timeslots(timeslots)
+                lesson.set_room(room)
+
+
+                #for ri, room in enumerate(self.rooms):
+                #    free_timeslots = self.find_free_timeslots_for_room(room)
+                #    consecutive_timeslots = self.find_consecutive_timeslots(n_timeslots, free_timeslots)
+                #    if consecutive_timeslots:
+                #        lesson.set_timeslots(consecutive_timeslots)
+                #        lesson.set_room(room)
+                #        found = True
+                #        break
+
+                #if not found:
+                #    print("Not enough rooms to fit the lessons in. Try breaking down subjects into smaller lessons?")
+                #    return
         
         return
 
