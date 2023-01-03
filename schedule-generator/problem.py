@@ -48,7 +48,7 @@ def subject_lessons_2(subject_name, teacher, student_group):
 def generate_problem_large():
     n_teachers = 40
     n_rooms = 6 #33 # cut down so we can view all the rooms
-    n_student_groups = 6
+    n_student_groups = 2
 
     teachers = [Teacher(f"Teacher {i}") for i in range(n_teachers)]
     student_groups = assign_ids([StudentGroup(f"Grade {i+7}") for i in range(n_student_groups)])

@@ -114,7 +114,7 @@ class TimetableEnvV0(gym.Env):
 
         #self.timetable.randomize_layout()
         #self.timetable.ordered_layout()
-        self.timetable.start_layout()
+        self.timetable.student_group_layout()
 
         # score here if just for testing
         hard_score, soft_score = self.constraints.test(self.timetable)

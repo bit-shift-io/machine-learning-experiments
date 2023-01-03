@@ -5,6 +5,8 @@ import datetime
 from functools import reduce
 import random
 import itertools
+import numpy as np
+import math
 #from constraints import Constraints
 
 # Used to test for intersection of 2 arrays of timeslots
@@ -354,14 +356,36 @@ class Timetable:
         print("Oh dear, need to improve code in find_rooms_with_free_consecutive_timeslots")
         return [], []
 
-    def start_layout(self):
-        """ Do a simple layout where each timeslotable is just placed down in the first room, in the first timeslot """
+    def student_group_layout(self):
+        """ Do a simple layout where each student group is just laid out in every second room """
         self.clear()
-        for timeslotable in self.timeslotables:
-            lessons = timeslotable.get_lessons()
-            for lesson in lessons:
-                lesson.set_timeslots(self.timeslots[:lesson.n_timeslots])
-                lesson.set_room(self.rooms[0])
+
+        room_spacing = math.floor(len(self.rooms) / len(self.student_groups))
+
+        for student_group_idx, student_group in enumerate(self.student_groups):
+            room_idx = (student_group_idx * room_spacing) % len(self.rooms)
+
+            timeslot_idx = 0
+            for timeslotable in self.timeslotables:
+                lessons = timeslotable.get_lessons()
+                lesson_student_group = lessons[0].student_group
+                if lesson_student_group != student_group:
+                    continue
+
+                indices = range(timeslot_idx, timeslot_idx + lessons[0].n_timeslots) # self.timeslots[timeslot_idx:timeslot_idx + lessons[0].n_timeslots]
+                timeslots = np.array(self.timeslots).take(indices, mode='wrap').tolist()
+                timeslot_idx += lessons[0].n_timeslots
+
+                for lesson_idx, lesson in enumerate(lessons):
+                    lesson.set_timeslots(timeslots)
+                    room = self.rooms[room_idx + (lesson_idx % room_spacing)]
+                    lesson.set_room(room)
+
+        #for timeslotable in self.timeslotables:
+        #    lessons = timeslotable.get_lessons()
+        #    for lesson in lessons:
+        #        lesson.set_timeslots(self.timeslots[:lesson.n_timeslots])
+        #        lesson.set_room(self.rooms[0])
 
 
     def ordered_layout(self):

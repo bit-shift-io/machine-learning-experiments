@@ -10,9 +10,9 @@ timetable = generate_problem_large()
 constraints = constraint_list()
 
 # debug the initial layout of the timetable
-debug_initial_layout = False
+debug_initial_layout = True
 if debug_initial_layout:
-    timetable.start_layout()
+    timetable.student_group_layout()
     timetable_renderer = TimetableRenderer(render_mode='human')
     timetable_renderer.render(timetable, constraints)
 
