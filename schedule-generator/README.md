@@ -52,6 +52,17 @@ Is it that the problem is not solvable? OR is it that the random exploration is 
 So why not try a array of what action is tried at each step. then when we want t new random action,
 we increment to try the next action, so exploration is no longer random, but planned out
 
+## Exploration
+
+This seems to e the bbug problem with my code: random exploration is not reaching any new levels of learning.
+
+https://lilianweng.github.io/posts/2020-06-07-exploration-drl/
+
+ideas here: Episodic Curiosity (EC) sounds promising
+
+another statement: the higher the q values, means that the model less farmiliar with the states, so is correcting a bigger error.
+Can we explot this by using some function of q value to determine exploration amount
+
 
 # A typical school problem
 

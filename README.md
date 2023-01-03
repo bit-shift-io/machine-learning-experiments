@@ -47,6 +47,15 @@ find-optimum
 ==============
 Given an unknnown function, find the opimum from it
 
+schedule-generator
+==============
+Exploring RL to generate a timetable
+
+rl-exploration
+===================
+The schedule generator sucks at exploration, so this project is setup to help try different explorationn methods
+
+
 FUTURE IDEAS:
 weather rain forecast - how lonng bbefore it rains
 
