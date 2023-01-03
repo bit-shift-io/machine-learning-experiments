@@ -7,6 +7,7 @@ from gym import spaces
 import numpy as np
 import math
 from gym.spaces.utils import flatdim, flatten, flatten_space, unflatten
+import beepy
 
 # really timetable env
 class TimetableEnvV0(gym.Env):
@@ -290,8 +291,9 @@ class TimetableEnvV0(gym.Env):
         hard_score, soft_score = self.constraints.test(self.timetable)
 
         terminated = False
-        #if hard_score == self.max_hard_score:
-        #    print("Solution found!")
+        if hard_score == self.max_hard_score:
+            print("SOLUTION FOUND!")
+            beepy.beep(sound='success')
         #    self.timetable.print()
         #    terminated = True
 
