@@ -9,6 +9,7 @@ BLUE = (0, 0, 100)
 
 
 line_height = 10
+margin = 2
 
 class TimetableRenderer:
     metadata = {"render_modes": ["human", "human_fast", "rgb_array"], "render_fps": 4}
@@ -48,7 +49,7 @@ class TimetableRenderer:
         lessons = timetable.lessons
         timeslots = timetable.timeslots
 
-        header_size = (40, 10)
+        header_size = (45, line_height + margin + margin)
 
         pix_square_size = (
             (self.window_size[0] - header_size[0]) / len(rooms),
@@ -75,17 +76,17 @@ class TimetableRenderer:
         # Draw room labels
         for ri in range(len(rooms)):
             img = self.font.render(rooms[ri].name, True, 0)
-            canvas.blit(img, (header_size[0] + (pix_square_size[0] * ri), 0))
+            canvas.blit(img, (header_size[0] + margin + (pix_square_size[0] * ri), 0 + margin))
 
         # Draw timetable labels
         for ti in range(len(timeslots)):
             timeslot = timeslots[ti]
             img = self.font.render(timeslot.day_of_week[0:2], True, 0)
-            canvas.blit(img, (0, header_size[1] + (pix_square_size[1] * ti)))
+            canvas.blit(img, (0 + margin, header_size[1] + margin + (pix_square_size[1] * ti)))
 
             label = (str(timeslot.start_time))[0:5]
             img = self.font.render(label, True, 0)
-            canvas.blit(img, (0, header_size[1] + (pix_square_size[1] * ti) + line_height))
+            canvas.blit(img, (0 + margin, header_size[1] + margin + (pix_square_size[1] * ti) + line_height))
 
 
 
@@ -109,6 +110,13 @@ class TimetableRenderer:
                     width=1,
                 )
 
+        # draw score
+        max_hard_score, max_soft_score = constraints.max_score(timetable)
+        hard_score, soft_score = constraints.test(timetable)
+        label = str(hard_score) + " / " + str(max_hard_score)
+        img = self.font.render(label, True, GREEN if hard_score == max_hard_score else RED)
+        canvas.blit(img, (0 + margin, 0 + margin))
+
         # draw contents of each cell
         for ri in range(len(rooms)):
             for ti in range(len(timeslots)):
@@ -117,15 +125,6 @@ class TimetableRenderer:
                 room = rooms[ri]
                 timeslot = timeslots[ti]
                 self.draw_room_timeslot(timetable, constraints, canvas, room, timeslot, start_pos, pix_square_size)
-
-
-        # draw score
-        max_hard_score, max_soft_score = constraints.max_score(timetable)
-        hard_score, soft_score = constraints.test(timetable)
-        label = str(hard_score) + " / " + str(max_hard_score)
-        img = self.font.render(label, True, GREEN if hard_score == max_hard_score else RED)
-        canvas.blit(img, (0, 0))
-
 
         if self.render_mode == "human" or self.render_mode == "human_fast":
             # The following line copies our drawings from `canvas` to the visible window
@@ -155,11 +154,18 @@ class TimetableRenderer:
         for li, lesson in enumerate(lessons):
             label = lesson.subject
             img = self.font.render(label, True, 0)
-            canvas.blit(img, (start_pos[0], start_pos[1] + (line_height * li)))
+            canvas.blit(img, (start_pos[0] + margin, start_pos[1] + margin + (line_height * li)))
 
             label = lesson.teacher.name
             img = self.font.render(label, True, 0)
-            canvas.blit(img, (start_pos[0], start_pos[1] + (line_height * (li + 1))))
+            canvas.blit(img, (start_pos[0] + margin, start_pos[1] + margin + (line_height * (li + 1))))
+
+            if len(lesson.constraint_violations) > 0:
+                label = ','.join(map(lambda constraint: constraint.label, lesson.constraint_violations))
+                img = self.font.render(label, True, RED)
+                text_width, text_height = self.font.size(label)
+                canvas.blit(img, (start_pos[0] + size[0] - text_width - margin, start_pos[1] + margin + (line_height * (li + 1))))
+
 
         # draw the score for this cell
         #label = str(hard_score)# + " | " + str(max_hard_score)

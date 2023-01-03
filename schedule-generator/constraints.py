@@ -41,6 +41,10 @@ class Constraints:
 @dataclass
 class Constraint:
     id: int
+    label: str
+
+    def __hash__(self):
+        return self.id
     
     def test(c: Constraints, t: Timetable):
         return 0, 0
@@ -63,6 +67,7 @@ class RoomConflict(Constraint):
                 h += 1
             else:
                 h -= 1
+                l.constraint_violations.add(self)
 
         return h, s
 
@@ -88,6 +93,7 @@ class TeacherConflict(Constraint):
             else:
                 h -= 1
                 f += 1
+                l.constraint_violations.add(self)
 
         return h, s
 
@@ -107,6 +113,7 @@ class StudentGroupConflict(Constraint):
                 h += 1
             else:
                 h -= 1
+                l.constraint_violations.add(self)
 
         return h, s
 

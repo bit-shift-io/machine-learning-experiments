@@ -5,6 +5,7 @@ import datetime
 from functools import reduce
 import random
 import itertools
+#from constraints import Constraints
 
 # Used to test for intersection of 2 arrays of timeslots
 def is_intersection(a, b):
@@ -127,6 +128,7 @@ class Lesson(Timeslotable):
     #n_timeslots: int # how many timeslots this lesson must occupy
     room: Room
     elective: "Elective" # https://stackoverflow.com/questions/55320236/does-python-evaluate-type-hinting-of-a-forward-reference
+    constraint_violations: "set[Constraints]"
 
     # Is this lesson in the same elective group as the other lesson?
     def is_same_elective(self, other):
@@ -145,8 +147,7 @@ class Lesson(Timeslotable):
         self.student_group = student_group
         self.room = None
         self.elective = None
-        self.constraints_fail = []
-        self.constraints_pass = []
+        self.constraint_violations = set()
 
     def set_timeslots(self, new_timeslots):
         self.timeslots = new_timeslots
@@ -168,6 +169,7 @@ class Lesson(Timeslotable):
 
     def clear(self):
         super().clear()
+        self.constraint_violations.clear()
         self.set_room(None)
 
 
