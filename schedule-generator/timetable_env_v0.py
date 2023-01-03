@@ -53,14 +53,7 @@ class TimetableEnvV0(gym.Env):
         # we now also include which constraints are being violated = 1 or 0 for pass
         self.observation_space = spaces.Dict()
         for lesson in self.timetable.lessons:
-            id = f"lesson_{lesson.id}"
-
-            #const_arr = np.empty(self.n_constraints)
-            #const_arr.fill(1)
-
-            # TODO: setup constraint voliaitions in lessons
-            # TODO: also add in here Teacher and StudentGroups so AI can map issues so we might nnot even nneed constraints
-            #       as currenntly the AI knows nnothing about teachers or student groups so can only guess!
+            id = f"lesson_{lesson.id}_room_teacher_studentgroup"
             arr = np.array([self.n_rooms, self.n_teachers, self.n_student_groups])
             space = spaces.MultiDiscrete(arr)
             self.observation_space[id] = space
@@ -70,12 +63,17 @@ class TimetableEnvV0(gym.Env):
             space = spaces.MultiBinary([self.n_timeslots]) 
             self.observation_space[id] = space
 
+            # state of constraint violations
+            id = f"lesson_{lesson.id}_constraint_violations"
+            space = spaces.MultiBinary([self.n_constraints]) 
+            self.observation_space[id] = space
+
 
     def _get_obs(self):
         """Convert timetable to the oservation_space"""
         o = {}
         for lesson in self.timetable.lessons:
-            id = f"lesson_{lesson.id}"
+            
 
             # calc constraint state
             #const_arr = np.empty(self.n_constraints)
@@ -83,6 +81,7 @@ class TimetableEnvV0(gym.Env):
             #for const in lesson.constraints_fail:
             #    const_arr[const.id] = 1
 
+            id = f"lesson_{lesson.id}_room_teacher_studentgroup"
             arr = np.array([lesson.room.id, lesson.teacher.id, lesson.student_group.id])
             #arr = np.concatenate((arr, const_arr), axis=0)
             o[id] = arr
@@ -92,6 +91,14 @@ class TimetableEnvV0(gym.Env):
             arr = np.zeros(self.n_timeslots)
             for t in lesson.timeslots:
                 arr[t.id] = 1
+
+            o[id] = arr
+
+            # lessons can violate multiple constraints
+            id = f"lesson_{lesson.id}_constraint_violations"
+            arr = np.zeros(self.n_constraints)
+            for c in lesson.constraint_violations:
+                arr[c.id] = 1
 
             o[id] = arr
  
