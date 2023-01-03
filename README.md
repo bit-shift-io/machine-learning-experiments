@@ -54,6 +54,9 @@ https://github.com/e-lab/VideoSensors - predict gyroscope data from video footag
 
 noise cancelling with 2 microphones, to determine what is outside sound to block and what is inside sound to ignore
 
+generate website from image (midjourney)
+
+ai to tweak image ready for text recognition for SS
 
 
 TODO: I realised that the possible problem with my QMaze was that the inputs were absolute, not relative. I need to give the AI the pixels around where they are located in concentric circles. This might also work to give them a history of past steps.

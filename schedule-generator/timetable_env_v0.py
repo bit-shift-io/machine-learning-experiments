@@ -39,12 +39,15 @@ class TimetableEnvV0(gym.Env):
         self.n_rooms = len(self.timetable.rooms)
         self.n_teachers = len(self.timetable.teachers)
         self.n_student_groups = len(self.timetable.student_groups)
+        self.n_lessons = len(self.timetable.lessons)
 
         self.max_hard_score, self.max_soft_score = self.constraints.max_score(self.timetable)
 
-        # For each Lesson we have 6 actions (just first 4 for now): "previous room", "next room", "previous timeslot", "next timeslot", "remove from timetale", "add to timetable"
-        self.n_actions = 4
-        self.action_space = spaces.Discrete(self.n_timeslotables * self.n_actions) # we cann try making this a MultiDiscrete in future to allow multiple changes in 1 step
+        # For each Lesson we have 6 actions (just first 2 for now): "previous timeslot", "next timeslot", "previous room", "next room", "remove from timetale", "add to timetable"
+        self.n_actions = 2
+
+        # to think about: can we reduce action space to just be timeslotables? how would changinng rooms work in such a case?
+        self.action_space = spaces.Discrete(self.n_lessons * self.n_actions) # we cann try making this a MultiDiscrete in future to allow multiple changes in 1 step
 
                 # Each lesson is 3 discreet spaces, where: which room it is in, which timetable slot it is in
         # we now also include which constraints are being violated = 1 or 0 for pass
@@ -240,17 +243,17 @@ class TimetableEnvV0(gym.Env):
 
         # "previous room", "next room", "previous timeslot", "next timeslot", "remove from timetale", "add to timetable"
         match lesson_action:
-            case 0: # "previous room"
-                self.action_swap_room(lesson, -1)
-
-            case 1: # "next room"
-                self.action_swap_room(lesson, 1)
-
-            case 2: #  "previous timeslot"
+            case 0: #  "previous timeslot"
                 self.action_swap_timeslot(lesson, -1)
 
-            case 3: # "next timeslot"
+            case 1: # "next timeslot"
                 self.action_swap_timeslot(lesson, 1)
+
+            #case 2: # "previous room"
+            #    self.action_swap_room(lesson, -1)
+
+            #case 3: # "next room"
+            #    self.action_swap_room(lesson, 1)
 
             #case 4: # "remove from timetable"
             #    pass # TODO:
@@ -275,7 +278,7 @@ class TimetableEnvV0(gym.Env):
         observation = self._get_obs()
         info = self._get_info()
 
-        if self.renderer.render_mode == "human":
+        if self.renderer.render_mode == "human" or self.renderer.render_mode == "human_fast":
             self._render_frame()
 
         # stop if we reach to many steps... failure

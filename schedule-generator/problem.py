@@ -67,23 +67,46 @@ def generate_problem_large():
     # and tech for term each. The digital tech/art and home ec/design tech semesters swap over with year 8 (as year 7 digital tech/art happens, year 8s do home ec/design tech, then they switch over). So you would need to be running this elective at the same 
     # time as a year 8 class. (there are 3 classes per year level).
     lessons += subject_lessons_5('English', teachers[0], student_groups[0])
-    lessons += subject_lessons_5('Maths', teachers[0], student_groups[0])
-    lessons += subject_lessons_5('Science', teachers[0], student_groups[0])
-    lessons += subject_lessons_5('Humanities', teachers[0], student_groups[0])
+    lessons += subject_lessons_5('Maths', teachers[1], student_groups[0])
+    lessons += subject_lessons_5('Science', teachers[2], student_groups[0])
+    lessons += subject_lessons_5('Humanities', teachers[3], student_groups[0])
 
-    lessons += subject_lessons_3('German', teachers[0], student_groups[0])
-    lessons += subject_lessons_3('PE', teachers[0], student_groups[0])
-    lessons += subject_lessons_2('Christian Living', teachers[0], student_groups[0])
+    lessons += subject_lessons_3('German', teachers[4], student_groups[0])
+    lessons += subject_lessons_3('PE', teachers[5], student_groups[0])
+    lessons += subject_lessons_2('Christian Living', teachers[6], student_groups[0])
 
     # art elective
-    drama = subject_lessons_2('Drama - El A', teachers[0], student_groups[0])
-    music = subject_lessons_2('Music - El A', teachers[1], student_groups[0])
+    drama = subject_lessons_2('Drama - El A', teachers[7], student_groups[0])
+    music = subject_lessons_2('Music - El A', teachers[8], student_groups[0])
     lessons += Elective.zipLessons([drama, music], "G7 Elective A")
 
     # another elective
-    design_tech = subject_lessons_5("Design Tech/Art - El B", teachers[0], student_groups[0])
-    home_ec = subject_lessons_5("Home Ec/Tech - El B", teachers[1], student_groups[0])
+    design_tech = subject_lessons_5("Design Tech/Art - El B", teachers[9], student_groups[0])
+    home_ec = subject_lessons_5("Home Ec/Tech - El B", teachers[10], student_groups[0])
     lessons += Elective.zipLessons([design_tech, home_ec], "G7 Elective B")
+
+
+
+    # Year 8: Essentially mirror what happens with year 7, as far as I can see. (there are 3 classes per year level).
+    lessons += subject_lessons_5('English', teachers[0], student_groups[1])
+    lessons += subject_lessons_5('Maths', teachers[1], student_groups[1])
+    lessons += subject_lessons_5('Science', teachers[2], student_groups[1])
+    lessons += subject_lessons_5('Humanities', teachers[3], student_groups[1])
+
+    lessons += subject_lessons_3('German', teachers[4], student_groups[1])
+    lessons += subject_lessons_3('PE', teachers[5], student_groups[1])
+    lessons += subject_lessons_2('Christian Living', teachers[6], student_groups[1])
+
+    # art elective
+    drama = subject_lessons_2('Drama - El A', teachers[7], student_groups[1])
+    music = subject_lessons_2('Music - El A', teachers[8], student_groups[1])
+    lessons += Elective.zipLessons([drama, music], "G7 Elective A")
+
+    # another elective
+    design_tech = subject_lessons_5("Design Tech/Art - El B", teachers[9], student_groups[1])
+    home_ec = subject_lessons_5("Home Ec/Tech - El B", teachers[10], student_groups[1])
+    lessons += Elective.zipLessons([design_tech, home_ec], "G7 Elective B")
+
 
     """
     for sgi, sg in enumerate(student_groups):

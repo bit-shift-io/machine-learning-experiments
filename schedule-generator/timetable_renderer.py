@@ -7,8 +7,11 @@ RED = (100, 0, 0)
 GREEN = (0, 100, 0)
 BLUE = (0, 0, 100)
 
+
+line_height = 10
+
 class TimetableRenderer:
-    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
+    metadata = {"render_modes": ["human", "human_fast", "rgb_array"], "render_fps": 4}
 
     def __init__(self, render_mode):
         self.window_size = (1500, 900)  # The size of the PyGame window
@@ -28,7 +31,7 @@ class TimetableRenderer:
 
 
     def render(self, timetable: Timetable, constraints: Constraints):
-        if self.window is None and self.render_mode == "human":
+        if self.window is None and (self.render_mode == "human" or self.render_mode == "human_fast"):
             pygame.init()
             pygame.display.init()
             self.window = pygame.display.set_mode(self.window_size)
@@ -77,9 +80,12 @@ class TimetableRenderer:
         # Draw timetable labels
         for ti in range(len(timeslots)):
             timeslot = timeslots[ti]
-            label = (timeslot.day_of_week[0:2] + " " + str(timeslot.start_time))[0:8]
-            img = self.font.render(label, True, 0)
+            img = self.font.render(timeslot.day_of_week[0:2], True, 0)
             canvas.blit(img, (0, header_size[1] + (pix_square_size[1] * ti)))
+
+            label = (str(timeslot.start_time))[0:5]
+            img = self.font.render(label, True, 0)
+            canvas.blit(img, (0, header_size[1] + (pix_square_size[1] * ti) + line_height))
 
 
 
@@ -121,7 +127,7 @@ class TimetableRenderer:
         canvas.blit(img, (0, 0))
 
 
-        if self.render_mode == "human":
+        if self.render_mode == "human" or self.render_mode == "human_fast":
             # The following line copies our drawings from `canvas` to the visible window
             self.window.blit(canvas, canvas.get_rect())
             pygame.event.pump()
@@ -129,7 +135,9 @@ class TimetableRenderer:
 
             # We need to ensure that human-rendering occurs at the predefined framerate.
             # The following line will automatically add a delay to keep the framerate stable.
-            self.clock.tick(self.metadata["render_fps"])
+            if self.clock != None:
+                self.clock.tick(self.metadata["render_fps"])
+
         else:  # rgb_array
             return np.transpose(
                 np.array(pygame.surfarray.pixels3d(canvas)), axes=(1, 0, 2)
@@ -139,7 +147,6 @@ class TimetableRenderer:
         lessons = timetable.lessons
         lessons = list(filter(lambda l: l.room == room and timeslot in l.timeslots, lessons))
 
-        line_height = 10
 
         #sub_timetable = Timetable([timeslot], [room], lessons, [], [])
         #max_hard_score, max_soft_score = constraints.max_score(sub_timetable)

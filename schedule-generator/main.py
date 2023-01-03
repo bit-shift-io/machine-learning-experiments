@@ -10,11 +10,14 @@ timetable = generate_problem_large()
 constraints = constraint_list()
 
 # debug the initial layout of the timetable
-#timetable.ordered_layout()
-#timetable_renderer = TimetableRenderer(render_mode='human')
-#timetable_renderer.render(timetable, constraints)
+debug_initial_layout = True
+if debug_initial_layout:
+    timetable.ordered_layout()
+    timetable_renderer = TimetableRenderer(render_mode='human')
+    timetable_renderer.render(timetable, constraints)
 
-env = TimetableEnvV0('human', timetable, constraints, max_episode_steps=100)
+render_mode = None #'human_fast'
+env = TimetableEnvV0(render_mode, timetable, constraints, max_episode_steps=100)
 dnn = DNN(env.state_size(), env.action_size(), hidden_dim=128, lr=0.0008)
 
 # choose a training algorithm
@@ -27,7 +30,7 @@ beepy.beep(sound='ping')
 trainer.plot() # this blocks
 
 # run a few epochs in human mode for seeing how things look
-env.renderer.render_mode = "human"
+env.renderer.render_mode = "human_fast"
 trainer.epsilon = 0 # disable random actions
 trainer.train_episode()
 env.timetable.print()

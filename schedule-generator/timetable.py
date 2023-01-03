@@ -321,13 +321,15 @@ class Timetable:
 
         pass
 
-    def find_rooms_with_free_timeslots(self, timeslots):
+    def find_rooms_with_free_timeslots(self, timeslots, n_rooms):
         rooms = []
         for ri, room in enumerate(self.rooms):
             free_timeslots = self.find_free_timeslots_for_room(room)
             intersect = intersection(free_timeslots, timeslots)
             if len(intersect) == len(timeslots):
                 rooms.append(room)
+                if n_rooms > 0 and len(rooms) >= n_rooms:
+                    return rooms
 
         return rooms
 
@@ -338,7 +340,7 @@ class Timetable:
             free_timeslots = self.find_free_timeslots_for_room(room)
             consecutive_timeslots = self.find_consecutive_timeslots(n_timeslots, free_timeslots)
             if consecutive_timeslots:
-                rooms = self.find_rooms_with_free_timeslots(consecutive_timeslots)
+                rooms = self.find_rooms_with_free_timeslots(consecutive_timeslots, n_rooms)
                 if len(rooms) >= n_rooms:
                     return rooms[:n_rooms], consecutive_timeslots
 
