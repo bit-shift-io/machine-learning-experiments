@@ -82,10 +82,18 @@ class TA_QL_Base(TrainAlgo_Base):
             # Implement greedy search policy to explore the state space
             if random.random() < self.epsilon:
                 action = self.env.action_space.sample()
+                #action = flatten(self.env.action_space, action)
                 rand_action_total += 1
             else:
                 q_values = self.dnn.predict([state])
-                action = torch.argmax(q_values).item()
+                q_values_np = q_values.numpy()[0] #torch.argmax(q_values).item()
+                splits = np.array_split(q_values_np, len(q_values_np) / self.env.n_actions)
+                split_actions = list(map(lambda s: np.argmax(s), splits))
+
+                action = {}
+                for idx, lesson in enumerate(self.env.timetable.lessons):
+                    id = f"lesson_{lesson.id}_actions"
+                    action[id] = split_actions[idx]
             
             # Take action and add reward to total
             next_state, reward, terminated, truncated, info = self.env.step(action)
@@ -99,7 +107,8 @@ class TA_QL_Base(TrainAlgo_Base):
             if (reward_min == None or reward < reward_min):
                 reward_min = reward
 
-            self.memory.append((state, action, next_state, reward, terminated))
+            flattened_action = flatten(self.env.action_space, action)
+            self.memory.append((state, flattened_action, next_state, reward, terminated))
             q_values = self.dnn.predict([state]).tolist()
             
             # Update network weights using replay memory

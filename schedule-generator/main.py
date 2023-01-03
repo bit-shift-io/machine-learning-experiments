@@ -16,7 +16,7 @@ if debug_initial_layout:
     timetable_renderer = TimetableRenderer(render_mode='human')
     timetable_renderer.render(timetable, constraints)
 
-render_mode = None #'human_fast' #'human_fast'
+render_mode = 'human_fast' #'human_fast' #'human_fast'
 env = TimetableEnvV0(render_mode, timetable, constraints, max_episode_steps=200)
 dnn = DNN(env.state_size(), env.action_size(), hidden_dim=1024, lr=0.0008)
 checkpoint = dnn.load('model.pt')

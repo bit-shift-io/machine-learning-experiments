@@ -23,7 +23,7 @@ class TimetableEnvV0(gym.Env):
 
     def action_size(self):
         # Number of actions
-        return self.action_space.n
+        return flatten_space(self.action_space).shape[0]
 
     def __init__(self, render_mode=None, timetable=None, constraints=None, max_episode_steps=100):
         #self.timetable = timetable
@@ -45,11 +45,11 @@ class TimetableEnvV0(gym.Env):
         self.max_hard_score, self.max_soft_score = self.constraints.max_score(self.timetable)
 
         # For each Lesson we have 6 actions (just first 2 for now): "previous timeslot", "next timeslot", "previous room", "next room", "remove from timetale", "add to timetable"
-        self.n_actions = 4
+        self.n_actions = 5
 
         # to think about: can we reduce action space to just be timeslotables? how would changinng rooms work in such a case?
-        self.action_space = spaces.Discrete(self.n_lessons * self.n_actions) # we cann try making this a MultiDiscrete in future to allow multiple changes in 1 step
-
+        self.action_space = spaces.Dict()
+        
                 # Each lesson is 3 discreet spaces, where: which room it is in, which timetable slot it is in
         # we now also include which constraints are being violated = 1 or 0 for pass
         self.observation_space = spaces.Dict()
@@ -69,6 +69,11 @@ class TimetableEnvV0(gym.Env):
             space = spaces.MultiBinary([self.n_constraints]) 
             self.observation_space[id] = space
 
+            # each lesson has its own action space
+            id = f"lesson_{lesson.id}_actions"
+            self.action_space[id] = spaces.Discrete(self.n_actions) # we cann try making this a MultiDiscrete in future to allow multiple changes in 1 step
+
+        return
 
     def _get_obs(self):
         """Convert timetable to the oservation_space"""
@@ -258,33 +263,37 @@ class TimetableEnvV0(gym.Env):
 
         self.n_step += 1
 
-        # convert action into something usable
-        lesson_idx = math.floor(action / self.n_actions)
-        lesson_action = action % self.n_actions
-        lesson = self.timetable.lessons[lesson_idx]
+        for lesson in self.timetable.lessons:
+            id = f"lesson_{lesson.id}_actions"
+            lesson_action = action[id]
 
-        # "previous room", "next room", "previous timeslot", "next timeslot", "remove from timetale", "add to timetable"
-        match lesson_action:
-            case 0: #  "previous timeslot"
-                self.action_swap_timeslot(lesson, -1)
+            # "previous room", "next room", "previous timeslot", "next timeslot", "remove from timetale", "add to timetable"
+            match lesson_action:
+                case 0: #  "previous timeslot"
+                    self.action_swap_timeslot(lesson, -1)
 
-            case 1: # "next timeslot"
-                self.action_swap_timeslot(lesson, 1)
+                case 1: # "next timeslot"
+                    self.action_swap_timeslot(lesson, 1)
 
-            case 2: # "previous room"
-                self.action_swap_room(lesson, -1)
+                case 2: # "previous room"
+                    self.action_swap_room(lesson, -1)
 
-            case 3: # "next room"
-                self.action_swap_room(lesson, 1)
+                case 3: # "next room"
+                    self.action_swap_room(lesson, 1)
 
-            #case 4: # "remove from timetable"
-            #    pass # TODO:
+                case 4: # "non op"
+                    pass
 
-            #case 5: # "add to timetable"
-            #    pass # TODO:
+                #case 4: # "remove from timetable"
+                #    pass # TODO:
 
-            case _: # default
-                print("Unknown lesson_action!")
+                #case 5: # "add to timetable"
+                #    pass # TODO:
+
+                case _: # default
+                    print("Unknown lesson_action!")
+
+
 
         # Score the new timetable
         # TODO: handle soft score
