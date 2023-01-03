@@ -43,7 +43,7 @@ class TA_QL_Base(TrainAlgo_Base):
         self.rand_action_total = []
         self.action_total = []
 
-    def train(self, n_episodes):
+    def train(self, n_episodes, fn_cb):
         t0 = time.time()
 
         for ei in range(n_episodes):
@@ -52,6 +52,7 @@ class TA_QL_Base(TrainAlgo_Base):
                 break
 
             self.epsilon = max(self.epsilon * self.eps_decay, 0.01)
+            fn_cb(ei)
 
         t1 = time.time()
         print(f"{n_episodes} episodes completed in {round((t1-t0)/60, 1)}min") 

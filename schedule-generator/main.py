@@ -10,7 +10,7 @@ timetable = generate_problem_large()
 constraints = constraint_list()
 
 # debug the initial layout of the timetable
-debug_initial_layout = True
+debug_initial_layout = False
 if debug_initial_layout:
     timetable.student_group_layout()
     timetable_renderer = TimetableRenderer(render_mode='human')
@@ -29,11 +29,11 @@ if checkpoint:
 #trainer = TA_QL_DoubleSoft(dnn, env, TAU=0.7)
 trainer = TA_QL(dnn, env)
 
-n_episodes = 100
-trainer.train(n_episodes)
-dnn.save('model.pt', {
-    'n_episodes': n_trained_eps + n_episodes
-})
+n_episodes = 50
+trainer.train(n_episodes, lambda ei: dnn.save('model.pt', {
+    'n_episodes': n_trained_eps + (ei + 1)
+}))
+
 
 beepy.beep(sound='ping')
 trainer.plot() # this blocks
