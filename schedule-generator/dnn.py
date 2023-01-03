@@ -15,6 +15,23 @@ class DNN:
                 )
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr)
 
+    # https://pytorch.org/tutorials/beginner/saving_loading_models.html#saving-loading-a-general-checkpoint-for-inference-and-or-resuming-training
+    def save(self, path, other_params={}):
+        torch.save({
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+            **other_params
+        }, path)
+
+    def load(self, path):
+        try:
+            checkpoint = torch.load(path)
+            self.model.load_state_dict(checkpoint['model_state_dict'])
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            return checkpoint
+        except:
+            return None
+
     # this performs 1 epoch
     def train(self, batch_x, batch_y, epoch=0):
         """Update the weights of the network given a training sample. """

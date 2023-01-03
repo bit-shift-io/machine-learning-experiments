@@ -20,6 +20,10 @@ class Constraints:
     def test(self, timetable: Timetable):
         total_hard_score = 0
         total_soft_score = 0
+
+        for l in timetable.lessons:
+            l.constraint_violations.clear()
+
         for constraint in self.constraints:
             hard, soft = constraint.test(self, timetable)
             total_hard_score += hard

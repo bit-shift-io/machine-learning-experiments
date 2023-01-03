@@ -154,17 +154,17 @@ class TimetableRenderer:
         for li, lesson in enumerate(lessons):
             label = lesson.subject
             img = self.font.render(label, True, 0)
-            canvas.blit(img, (start_pos[0] + margin, start_pos[1] + margin + (line_height * li)))
+            canvas.blit(img, (start_pos[0] + margin, start_pos[1] + margin))
 
             label = lesson.teacher.name
             img = self.font.render(label, True, 0)
-            canvas.blit(img, (start_pos[0] + margin, start_pos[1] + margin + (line_height * (li + 1))))
+            canvas.blit(img, (start_pos[0] + margin, start_pos[1] + margin + line_height))
 
             if len(lesson.constraint_violations) > 0:
                 label = ','.join(map(lambda constraint: constraint.label, lesson.constraint_violations))
                 img = self.font.render(label, True, RED)
                 text_width, text_height = self.font.size(label)
-                canvas.blit(img, (start_pos[0] + size[0] - text_width - margin, start_pos[1] + margin + (line_height * (li + 1))))
+                canvas.blit(img, (start_pos[0] + size[0] - text_width - margin, start_pos[1] + margin))
 
 
         # draw the score for this cell

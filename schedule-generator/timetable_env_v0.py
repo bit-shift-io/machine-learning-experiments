@@ -44,7 +44,7 @@ class TimetableEnvV0(gym.Env):
         self.max_hard_score, self.max_soft_score = self.constraints.max_score(self.timetable)
 
         # For each Lesson we have 6 actions (just first 2 for now): "previous timeslot", "next timeslot", "previous room", "next room", "remove from timetale", "add to timetable"
-        self.n_actions = 2
+        self.n_actions = 4
 
         # to think about: can we reduce action space to just be timeslotables? how would changinng rooms work in such a case?
         self.action_space = spaces.Discrete(self.n_lessons * self.n_actions) # we cann try making this a MultiDiscrete in future to allow multiple changes in 1 step
@@ -112,7 +112,8 @@ class TimetableEnvV0(gym.Env):
         super().reset(seed=seed)
 
         #self.timetable.randomize_layout()
-        self.timetable.ordered_layout()
+        #self.timetable.ordered_layout()
+        self.timetable.start_layout()
 
         # score here if just for testing
         hard_score, soft_score = self.constraints.test(self.timetable)
@@ -132,25 +133,25 @@ class TimetableEnvV0(gym.Env):
         # swap to another room with the same timeslots
         # TODO: support multiple timeslots
 
-        idx = lesson.room.id
+        idx = self.timetable.rooms.index(lesson.room) #lesson.room.id
         idx += offset
         idx = idx % self.n_rooms
 
         cur_room = lesson.room
         next_room = self.timetable.rooms[idx]
 
-        other_lessons = list(filter(lambda l: l.room == next_room and is_intersection(l.timeslots, lesson.timeslots), self.timetable.lessons))
-        if (len(other_lessons) > 1):
-            print("oh dear, we cant swap rooms! unless the two lessons are the same size together, or one of them is the same size as this lesson")
-            return
+        #other_lessons = list(filter(lambda l: l.room == next_room and is_intersection(l.timeslots, lesson.timeslots), self.timetable.lessons))
+        #if (len(other_lessons) > 1):
+        #    print("oh dear, we cant swap rooms! unless the two lessons are the same size together, or one of them is the same size as this lesson")
+        #    return
 
-        if (len(other_lessons) == 1):
-            other_lesson = other_lessons[0]
-            if other_lesson.n_timeslots != lesson.n_timeslots:
-                print("oh dear, we couldn't swap rooms!... need more work to handle swapping")
-                return
+        #if (len(other_lessons) == 1):
+        #    other_lesson = other_lessons[0]
+        #    if other_lesson.n_timeslots != lesson.n_timeslots:
+        #        print("oh dear, we couldn't swap rooms!... need more work to handle swapping")
+        #        return
 
-            other_lesson.set_room(cur_room)
+        #    other_lesson.set_room(cur_room)
 
         lesson.set_room(next_room)
 
@@ -158,14 +159,27 @@ class TimetableEnvV0(gym.Env):
     def action_swap_timeslot(self, lesson, offset):
         # move the lesson (or elective) up or down in the list
         timetableable = lesson if lesson.elective == None else lesson.elective
-        timetableable_idx = self.timetable.timeslotables.index(timetableable)
 
-        next_timetableable_idx = (timetableable_idx + offset) % len(self.timetable.timeslotables)
+        timeslots = lesson.timeslots
+        start_timeslot_idx = self.timetable.timeslots.index(timeslots[0])
+
+        next_start_timeslot_idx = (start_timeslot_idx + offset) % len(self.timetable.timeslots)
+
+        indices = range(next_start_timeslot_idx,next_start_timeslot_idx + lesson.n_timeslots)
+        next_timeslots = np.array(self.timetable.timeslots).take(indices, mode='wrap').tolist()
+
+        timetableable.set_timeslots(next_timeslots)
+        pass
+
+
+        #timetableable_idx = self.timetable.timeslotables.index(timetableable)
+
+        #next_timetableable_idx = (timetableable_idx + offset) % len(self.timetable.timeslotables)
 
         # swap
-        self.timetable.timeslotables[timetableable_idx], self.timetable.timeslotables[next_timetableable_idx] = self.timetable.timeslotables[next_timetableable_idx], self.timetable.timeslotables[timetableable_idx]
+        #self.timetable.timeslotables[timetableable_idx], self.timetable.timeslotables[next_timetableable_idx] = self.timetable.timeslotables[next_timetableable_idx], self.timetable.timeslotables[timetableable_idx]
 
-        self.timetable.ordered_layout()
+        #self.timetable.ordered_layout()
 
         """
         if offset > 0:
@@ -256,11 +270,11 @@ class TimetableEnvV0(gym.Env):
             case 1: # "next timeslot"
                 self.action_swap_timeslot(lesson, 1)
 
-            #case 2: # "previous room"
-            #    self.action_swap_room(lesson, -1)
+            case 2: # "previous room"
+                self.action_swap_room(lesson, -1)
 
-            #case 3: # "next room"
-            #    self.action_swap_room(lesson, 1)
+            case 3: # "next room"
+                self.action_swap_room(lesson, 1)
 
             #case 4: # "remove from timetable"
             #    pass # TODO:

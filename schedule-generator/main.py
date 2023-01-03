@@ -10,21 +10,30 @@ timetable = generate_problem_large()
 constraints = constraint_list()
 
 # debug the initial layout of the timetable
-debug_initial_layout = True
+debug_initial_layout = False
 if debug_initial_layout:
-    timetable.ordered_layout()
+    timetable.start_layout()
     timetable_renderer = TimetableRenderer(render_mode='human')
     timetable_renderer.render(timetable, constraints)
 
-render_mode = 'human' #'human_fast'
-env = TimetableEnvV0(render_mode, timetable, constraints, max_episode_steps=100)
-dnn = DNN(env.state_size(), env.action_size(), hidden_dim=128, lr=0.0008)
+render_mode = None #'human_fast' #'human_fast'
+env = TimetableEnvV0(render_mode, timetable, constraints, max_episode_steps=200)
+dnn = DNN(env.state_size(), env.action_size(), hidden_dim=1024, lr=0.0008)
+checkpoint = dnn.load('model.pt')
+n_trained_eps = 0
+if checkpoint:
+    n_trained_eps = checkpoint['n_episodes']
+    print(f'Resuming training from episode #{n_trained_eps}')
 
 # choose a training algorithm
 #trainer = TA_QL_DoubleSoft(dnn, env, TAU=0.7)
 trainer = TA_QL(dnn, env)
 
-trainer.train(n_episodes=300)
+n_episodes = 100
+trainer.train(n_episodes)
+dnn.save('model.pt', {
+    'n_episodes': n_trained_eps + n_episodes
+})
 
 beepy.beep(sound='ping')
 trainer.plot() # this blocks

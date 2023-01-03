@@ -117,6 +117,9 @@ class Timeslotable:
     def is_elective(self):
         return False
 
+    def get_lessons(self):
+        return []
+
 
 @dataclass
 class Lesson(Timeslotable):
@@ -172,6 +175,9 @@ class Lesson(Timeslotable):
         self.constraint_violations.clear()
         self.set_room(None)
 
+    def get_lessons(self):
+        return [self]
+
 
 # Group of lessons that must occupy the same timeslot
 @dataclass
@@ -213,16 +219,15 @@ class Elective(Timeslotable):
     def is_elective(self):
         return True
 
+    def get_lessons(self):
+        return self.lessons
 
 
 # flatten an array of timeslotables into a list of lessons
 def get_lessons(timeslotables):
     lessons = []
     for timeslotable in timeslotables:
-        if (timeslotable.is_elective()):
-            lessons += timeslotable.lessons
-        else:
-            lessons += [timeslotable]
+        lessons += timeslotable.get_lessons()
 
     return lessons
 
@@ -349,22 +354,22 @@ class Timetable:
         print("Oh dear, need to improve code in find_rooms_with_free_consecutive_timeslots")
         return [], []
 
+    def start_layout(self):
+        """ Do a simple layout where each timeslotable is just placed down in the first room, in the first timeslot """
+        self.clear()
+        for timeslotable in self.timeslotables:
+            lessons = timeslotable.get_lessons()
+            for lesson in lessons:
+                lesson.set_timeslots(self.timeslots[:lesson.n_timeslots])
+                lesson.set_room(self.rooms[0])
+
+
     def ordered_layout(self):
         """ Do a simple layout where each timeslotable is just placed down in order """
         self.clear()
 
-        #self.lessons = get_lessons(self.timeslotables)
-
         for timeslotable in self.timeslotables:
-            n_timeslots = timeslotable.n_timeslots
-            found = False
-
-            lessons = []
-            if timeslotable.is_elective():
-                lessons = timeslotable.lessons
-            else:
-                lessons = [timeslotable]
-
+            lessons = timeslotable.get_lessons()
             n_lessons = len(lessons)
             rooms, timeslots = self.find_rooms_with_free_consecutive_timeslots(n_lessons, lessons[0].n_timeslots)
             for (lesson, room) in zip(lessons, rooms):
