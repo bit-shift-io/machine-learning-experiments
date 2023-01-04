@@ -61,7 +61,7 @@ import gymnasium as gym
 # Note: We are going to follow the rules from Sutton & Barto.
 # Other versions of the game can be found below for you to experiment.
 
-env = gym.make("Blackjack-v1", sab=True)
+env = gym.make("Blackjack-v1", sab=True, render_mode='human')
 
 # %%
 # .. code:: py
