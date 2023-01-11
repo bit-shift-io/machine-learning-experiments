@@ -35,14 +35,20 @@ async function handleElement(page, element, dir) {
     return r
 }
 
-export async function screenshotWebsite(url) {
-    const browser = await puppeteer.launch()
+export async function screenshotWebsite(browser, url) {
     const page = await browser.newPage()
 
     // create a dir from the website url
     const dir = 'data/' + url.replace('https://', '').replace('http://').replaceAll('.', '-')
 
-    await page.goto(url)
+    try {
+        await page.goto(url)
+    } catch (err) {
+        //console.warn(err)
+        console.warn(`Processing failed: ${url}`)
+        await page.close()
+        return
+    }
 
     await page.waitForSelector('body')
     const element = await page.$('body')
@@ -51,11 +57,14 @@ export async function screenshotWebsite(url) {
     const json = JSON.stringify(results, null, 4)
     fs.writeFileSync(`${dir}/data.json`, json)
 
-    await browser.close()
+    await page.close()
 }
 
-
+/*
 (async () => {
+    const browser = await puppeteer.launch()
     const url = 'https://google.com'
-    //await screenshotWebsite(url)
+    await screenshotWebsite(browser, url)
+    await browser.close()
 })();
+*/

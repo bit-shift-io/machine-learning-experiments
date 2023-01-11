@@ -1,4 +1,6 @@
 import { screenshotWebsite } from './website.js'
+import chunk from 'lodash/chunk.js'
+import puppeteer from 'puppeteer';
 
 /*
 const Crawler = require('crawler');
@@ -26,12 +28,17 @@ const c = new Crawler({
 c.queue(['http://www.google.com/','http://www.yahoo.com']);
 */
 
+const browser = await puppeteer.launch()
 const r = await fetch('https://raw.githubusercontent.com/Kikobeats/top-sites/master/top-sites.json').then(r => r.json())
+const c = chunk(r, r.length / 10)
+const p = c.map(async (arr, idx) => {
+    for (const w of arr) {
+        console.log(`Processing: ${w.rootDomain}`)
+        await screenshotWebsite(browser, 'http://' + w.rootDomain)
+    }
+})
 
-for (const w of r) {
-    console.log(`Processing: ${w.rootDomain}`)
-    await screenshotWebsite('https://' + w.rootDomain)
-}
-
-console.log(r)
+await Promise.all(p)
+await browser.close()
+console.log('All Done')
 
