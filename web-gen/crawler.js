@@ -33,7 +33,6 @@ const r = await fetch('https://raw.githubusercontent.com/Kikobeats/top-sites/mas
 const c = chunk(r, r.length / 10)
 const p = c.map(async (arr, idx) => {
     for (const w of arr) {
-        console.log(`Processing: ${w.rootDomain}`)
         await screenshotWebsite(browser, 'http://' + w.rootDomain)
     }
 })

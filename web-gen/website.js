@@ -36,6 +36,7 @@ async function handleElement(page, element, dir) {
 }
 
 export async function screenshotWebsite(browser, url) {
+    console.log(`Starting processing: ${url}`)
     const page = await browser.newPage()
 
     // create a dir from the website url
@@ -45,7 +46,7 @@ export async function screenshotWebsite(browser, url) {
         await page.goto(url)
     } catch (err) {
         //console.warn(err)
-        console.warn(`Processing failed: ${url}`)
+        console.warn(`Failed processing: ${url}`)
         await page.close()
         return
     }
@@ -58,6 +59,7 @@ export async function screenshotWebsite(browser, url) {
     fs.writeFileSync(`${dir}/data.json`, json)
 
     await page.close()
+    console.log(`Done processing: ${url}`)
 }
 
 /*
