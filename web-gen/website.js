@@ -4,7 +4,7 @@ import fs from 'fs'
 async function handleElement(page, element, dir) {
     fs.mkdirSync(dir, { recursive: true });
 
-    const img_path = `${dir}/screenshot.png`
+    const img_path = `${dir}/screenshot.jpg`
     const r = {
         img_path
     }
@@ -40,7 +40,7 @@ export async function screenshotWebsite(browser, url) {
     const page = await browser.newPage()
 
     // create a dir from the website url
-    const dir = 'data/' + url.replace('https://', '').replace('http://').replaceAll('.', '-')
+    const dir = 'data/' + url.replace('https://', '').replace('http://', '').replaceAll('.', '-')
 
     try {
         await page.goto(url)
