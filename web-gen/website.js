@@ -37,29 +37,35 @@ async function handleElement(page, element, dir) {
 
 export async function screenshotWebsite(browser, url) {
     console.log(`Starting processing: ${url}`)
-    const page = await browser.newPage()
 
     // create a dir from the website url
     const dir = 'data/' + url.replace('https://', '').replace('http://', '').replaceAll('.', '-')
-
-    try {
-        await page.goto(url)
-    } catch (err) {
-        //console.warn(err)
-        console.warn(`Failed processing: ${url}`)
-        await page.close()
+    const dataFile = `${dir}/data.json`
+    if (fs.existsSync(dataFile)) {
+        console.log(`Already processed: ${url}`)
         return
     }
 
-    await page.waitForSelector('body')
-    const element = await page.$('body')
+    let page = null
+    try {
+        page = await browser.newPage()
 
-    const results = await handleElement(page, element, `${dir}/body`)
-    const json = JSON.stringify(results, null, 4)
-    fs.writeFileSync(`${dir}/data.json`, json)
+        await page.goto(url)
 
-    await page.close()
-    console.log(`Done processing: ${url}`)
+        await page.waitForSelector('body')
+        const element = await page.$('body')
+
+        const results = await handleElement(page, element, `${dir}/body`)
+        const json = JSON.stringify(results, null, 4)
+        fs.writeFileSync(dataFile, json)
+
+        await page.close()
+        console.log(`Done processing: ${url}`)
+    } catch (err) {
+        //console.warn(err)
+        console.warn(`Failed processing: ${url}`)
+        await page?.close()
+    }
 }
 
 /*

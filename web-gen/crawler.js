@@ -30,7 +30,7 @@ c.queue(['http://www.google.com/','http://www.yahoo.com']);
 
 const browser = await puppeteer.launch()
 const r = await fetch('https://raw.githubusercontent.com/Kikobeats/top-sites/master/top-sites.json').then(r => r.json())
-const c = chunk(r, r.length / 10)
+const c = chunk(r, r.length)// / 10)
 const p = c.map(async (arr, idx) => {
     for (const w of arr) {
         await screenshotWebsite(browser, 'http://' + w.rootDomain)
