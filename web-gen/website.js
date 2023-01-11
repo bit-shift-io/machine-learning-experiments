@@ -14,7 +14,7 @@ async function handleElement(page, element, dir) {
         await element.screenshot({path: img_path})
     } catch (err) {
         // TODO: delete the dir?
-        console.warn(err)
+        //console.warn(err)
         return null
     }
 
@@ -35,12 +35,12 @@ async function handleElement(page, element, dir) {
     return r
 }
 
-(async () => {
+export async function screenshotWebsite(url) {
     const browser = await puppeteer.launch()
     const page = await browser.newPage()
 
-    const url = 'https://google.com'
-    const dir = 'data/' + url.replace('https://', '').replace('http://').replace('.', '-')
+    // create a dir from the website url
+    const dir = 'data/' + url.replace('https://', '').replace('http://').replaceAll('.', '-')
 
     await page.goto(url)
 
@@ -52,4 +52,10 @@ async function handleElement(page, element, dir) {
     fs.writeFileSync(`${dir}/data.json`, json)
 
     await browser.close()
+}
+
+
+(async () => {
+    const url = 'https://google.com'
+    //await screenshotWebsite(url)
 })();

@@ -1,3 +1,6 @@
+import { screenshotWebsite } from './website.js'
+
+/*
 const Crawler = require('crawler');
 
 const c = new Crawler({
@@ -21,3 +24,14 @@ const c = new Crawler({
 
 // Queue a list of URLs
 c.queue(['http://www.google.com/','http://www.yahoo.com']);
+*/
+
+const r = await fetch('https://raw.githubusercontent.com/Kikobeats/top-sites/master/top-sites.json').then(r => r.json())
+
+for (const w of r) {
+    console.log(`Processing: ${w.rootDomain}`)
+    await screenshotWebsite('https://' + w.rootDomain)
+}
+
+console.log(r)
+
