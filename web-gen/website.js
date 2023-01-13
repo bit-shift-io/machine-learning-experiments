@@ -1,12 +1,22 @@
 import puppeteer from 'puppeteer';
 import fs from 'fs'
 
+async function getPropertyValue(element, property) {
+    return await (await element.getProperty(property)).jsonValue()
+}
+
 async function handleElement(page, element, dir) {
     fs.mkdirSync(dir, { recursive: true });
 
+    const bounds = await element.boundingBox()
     const img_path = `${dir}/screenshot.jpg`
     const r = {
-        img_path
+        img_path,
+        offset_left: await getPropertyValue(element, 'offsetLeft'),
+        offset_top: await getPropertyValue(element, 'offsetTop'),
+        bounds,
+        tag_name: await getPropertyValue(element, 'tagName'),
+        // TODO: add css block to get layout info, padding, margins, border etc...
     }
     const r_children = []
 
@@ -39,7 +49,10 @@ export async function screenshotWebsite(browser, url) {
     console.log(`Starting processing: ${url}`)
 
     // create a dir from the website url
-    const dir = 'data/' + url.replace('https://', '').replace('http://', '').replaceAll('.', '-')
+    let dir = 'data/' + url.replace('https://', '').replace('http://', '').replaceAll('.', '-')
+    if (dir.endsWith('/')) {
+        dir = dir.slice(0, -1)
+    }
     const dataFile = `${dir}/data.json`
     if (fs.existsSync(dataFile)) {
         console.log(`Already processed: ${url}`)
@@ -53,9 +66,9 @@ export async function screenshotWebsite(browser, url) {
         await page.goto(url)
 
         await page.waitForSelector('body')
-        const element = await page.$('body')
+        const element = await page.$('html')
 
-        const results = await handleElement(page, element, `${dir}/body`)
+        const results = await handleElement(page, element, `${dir}/html`)
         const json = JSON.stringify(results, null, 4)
         fs.writeFileSync(dataFile, json)
 
@@ -67,12 +80,3 @@ export async function screenshotWebsite(browser, url) {
         await page?.close()
     }
 }
-
-/*
-(async () => {
-    const browser = await puppeteer.launch()
-    const url = 'https://google.com'
-    await screenshotWebsite(browser, url)
-    await browser.close()
-})();
-*/

@@ -28,16 +28,28 @@ const c = new Crawler({
 c.queue(['http://www.google.com/','http://www.yahoo.com']);
 */
 
-const browser = await puppeteer.launch()
-const r = await fetch('https://raw.githubusercontent.com/Kikobeats/top-sites/master/top-sites.json').then(r => r.json())
-const c = chunk(r, r.length)// / 10)
-const p = c.map(async (arr, idx) => {
-    for (const w of arr) {
-        await screenshotWebsite(browser, 'http://' + w.rootDomain)
-    }
-})
 
-await Promise.all(p)
-await browser.close()
+
+const TEST_SINGLE = true
+
+if (TEST_SINGLE) {
+    const browser = await puppeteer.launch()
+    const url = 'https://www.wikipedia.org/'
+    await screenshotWebsite(browser, url)
+    await browser.close()
+} else {
+    const browser = await puppeteer.launch()
+    const r = await fetch('https://raw.githubusercontent.com/Kikobeats/top-sites/master/top-sites.json').then(r => r.json())
+    const c = chunk(r, r.length)// / 10)
+    const p = c.map(async (arr, idx) => {
+        for (const w of arr) {
+            await screenshotWebsite(browser, 'http://' + w.rootDomain)
+        }
+    })
+
+    await Promise.all(p)
+    await browser.close()
+}
+
 console.log('All Done')
 

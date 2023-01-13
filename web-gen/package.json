@@ -4,5 +4,8 @@
     "lodash": "^4.17.21",
     "puppeteer": "^19.5.0"
   },
-  "type": "module"
+  "type": "module",
+  "engines": {
+    "node": ">=18.13.0"
+  }
 }
