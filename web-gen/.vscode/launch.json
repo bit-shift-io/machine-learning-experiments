@@ -21,16 +21,6 @@
             ],
             "program": "crawler.js",
             "runtimeExecutable": "/usr/local/bin/node"
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "website",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "program": "website.js",
-            "runtimeExecutable": "/usr/local/bin/node"
         }
     ]
 }

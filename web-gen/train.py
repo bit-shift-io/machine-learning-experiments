@@ -3,13 +3,34 @@
 import torch
 from torch.autograd import Variable
 import torchvision.datasets as dsets
+from torch.utils.data import DataLoader, random_split
 import torchvision.transforms as transforms
 import torch.nn.init
+import matplotlib.pyplot as plt
+from datasets import WebsitesDataset
 
 # hyperparameters
 batch_size = 32
 keep_prob = 1
 
+
+
+ds = WebsitesDataset('data')
+train_data, test_data = torch.utils.data.random_split(ds, [int(0.8 * len(ds)), len(ds) - int(0.8 * len(ds))])
+train_dataloader = DataLoader(train_data, batch_size=8, shuffle=True)
+
+
+# Display image and label.
+train_features, train_labels = next(iter(train_dataloader))
+#print(f"Feature batch shape: {train_features.size()}")
+#print(f"Labels batch shape: {train_labels.size()}")
+img = train_features[0].squeeze()
+#label = train_labels[0]
+plt.imshow(img.permute(1, 2, 0))#, cmap="gray")
+plt.show()
+#print(f"Label: {label}")
+
+exit
 
 # MNIST dataset
 mnist_train = dsets.MNIST(root='MNIST_data/',
