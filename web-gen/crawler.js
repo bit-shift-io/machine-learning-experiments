@@ -3,6 +3,7 @@
  */
 
 import chunk from 'lodash/chunk.js'
+import pick from 'lodash/pick.js'
 import puppeteer from 'puppeteer'
 import fs from 'fs'
 import path from 'path'
@@ -12,9 +13,35 @@ async function getPropertyValue(element, property) {
 }
 
 async function handleElement(page, element, dir) {
-    fs.mkdirSync(dir, { recursive: true });
+    
 
-    const bounds = await element.boundingBox()
+    const styles = await page.evaluate((element) => {
+        console.log('el:', element)
+        return JSON.parse(JSON.stringify(getComputedStyle(element)));
+    }, element);
+
+    // TODO: add other css properties we are interested in
+    const pickedStyles = pick(styles, ['display, marginTop', 'marginLeft', 'marginRight', 'marginBottom', 'paddingTop', 'paddingLeft', 'paddingRight', 'paddingBottom'])
+
+    const boundingBox = await element.boundingBox()
+    const boxModel = await element.boxModel()
+
+    // not visible
+    if (!boxModel) {
+        return null
+    }
+
+    // TODO: margins here are not working properly.... something is a bit off....
+    const width = Math.floor(boxModel.margin[2].x - boxModel.margin[0].x)
+    const height = Math.floor(boxModel.margin[2].y - boxModel.margin[0].y)
+    const bounds = {
+        ...boxModel.margin[0],
+        width,
+        height,
+        cx: boxModel.margin[0].x + (width * 0.5),
+        cy: boxModel.margin[0].y + (height * 0.5)
+    }
+    // TODO: compute center-size coordinates using fractional values (i.e. relative to parent)
     const img_path = `${dir}/screenshot.jpg`
     const r = {
         img_path,
@@ -22,12 +49,21 @@ async function handleElement(page, element, dir) {
         offset_top: await getPropertyValue(element, 'offsetTop'),
         bounds,
         tag_name: await getPropertyValue(element, 'tagName'),
-        // TODO: add css block to get layout info, padding, margins, border etc...
+        css: {
+            ...pickedStyles
+        }
     }
     const r_children = []
 
     try {
-        await element.screenshot({path: img_path})
+        /*
+        // https://github.com/puppeteer/puppeteer/issues/1010
+        const clip = Object.assign({}, bounds);
+        clip.y += parseFloat(styles.marginTop) || 0;
+        clip.x += parseFloat(styles.marginLeft) || 0;
+        */
+        fs.mkdirSync(dir, { recursive: true });
+        await element.screenshot({path: img_path, clip: bounds})
     } catch (err) {
         try {
             fs.rmdirSync(dir)

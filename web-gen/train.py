@@ -12,46 +12,21 @@ from datasets import WebsitesDataset
 # hyperparameters
 batch_size = 32
 keep_prob = 1
+image_size=[28, 28]
 
-
-
-ds = WebsitesDataset('data')
+ds = WebsitesDataset('data', image_size=image_size)
 train_data, test_data = torch.utils.data.random_split(ds, [int(0.8 * len(ds)), len(ds) - int(0.8 * len(ds))])
-train_dataloader = DataLoader(train_data, batch_size=8, shuffle=True)
+train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
 
 
 # Display image and label.
-train_features, train_labels = next(iter(train_dataloader))
-#print(f"Feature batch shape: {train_features.size()}")
-#print(f"Labels batch shape: {train_labels.size()}")
-img = train_features[0].squeeze()
-#label = train_labels[0]
-plt.imshow(img.permute(1, 2, 0))#, cmap="gray")
-plt.show()
-#print(f"Label: {label}")
+def showimg():
+    train_features, train_labels = next(iter(train_dataloader))
+    img = train_features[0].squeeze()
+    plt.imshow(img.permute(1, 2, 0))
+    plt.show()
 
-exit
-
-# MNIST dataset
-mnist_train = dsets.MNIST(root='MNIST_data/',
-                          train=True,
-                          transform=transforms.ToTensor(),
-                          download=True)
-
-mnist_test = dsets.MNIST(root='MNIST_data/',
-                         train=False,
-                         transform=transforms.ToTensor(),
-                         download=True)
-
-# dataset loader
-data_loader = torch.utils.data.DataLoader(dataset=mnist_train,
-                                          batch_size=batch_size,
-                                          shuffle=True)
-
-# Display informations about the dataset
-print('The training dataset:\t',mnist_train)
-print('\nThe testing dataset:\t',mnist_test)
-
+#showimg()
 
 # Implementation of CNN/ConvNet Model
 class CNN(torch.nn.Module):
@@ -119,17 +94,17 @@ train_cost = []
 train_accu = []
 
 training_epochs = 15
-total_batch = len(mnist_train) // batch_size
+total_batch = len(train_data) // batch_size
 
-print('Size of the training dataset is {}'.format(mnist_train.data.size()))
-print('Size of the testing dataset'.format(mnist_test.data.size()))
+print('Size of the training dataset is {}'.format(len(train_data)))
+print('Size of the testing dataset'.format(len(test_data)))
 print('Batch size is : {}'.format(batch_size))
 print('Total number of batches is : {0:2.0f}'.format(total_batch))
 print('\nTotal number of epochs is : {0:2.0f}'.format(training_epochs))
 
 for epoch in range(training_epochs):
     avg_cost = 0
-    for i, (batch_X, batch_Y) in enumerate(data_loader):
+    for i, (batch_X, batch_Y) in enumerate(train_dataloader):
         X = Variable(batch_X)    # image is already size of (28x28), no reshape
         Y = Variable(batch_Y)    # label is not one-hot encoded
 
@@ -167,8 +142,8 @@ plt.subplot(122), plt.plot(np.arange(len(train_accu)), 100 * torch.as_tensor(tra
 # Test model and check accuracy
 model.eval()    # set the model to evaluation mode (dropout=False)
 
-X_test = Variable(mnist_test.data.view(len(mnist_test), 1, 28, 28).float())
-Y_test = Variable(mnist_test.targets)
+X_test = Variable(test_data.data.view(len(test_data), 1, 28, 28).float())
+Y_test = Variable(test_data.targets)
 
 prediction = model(X_test)
 
