@@ -7,6 +7,8 @@ from PIL import Image
 import torchvision.transforms.functional as FT
 from torchvision import transforms
 import torch
+from utils import *
+from pathlib import Path
 
 # sample: https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Object-Detection/blob/master/datasets.py
 class WebsitesDataset(Dataset):
@@ -24,6 +26,13 @@ class WebsitesDataset(Dataset):
         with open(sample, 'r') as f:
             js = json.load(f)
 
+        #path = Path(sample)
+        #parent_dir = path.parents[1]
+        #parent_sample = parent_dir.joinpath('data.json')
+
+        #with open(parent_sample, 'r') as f:
+        #    parent_js = json.load(f)
+
 
         # compute the first child ouputs
         # i.e. when we see see our screenshot, what would we expect as the output?
@@ -38,9 +47,11 @@ class WebsitesDataset(Dataset):
         # how do we deal with multiple children?
         # we need to know if it is a display: flex, grid or block layout
 
+        parent_wh = [js['parent_size']['width'], js['parent_size']['height']] #[parent_js['bounds']['width'], parent_js['bounds']['height']]
         bounds_arr = [js['bounds']['x'], js['bounds']['y'], js['bounds']['width'], js['bounds']['height']]
-        bounds = torch.FloatTensor(bounds_arr)
-
+        frac_bounds_arr = to_fractional_scale(bounds_arr, parent_wh)
+        centre_bounds_arr = xy_to_cxcy(frac_bounds_arr)
+        bounds = torch.FloatTensor(centre_bounds_arr)
 
         # the sample code above applies random variation and flips etc...
         # do we need to do something similar to help AI in fuzzy situations?

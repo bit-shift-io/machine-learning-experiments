@@ -7,13 +7,36 @@ import pick from 'lodash/pick.js'
 import puppeteer from 'puppeteer'
 import fs from 'fs'
 import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 async function getPropertyValue(element, property) {
     return await (await element.getProperty(property)).jsonValue()
 }
 
-async function handleElement(page, element, dir) {
-    
+function computeBounds(boxModel) {
+    // TODO: margins here are not working properly.... something is a bit off....
+    const width = Math.floor(boxModel.margin[2].x - boxModel.margin[0].x)
+    const height = Math.floor(boxModel.margin[2].y - boxModel.margin[0].y)
+    return {
+        ...boxModel.margin[0],
+        width,
+        height
+    }
+}
+
+function makeRelativeToParent(childBounds, parentBounds) {
+    return {
+        ...childBounds,
+        x: childBounds.x - parentBounds.x,
+        y: childBounds.y - parentBounds.y
+    } 
+}
+
+async function handleElement(page, parent_element, element, dir) {    
+    const id = await getPropertyValue(element, 'id')
 
     const styles = await page.evaluate((element) => {
         console.log('el:', element)
@@ -21,7 +44,7 @@ async function handleElement(page, element, dir) {
     }, element);
 
     // TODO: add other css properties we are interested in
-    const pickedStyles = pick(styles, ['display, marginTop', 'marginLeft', 'marginRight', 'marginBottom', 'paddingTop', 'paddingLeft', 'paddingRight', 'paddingBottom'])
+    const pickedStyles = pick(styles, ['display', 'flex-direction', 'flex', 'marginTop', 'marginLeft', 'marginRight', 'marginBottom', 'paddingTop', 'paddingLeft', 'paddingRight', 'paddingBottom'])
 
     const boundingBox = await element.boundingBox()
     const boxModel = await element.boxModel()
@@ -31,23 +54,29 @@ async function handleElement(page, element, dir) {
         return null
     }
 
-    // TODO: margins here are not working properly.... something is a bit off....
-    const width = Math.floor(boxModel.margin[2].x - boxModel.margin[0].x)
-    const height = Math.floor(boxModel.margin[2].y - boxModel.margin[0].y)
-    const bounds = {
-        ...boxModel.margin[0],
-        width,
-        height,
-        cx: boxModel.margin[0].x + (width * 0.5),
-        cy: boxModel.margin[0].y + (height * 0.5)
+    // compute bounds relative to parent
+    let bounds = computeBounds(boxModel)
+    let boundsRelativeToParent = bounds
+    let parentBounds = null 
+    if (parent_element) {
+        const parentBoxModel = await parent_element?.boxModel()
+        if (parentBoxModel) {
+            parentBounds = computeBounds(parentBoxModel)
+            boundsRelativeToParent = makeRelativeToParent(bounds, parentBounds)
+        }
     }
-    // TODO: compute center-size coordinates using fractional values (i.e. relative to parent)
+    
     const img_path = `${dir}/screenshot.jpg`
     const r = {
+        id,
         img_path,
-        offset_left: await getPropertyValue(element, 'offsetLeft'),
-        offset_top: await getPropertyValue(element, 'offsetTop'),
-        bounds,
+        //offset_left: await getPropertyValue(element, 'offsetLeft'),
+        //offset_top: await getPropertyValue(element, 'offsetTop'),
+        parent_size: { // need parent size to compute fractional scaling
+            width: parentBounds?.width || bounds.width,
+            height: parentBounds?.height || bounds.height,
+        },
+        bounds: boundsRelativeToParent,
         tag_name: await getPropertyValue(element, 'tagName'),
         css: {
             ...pickedStyles
@@ -77,7 +106,7 @@ async function handleElement(page, element, dir) {
     const children = await element.$$(':scope > *')
     //const children = await page.evaluateHandle(e => e.children, element)
     const p = children.map(async (c, idx) => {
-        const rc = await handleElement(page, c, `${dir}/child_${idx}`)
+        const rc = await handleElement(page, element, c, `${dir}/child_${idx}`)
         if (rc) {
             r_children.push(rc)
         }
@@ -89,7 +118,7 @@ async function handleElement(page, element, dir) {
         r.children = r_children
     } else {
         // for now, if we have non children, we are a leaf node.... we don't care about having a json file
-        return r
+        //return r
     }
 
     const dataFile = `${dir}/data.json`
@@ -123,7 +152,7 @@ export async function screenshotWebsite(browser, url) {
         await page.waitForSelector('body')
         const element = await page.$('html')
 
-        const results = await handleElement(page, element, `${dir}/html`)
+        const results = await handleElement(page, null, element, `${dir}/html`)
         /*
         const json = JSON.stringify(results, null, 4)
         fs.writeFileSync(dataFile, json)
@@ -171,7 +200,8 @@ const TEST_SINGLE = true
 
 if (TEST_SINGLE) {
     const browser = await puppeteer.launch()
-    const url = 'https://www.wikipedia.org/'
+    //const url = 'https://www.wikipedia.org/'
+    const url = `file://${__dirname}/test-web/test-1.html`
     await screenshotWebsite(browser, url)
     await browser.close()
 } else {
