@@ -178,6 +178,9 @@ export async function screenshotWebsite(browser, url) {
 
         await page.goto(url)
 
+        // https://github.com/microsoft/playwright/issues/662
+        await page.waitForLoadState('networkidle')
+
         await page.waitForSelector('body')
         const element = await page.$('html')
 
@@ -236,7 +239,7 @@ if (TEST_SINGLE) {
 } else {
     const browser = await chromium.launch()
     const r = await fetch('https://raw.githubusercontent.com/Kikobeats/top-sites/master/top-sites.json').then(r => r.json())
-    const c = chunk(r, r.length)// / 10)
+    const c = chunk(r, r.length / 10)
     const p = c.map(async (arr, idx) => {
         for (const w of arr) {
             await screenshotWebsite(browser, 'http://' + w.rootDomain)
