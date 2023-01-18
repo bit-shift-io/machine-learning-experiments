@@ -174,10 +174,22 @@ plt.subplot(122), plt.plot(np.arange(len(train_accu)), 100 * torch.as_tensor(tra
 # Test model and check accuracy
 model.eval()    # set the model to evaluation mode (dropout=False)
 
-exit()
+test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=True)
+for i, (batch_X, batch_Y) in enumerate(train_dataloader):
+        X = batch_X    # images
+        Y = batch_Y    # labels are not one-hot encoded
 
-X_test = Variable(test_data.data.view(len(test_data), 1, 28, 28).float())
-Y_test = Variable(test_data.targets)
+        prediction = model(X)
+
+        # todo: make a common encoder/decoder class
+        pred_bounds = prediction[:, 0:4]
+        pred_class_1 = prediction[:, 4:6]
+        pred_class_2 = prediction[:, 6:8]
+
+
+exit()
+X_test = test_data.samples.view(len(test_data), 1, 28, 28).float()
+Y_test = test_data.targets
 
 prediction = model(X_test)
 
