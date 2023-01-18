@@ -225,7 +225,7 @@ c.queue(['http://www.google.com/','http://www.yahoo.com']);
 
 
 
-const TEST_SINGLE = true
+const TEST_SINGLE = false
 
 if (TEST_SINGLE) {
     const browser = await chromium.launch()
