@@ -4,7 +4,10 @@
 
 import chunk from 'lodash/chunk.js'
 import pick from 'lodash/pick.js'
-import puppeteer from 'puppeteer'
+//import puppeteer from 'puppeteer'
+
+import { chromium } from 'playwright' // Or 'chromium' or 'firefox'.
+
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -16,6 +19,7 @@ async function getPropertyValue(element, property) {
     return await (await element.getProperty(property)).jsonValue()
 }
 
+/*
 function computeBounds(boxModel) {
     // TODO: margins here are not working properly.... something is a bit off....
     const width = Math.floor(boxModel.margin[2].x - boxModel.margin[0].x)
@@ -25,7 +29,7 @@ function computeBounds(boxModel) {
         width,
         height
     }
-}
+}*/
 
 function makeRelativeToParent(childBounds, parentBounds) {
     return {
@@ -35,46 +39,50 @@ function makeRelativeToParent(childBounds, parentBounds) {
     } 
 }
 
-async function handleElement(page, parent_element, element, dir) {    
+function computeBounds(boundingBox, styles) {
+    if (!boundingBox) {
+        return null
+    }
+
+    const b = Object.assign({}, boundingBox)
+    b.y -= (parseFloat(styles.marginTop) || 0)
+    b.x -= (parseFloat(styles.marginLeft) || 0)
+    b.height += (parseFloat(styles.marginTop) || 0) + (parseFloat(styles.marginBottom) || 0)
+    b.width += (parseFloat(styles.marginLeft) || 0) + (parseFloat(styles.marginRight) || 0)
+    return b
+}
+
+async function handleElement(page, parent_element, parent_bounds, element, dir) {    
     const id = await getPropertyValue(element, 'id')
 
-    const styles = await page.evaluate((element) => {
-        console.log('el:', element)
-        return JSON.parse(JSON.stringify(getComputedStyle(element)));
-    }, element);
+    const styles = await element.evaluate((element) => {
+        return window.getComputedStyle(element)
+    })
 
     // TODO: add other css properties we are interested in
     const pickedStyles = pick(styles, ['display', 'flex-direction', 'flex', 'marginTop', 'marginLeft', 'marginRight', 'marginBottom', 'paddingTop', 'paddingLeft', 'paddingRight', 'paddingBottom'])
 
-    const boundingBox = await element.boundingBox()
-    const boxModel = await element.boxModel()
-
+    // this is relative to viewport apparently
+    let boundingBox = computeBounds(await element.boundingBox(), styles)
+    
     // not visible
-    if (!boxModel) {
+    if (!boundingBox) {
         return null
     }
 
     // compute bounds relative to parent
-    let bounds = computeBounds(boxModel)
-    let boundsRelativeToParent = bounds
-    let parentBounds = null 
-    if (parent_element) {
-        const parentBoxModel = await parent_element?.boxModel()
-        if (parentBoxModel) {
-            parentBounds = computeBounds(parentBoxModel)
-            boundsRelativeToParent = makeRelativeToParent(bounds, parentBounds)
-        }
+    let boundsRelativeToParent = boundingBox
+    if (parent_bounds) {
+        boundsRelativeToParent = makeRelativeToParent(boundingBox, parent_bounds)
     }
-    
+
     const img_path = `${dir}/screenshot.jpg`
     const r = {
         id,
         img_path,
-        //offset_left: await getPropertyValue(element, 'offsetLeft'),
-        //offset_top: await getPropertyValue(element, 'offsetTop'),
         parent_size: { // need parent size to compute fractional scaling
-            width: parentBounds?.width || bounds.width,
-            height: parentBounds?.height || bounds.height,
+            width: parent_bounds?.width || boundingBox.width,
+            height: parent_bounds?.height || boundingBox.height,
         },
         bounds: boundsRelativeToParent,
         tag_name: await getPropertyValue(element, 'tagName'),
@@ -85,14 +93,23 @@ async function handleElement(page, parent_element, element, dir) {
     const r_children = []
 
     try {
-        /*
-        // https://github.com/puppeteer/puppeteer/issues/1010
-        const clip = Object.assign({}, bounds);
-        clip.y += parseFloat(styles.marginTop) || 0;
-        clip.x += parseFloat(styles.marginLeft) || 0;
-        */
-        fs.mkdirSync(dir, { recursive: true });
-        await element.screenshot({path: img_path, clip: bounds})
+        fs.mkdirSync(dir, { recursive: true })
+
+        // Calculate your clip rect. For a single element, that's usually the same as it's bounding box.
+        //const clipRelativeToViewport = await element.boundingBox();
+
+        // Translate clip to be relative to the page.
+        const clipRelativeToPage = {
+            width: boundingBox.width,
+            height: boundingBox.height,
+            x: boundingBox.x + await page.evaluate(() => window.scrollX),
+            y: boundingBox.y + await page.evaluate(() => window.scrollY),
+        }
+
+        // Take an area screenshot.
+        const areaScreenshot = await page.screenshot({ path: img_path, clip: clipRelativeToPage, fullPage: true })
+
+        //await element.screenshot({path: img_path, clip: boundingBox})
     } catch (err) {
         try {
             fs.rmdirSync(dir)
@@ -105,14 +122,25 @@ async function handleElement(page, parent_element, element, dir) {
 
     const children = await element.$$(':scope > *')
     //const children = await page.evaluateHandle(e => e.children, element)
+
+    /*
     const p = children.map(async (c, idx) => {
-        const rc = await handleElement(page, element, c, `${dir}/child_${idx}`)
+        const rc = await handleElement(page, element, boundingBox, c, `${dir}/child_${idx}`)
         if (rc) {
             r_children.push(rc)
         }
     })
 
     await Promise.all(p)
+    */
+
+    for (let i = 0; i < children.length; ++i) {
+        const c = children[i]
+        const rc = await handleElement(page, element, boundingBox, c, `${dir}/child_${i}`)
+        if (rc) {
+            r_children.push(rc)
+        }
+    }
 
     if (r_children.length > 0) {
         r.children = r_children
@@ -145,14 +173,15 @@ export async function screenshotWebsite(browser, url) {
 
     let page = null
     try {
-        page = await browser.newPage()
+        const context = await browser.newContext()
+        page = await context.newPage()
 
         await page.goto(url)
 
         await page.waitForSelector('body')
         const element = await page.$('html')
 
-        const results = await handleElement(page, null, element, `${dir}/html`)
+        const results = await handleElement(page, null, null, element, `${dir}/html`)
         /*
         const json = JSON.stringify(results, null, 4)
         fs.writeFileSync(dataFile, json)
@@ -162,7 +191,7 @@ export async function screenshotWebsite(browser, url) {
         console.log(`Done processing: ${url}`)
     } catch (err) {
         //console.warn(err)
-        console.warn(`Failed processing: ${url}`)
+        console.warn(`Failed processing: ${url}:`, err)
         await page?.close()
     }
 }
@@ -199,13 +228,13 @@ c.queue(['http://www.google.com/','http://www.yahoo.com']);
 const TEST_SINGLE = true
 
 if (TEST_SINGLE) {
-    const browser = await puppeteer.launch()
+    const browser = await chromium.launch()
     //const url = 'https://www.wikipedia.org/'
     const url = `file://${__dirname}/test-web/test-1.html`
     await screenshotWebsite(browser, url)
     await browser.close()
 } else {
-    const browser = await puppeteer.launch()
+    const browser = await chromium.launch()
     const r = await fetch('https://raw.githubusercontent.com/Kikobeats/top-sites/master/top-sites.json').then(r => r.json())
     const c = chunk(r, r.length)// / 10)
     const p = c.map(async (arr, idx) => {
