@@ -67,10 +67,10 @@ class WebsitesDataset(Dataset):
 
         # the sample code above applies random variation and flips etc...
         # do we need to do something similar to help AI in fuzzy situations?
-        image = Image.open(js['img_path']).convert("RGB")
-        image = FT.pil_to_tensor(image)
+        image = Image.open(js['img_path'])
         image = FT.resize(image, self.image_size)
-
+        image = transforms.ToTensor()(image) # convert from 0->255 to 0->1
+        
         # convert CSS properties to a set of labels
         node_cls = 'node' if 'children' in js and len(js['children']) > 0 else 'leaf'
         display_cls = 'column'
@@ -87,3 +87,8 @@ class WebsitesDataset(Dataset):
         labels = torch.cat((bounds, node_onehot, display_onehot), dim=0)
 
         return image, labels
+
+    # the number of outputs the model needs for the labels
+    def output_size(self):
+        bounds_len = 4
+        return bounds_len + len(node_classes) + len(display_classes)

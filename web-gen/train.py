@@ -12,7 +12,10 @@ from datasets import WebsitesDataset
 # hyperparameters
 batch_size = 32
 keep_prob = 1
-image_size=[28, 28]
+image_size=[200, 200]
+reg_weight = 0.3333
+class_1_weight = 0.3333
+class_2_weight = 0.3333
 
 ds = WebsitesDataset('data', image_size=image_size)
 train_data, test_data = torch.utils.data.random_split(ds, [int(0.8 * len(ds)), len(ds) - int(0.8 * len(ds))])
@@ -78,14 +81,30 @@ class CNN(torch.nn.Module):
         out = self.fc2(out)
         return out
 
+class CNN2(torch.nn.Module):
+    def __init__(self, image_size, out_features):
+        super().__init__()
+        total_sz = image_size[0] * image_size[1] * 3 #image_size[3]
+        self.main = torch.nn.Sequential(
+            torch.nn.Conv2d(in_channels=3, out_channels=3, kernel_size=(3, 3), padding=1),
+            torch.nn.ReLU(),
+            #torch.nn.Conv2d(in_channels=3, out_channels=3, kernel_size=(3, 3), padding=1),
+            #torch.nn.ReLU(),
+            torch.nn.Flatten(),
+            torch.nn.Linear(total_sz, out_features)
+        )
+
+    def forward(self, x):
+        out = self.main(x)
+        return out
 
 #instantiate CNN model
-model = CNN()
+model = CNN2(image_size=image_size, out_features=ds.output_size())
 print(model)
 
 
 learning_rate = 0.001
-criterion = torch.nn.CrossEntropyLoss()    # Softmax is internally computed.
+#criterion = torch.nn.CrossEntropyLoss()    # Softmax is internally computed.
 optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
 
 
@@ -93,8 +112,8 @@ print('Training the Deep Learning network ...')
 train_cost = []
 train_accu = []
 
-training_epochs = 15
-total_batch = len(train_data) // batch_size
+training_epochs = 100
+total_batch = len(train_data) / batch_size
 
 print('Size of the training dataset is {}'.format(len(train_data)))
 print('Size of the testing dataset'.format(len(test_data)))
@@ -105,27 +124,40 @@ print('\nTotal number of epochs is : {0:2.0f}'.format(training_epochs))
 for epoch in range(training_epochs):
     avg_cost = 0
     for i, (batch_X, batch_Y) in enumerate(train_dataloader):
-        X = Variable(batch_X)    # image is already size of (28x28), no reshape
-        Y = Variable(batch_Y)    # label is not one-hot encoded
+        X = batch_X    # images
+        Y = batch_Y    # labels are not one-hot encoded
 
         optimizer.zero_grad() # <= initialization of the gradients
         
         # forward propagation
         hypothesis = model(X)
-        cost = criterion(hypothesis, Y) # <= compute the loss function
+
+        # https://discuss.pytorch.org/t/is-there-a-way-to-combine-classification-and-regression-in-single-model/165549/2
+        # first 4 params are a regression problem - fit the bounding box
+        # the next 2 are for 2 classes
+        # the next 2 are another 2 class
+        reg_target = Y[:, 0:4]
+        class_target_1 = Y[:, 4:6]
+        class_target_2 = Y[:, 6:8]
+        loss_regression = torch.nn.MSELoss() (hypothesis[:, 0:4], reg_target)
+        loss_classification_1 = torch.nn.CrossEntropyLoss() (hypothesis[:, 4:6], class_target_1)
+        loss_classification_2 = torch.nn.CrossEntropyLoss() (hypothesis[:, 6:8], class_target_2)
+        loss_total = reg_weight * loss_regression + class_1_weight * loss_classification_1 + class_2_weight * loss_classification_2
+
+        #cost = criterion(hypothesis, Y) # <= compute the loss function
         
         # Backward propagation
-        cost.backward() # <= compute the gradient of the loss/cost function     
+        loss_total.backward() #cost.backward() # <= compute the gradient of the loss/cost function     
         optimizer.step() # <= Update the gradients
              
         # Print some performance to monitor the training
-        prediction = hypothesis.data.max(dim=1)[1]
-        train_accu.append(((prediction.data == Y.data).float().mean()).item())
-        train_cost.append(cost.item())   
-        if i % 200 == 0:
-            print("Epoch= {},\t batch = {},\t cost = {:2.4f},\t accuracy = {}".format(epoch+1, i, train_cost[-1], train_accu[-1]))
+        #prediction = hypothesis.data.max(dim=1)[1]
+        #train_accu.append(((prediction.data == Y.data).float().mean()).item())
+        train_cost.append(loss_total.item())   
+        #if i % 200 == 0:
+        #    print("Epoch= {},\t batch = {},\t cost = {:2.4f},\t accuracy = {}".format(epoch+1, i, train_cost[-1], train_accu[-1]))
        
-        avg_cost += cost.data / total_batch
+        avg_cost += loss_total.data / total_batch
 
     print("[Epoch: {:>4}], averaged cost = {:>.9}".format(epoch + 1, avg_cost.item()))
 
@@ -141,6 +173,8 @@ plt.subplot(122), plt.plot(np.arange(len(train_accu)), 100 * torch.as_tensor(tra
 
 # Test model and check accuracy
 model.eval()    # set the model to evaluation mode (dropout=False)
+
+exit()
 
 X_test = Variable(test_data.data.view(len(test_data), 1, 28, 28).float())
 Y_test = Variable(test_data.targets)
