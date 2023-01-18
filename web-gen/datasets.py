@@ -7,8 +7,27 @@ from PIL import Image
 import torchvision.transforms.functional as FT
 from torchvision import transforms
 import torch
+import torch.nn.functional as F
 from utils import *
 from pathlib import Path
+from sklearn import preprocessing
+
+display_classes = ['row', 'column']
+node_classes = ['node', 'leaf']
+
+# keys = str, list, tuple of one or more keys
+# voc = vocabulary = list all the available classes
+def one_hot(voc, keys):
+    if isinstance(keys, str):
+        keys = [keys]
+
+    le = preprocessing.LabelEncoder()
+    le.fit(voc)
+
+    xform_keys = le.transform(keys)
+    oh = F.one_hot(torch.tensor(xform_keys), num_classes=len(voc))
+    return oh
+
 
 # sample: https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Object-Detection/blob/master/datasets.py
 class WebsitesDataset(Dataset):
@@ -25,13 +44,6 @@ class WebsitesDataset(Dataset):
         sample = self.samples[idx]
         with open(sample, 'r') as f:
             js = json.load(f)
-
-        #path = Path(sample)
-        #parent_dir = path.parents[1]
-        #parent_sample = parent_dir.joinpath('data.json')
-
-        #with open(parent_sample, 'r') as f:
-        #    parent_js = json.load(f)
 
 
         # compute the first child ouputs
@@ -56,21 +68,22 @@ class WebsitesDataset(Dataset):
         # the sample code above applies random variation and flips etc...
         # do we need to do something similar to help AI in fuzzy situations?
         image = Image.open(js['img_path']).convert("RGB")
-
-        #pil_to_tensor = transforms.ToTensor()(image).unsqueeze_(0)
-        #print(pil_to_tensor.shape) 
-
         image = FT.pil_to_tensor(image)
-        #im = transforms.ToPILImage()(image).convert("RGB")
-
-        #image = FT.pil_to_tensor(image)
         image = FT.resize(image, self.image_size)
 
-        # TODO: massage js into a label
+        # convert CSS properties to a set of labels
+        node_cls = 'node' if 'children' in js and len(js['children']) > 0 else 'leaf'
+        display_cls = 'column'
 
-        #if self.transform:
-        #    image = self.transform(image)
-        #if self.target_transform:
-        #    label = self.target_transform(label)
-        label = 'test'
-        return image, bounds
+        try:
+            if js['css']['display'] == 'flex' and js['css']['flex-direction'] == 'row':
+                display_cls = 'row'
+        except:
+            pass
+
+        node_onehot = one_hot(node_classes, node_cls)[0]
+        display_onehot = one_hot(display_classes, display_cls)[0]
+
+        labels = torch.cat((bounds, node_onehot, display_onehot), dim=0)
+
+        return image, labels
