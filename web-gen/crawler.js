@@ -164,12 +164,12 @@ export async function screenshotWebsite(browser, url) {
     if (dir.endsWith('/')) {
         dir = dir.slice(0, -1)
     }
-    /*
+    
     const dataFile = `${dir}/data.json`
     if (fs.existsSync(dataFile)) {
         console.log(`Already processed: ${url}`)
         return
-    }*/
+    }
 
     let page = null
     try {

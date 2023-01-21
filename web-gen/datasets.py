@@ -12,29 +12,13 @@ from utils import *
 from pathlib import Path
 from sklearn import preprocessing
 
-display_classes = ['row', 'column']
-node_classes = ['node', 'leaf']
-
-# keys = str, list, tuple of one or more keys
-# voc = vocabulary = list all the available classes
-def one_hot(voc, keys):
-    if isinstance(keys, str):
-        keys = [keys]
-
-    le = preprocessing.LabelEncoder()
-    le.fit(voc)
-
-    xform_keys = le.transform(keys)
-    oh = F.one_hot(torch.tensor(xform_keys), num_classes=len(voc))
-    return oh
-
 
 # sample: https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Object-Detection/blob/master/datasets.py
 class WebsitesDataset(Dataset):
-    def __init__(self, data_dir, image_size):
+    def __init__(self, data_dir, transformer):
         search = f'{data_dir}/**/*.json'
         self.samples = glob.glob(search, recursive = True)
-        self.image_size = image_size
+        self.transformer = transformer
         return
 
     def __len__(self):
@@ -61,15 +45,11 @@ class WebsitesDataset(Dataset):
 
         parent_wh = [js['parent_size']['width'], js['parent_size']['height']] #[parent_js['bounds']['width'], parent_js['bounds']['height']]
         bounds_arr = [js['bounds']['x'], js['bounds']['y'], js['bounds']['width'], js['bounds']['height']]
-        frac_bounds_arr = to_fractional_scale(bounds_arr, parent_wh)
-        centre_bounds_arr = xy_to_cxcy(frac_bounds_arr)
-        bounds = torch.FloatTensor(centre_bounds_arr)
+        
 
         # the sample code above applies random variation and flips etc...
         # do we need to do something similar to help AI in fuzzy situations?
         image = Image.open(js['img_path'])
-        image = FT.resize(image, self.image_size)
-        image = transforms.ToTensor()(image) # convert from 0->255 to 0->1
         
         # convert CSS properties to a set of labels
         node_cls = 'node' if 'children' in js and len(js['children']) > 0 else 'leaf'
@@ -81,14 +61,4 @@ class WebsitesDataset(Dataset):
         except:
             pass
 
-        node_onehot = one_hot(node_classes, node_cls)[0]
-        display_onehot = one_hot(display_classes, display_cls)[0]
-
-        labels = torch.cat((bounds, node_onehot, display_onehot), dim=0)
-
-        return image, labels
-
-    # the number of outputs the model needs for the labels
-    def output_size(self):
-        bounds_len = 4
-        return bounds_len + len(node_classes) + len(display_classes)
+        return self.transformer.encode_inputs(image), self.transformer.encode_outputs(parent_wh, bounds_arr, node_cls, display_cls)

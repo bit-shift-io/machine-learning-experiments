@@ -8,6 +8,11 @@ import torchvision.transforms as transforms
 import torch.nn.init
 import matplotlib.pyplot as plt
 from datasets import WebsitesDataset
+from transformer import Transformer
+from tqdm import tqdm
+from model_io import save, load
+
+model_path = 'model.pt'
 
 # hyperparameters
 batch_size = 32
@@ -17,8 +22,14 @@ reg_weight = 0.3333
 class_1_weight = 0.3333
 class_2_weight = 0.3333
 
-ds = WebsitesDataset('data', image_size=image_size)
-train_data, test_data = torch.utils.data.random_split(ds, [int(0.8 * len(ds)), len(ds) - int(0.8 * len(ds))])
+learning_rate = 0.001
+
+train_pct = 0.8 #0.001 # should e about 0.8, reduce to lower to speed up training for testing only
+training_epochs = 100 # should be abbout 100, reduce to speed up testing
+
+tr = Transformer(image_size=image_size)
+ds = WebsitesDataset('data', transformer=tr)
+train_data, test_data = torch.utils.data.random_split(ds, [int(train_pct * len(ds)), len(ds) - int(train_pct * len(ds))])
 train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
 
 
@@ -99,20 +110,23 @@ class CNN2(torch.nn.Module):
         return out
 
 #instantiate CNN model
-model = CNN2(image_size=image_size, out_features=ds.output_size())
+model = CNN2(image_size=tr.input_size(), out_features=tr.output_size())
 print(model)
 
 
-learning_rate = 0.001
 #criterion = torch.nn.CrossEntropyLoss()    # Softmax is internally computed.
 optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
 
+# load existing model
+io_params = load(model_path, model, optimizer, {
+    'epoch': 0
+})
 
 print('Training the Deep Learning network ...')
 train_cost = []
 train_accu = []
 
-training_epochs = 100
+
 total_batch = len(train_data) / batch_size
 
 print('Size of the training dataset is {}'.format(len(train_data)))
@@ -121,9 +135,9 @@ print('Batch size is : {}'.format(batch_size))
 print('Total number of batches is : {0:2.0f}'.format(total_batch))
 print('\nTotal number of epochs is : {0:2.0f}'.format(training_epochs))
 
-for epoch in range(training_epochs):
+for epoch in tqdm(range(training_epochs)):
     avg_cost = 0
-    for i, (batch_X, batch_Y) in enumerate(train_dataloader):
+    for i, (batch_X, batch_Y) in tqdm(enumerate(train_dataloader), leave=False):
         X = batch_X    # images
         Y = batch_Y    # labels are not one-hot encoded
 
@@ -131,6 +145,9 @@ for epoch in range(training_epochs):
         
         # forward propagation
         hypothesis = model(X)
+
+        # testing - just to help test the decoder outputs code
+        #decoded_pred = tr.decode_output(hypothesis)
 
         # https://discuss.pytorch.org/t/is-there-a-way-to-combine-classification-and-regression-in-single-model/165549/2
         # first 4 params are a regression problem - fit the bounding box
@@ -160,6 +177,9 @@ for epoch in range(training_epochs):
         avg_cost += loss_total.data / total_batch
 
     print("[Epoch: {:>4}], averaged cost = {:>.9}".format(epoch + 1, avg_cost.item()))
+    save(model_path, model, optimizer, {
+        'epoch': epoch + io_params['epoch']
+    })
 
 
 print('Learning Finished!')
@@ -176,15 +196,16 @@ model.eval()    # set the model to evaluation mode (dropout=False)
 
 test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=True)
 for i, (batch_X, batch_Y) in enumerate(train_dataloader):
-        X = batch_X    # images
-        Y = batch_Y    # labels are not one-hot encoded
+    X = batch_X    # images
+    Y = batch_Y    # labels are not one-hot encoded
 
-        prediction = model(X)
+    prediction = model(X)
 
-        # todo: make a common encoder/decoder class
-        pred_bounds = prediction[:, 0:4]
-        pred_class_1 = prediction[:, 4:6]
-        pred_class_2 = prediction[:, 6:8]
+    decoded_pred = tr.decode_output(prediction)
+    decoded_actual = tr.decode_output(Y)
+    print(decoded_pred)
+    exit()
+
 
 
 exit()
