@@ -96,13 +96,16 @@ class CNN2(torch.nn.Module):
     def __init__(self, image_size, out_features):
         super().__init__()
         total_sz = image_size[0] * image_size[1] * 3 #image_size[3]
+        hidden_sz = out_features * out_features # TODO: make this a hyper param?
         self.main = torch.nn.Sequential(
             torch.nn.Conv2d(in_channels=3, out_channels=3, kernel_size=(3, 3), padding=1),
             torch.nn.ReLU(),
-            #torch.nn.Conv2d(in_channels=3, out_channels=3, kernel_size=(3, 3), padding=1),
-            #torch.nn.ReLU(),
+            torch.nn.Conv2d(in_channels=3, out_channels=3, kernel_size=(3, 3), padding=1),
+            torch.nn.ReLU(),
             torch.nn.Flatten(),
-            torch.nn.Linear(total_sz, out_features)
+            torch.nn.Linear(total_sz, hidden_sz),
+            torch.nn.ReLU(),
+            torch.nn.Linear(hidden_sz, out_features)
         )
 
     def forward(self, x):
@@ -130,7 +133,7 @@ train_accu = []
 total_batch = len(train_data) / batch_size
 
 print('Size of the training dataset is {}'.format(len(train_data)))
-print('Size of the testing dataset'.format(len(test_data)))
+print('Size of the testing dataset is {}'.format(len(test_data)))
 print('Batch size is : {}'.format(batch_size))
 print('Total number of batches is : {0:2.0f}'.format(total_batch))
 print('\nTotal number of epochs is : {0:2.0f}'.format(training_epochs))
