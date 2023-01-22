@@ -16,8 +16,11 @@ model_path = 'model.pt'
 
 # hyperparameters
 batch_size = 32
-keep_prob = 1
-image_size=[200, 200]
+
+keep_prob = 0.8
+hidden_sz = 1024 #out_features * out_features # TODO: make this a hyper param?
+
+image_size=[100, 100]
 reg_weight = 0.3333
 class_1_weight = 0.3333
 class_2_weight = 0.3333
@@ -95,16 +98,27 @@ class CNN(torch.nn.Module):
 class CNN2(torch.nn.Module):
     def __init__(self, image_size, out_features):
         super().__init__()
-        total_sz = image_size[0] * image_size[1] * 3 #image_size[3]
-        hidden_sz = out_features * out_features # TODO: make this a hyper param?
+        
+        #total_sz = image_size[0] * image_size[1] * 3 #image_size[3]
+        #max_pool_sz_1 = int(total_sz / 4)
+        #max_pool_sz_2 = int(max_pool_sz_1 / 4)
+
         self.main = torch.nn.Sequential(
             torch.nn.Conv2d(in_channels=3, out_channels=3, kernel_size=(3, 3), padding=1),
             torch.nn.ReLU(),
+            torch.nn.MaxPool2d(kernel_size=2, stride=2),
+            torch.nn.Dropout(p=1-keep_prob),
+
             torch.nn.Conv2d(in_channels=3, out_channels=3, kernel_size=(3, 3), padding=1),
             torch.nn.ReLU(),
+            torch.nn.MaxPool2d(kernel_size=2, stride=2),
+            torch.nn.Dropout(p=1-keep_prob),
+
             torch.nn.Flatten(),
-            torch.nn.Linear(total_sz, hidden_sz),
+            torch.nn.Linear(1875, hidden_sz), # max_pool_sz_1
             torch.nn.ReLU(),
+            torch.nn.Dropout(p=1-keep_prob),
+
             torch.nn.Linear(hidden_sz, out_features)
         )
 
@@ -117,7 +131,8 @@ model = CNN2(image_size=tr.input_size(), out_features=tr.output_size())
 print(model)
 
 
-#criterion = torch.nn.CrossEntropyLoss()    # Softmax is internally computed.
+criterion_1 = torch.nn.CrossEntropyLoss()    # Softmax is internally computed.
+criterion_2 = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
 
 # load existing model
@@ -162,7 +177,8 @@ for epoch in tqdm(range(training_epochs)):
         loss_regression = torch.nn.MSELoss() (hypothesis[:, 0:4], reg_target)
         loss_classification_1 = torch.nn.CrossEntropyLoss() (hypothesis[:, 4:6], class_target_1)
         loss_classification_2 = torch.nn.CrossEntropyLoss() (hypothesis[:, 6:8], class_target_2)
-        loss_total = reg_weight * loss_regression + class_1_weight * loss_classification_1 + class_2_weight * loss_classification_2
+        #loss_total = reg_weight * loss_regression + class_1_weight * loss_classification_1 + class_2_weight * loss_classification_2
+        loss_total =  loss_regression +  loss_classification_1 + loss_classification_2
 
         #cost = criterion(hypothesis, Y) # <= compute the loss function
         
@@ -179,7 +195,7 @@ for epoch in tqdm(range(training_epochs)):
        
         avg_cost += loss_total.data / total_batch
 
-    print("[Epoch: {:>4}], averaged cost = {:>.9}".format(epoch + 1, avg_cost.item()))
+    print("[Epoch: {:>4}], averaged loss = {:>.9}".format(epoch + io_params['epoch'] + 1, avg_cost.item()))
     save(model_path, model, optimizer, {
         'epoch': epoch + io_params['epoch']
     })
