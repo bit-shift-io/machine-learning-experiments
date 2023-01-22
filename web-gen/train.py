@@ -130,9 +130,9 @@ class CNN2(torch.nn.Module):
 model = CNN2(image_size=tr.input_size(), out_features=tr.output_size())
 print(model)
 
-
-criterion_1 = torch.nn.CrossEntropyLoss()    # Softmax is internally computed.
-criterion_2 = torch.nn.CrossEntropyLoss()
+criterion_1 = torch.nn.MSELoss()
+criterion_2 = torch.nn.CrossEntropyLoss()    # Softmax is internally computed.
+criterion_3 = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
 
 # load existing model
@@ -162,6 +162,7 @@ for epoch in tqdm(range(training_epochs)):
         optimizer.zero_grad() # <= initialization of the gradients
         
         # forward propagation
+        # TODO: model should output multiple layers so we don't have to manually split the output
         hypothesis = model(X)
 
         # testing - just to help test the decoder outputs code
@@ -174,11 +175,11 @@ for epoch in tqdm(range(training_epochs)):
         reg_target = Y[:, 0:4]
         class_target_1 = Y[:, 4:6]
         class_target_2 = Y[:, 6:8]
-        loss_regression = torch.nn.MSELoss() (hypothesis[:, 0:4], reg_target)
-        loss_classification_1 = torch.nn.CrossEntropyLoss() (hypothesis[:, 4:6], class_target_1)
-        loss_classification_2 = torch.nn.CrossEntropyLoss() (hypothesis[:, 6:8], class_target_2)
+        loss_regression = criterion_1(hypothesis[:, 0:4], reg_target)
+        loss_classification_1 = criterion_2(hypothesis[:, 4:6], class_target_1)
+        loss_classification_2 = criterion_3(hypothesis[:, 6:8], class_target_2)
         #loss_total = reg_weight * loss_regression + class_1_weight * loss_classification_1 + class_2_weight * loss_classification_2
-        loss_total =  loss_regression +  loss_classification_1 + loss_classification_2
+        loss_total = loss_regression + loss_classification_1 + loss_classification_2
 
         #cost = criterion(hypothesis, Y) # <= compute the loss function
         
