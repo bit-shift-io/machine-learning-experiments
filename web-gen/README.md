@@ -6,3 +6,8 @@ Train AI.
 
 1. Run 'crawler' to generate the required data
 2. Run 'train' to train the model
+
+
+# Random test data generators
+
+https://codepen.io/jipdev/pen/ZEJOWjP

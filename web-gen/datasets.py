@@ -51,8 +51,8 @@ class WebsitesDataset(Dataset):
             first_child = children[0]
             bounds_arr = [first_child['bounds']['x'], first_child['bounds']['y'], first_child['bounds']['width'], first_child['bounds']['height']]
         except:
-            # if not children we end up here.... just return our bounds
-            bounds_arr = [js['bounds']['x'], js['bounds']['y'], js['bounds']['width'], js['bounds']['height']]
+            # if not children we end up here.... return null bounds
+            bounds_arr = [0, 0, 0, 0]
         
 
         # the sample code above applies random variation and flips etc...
