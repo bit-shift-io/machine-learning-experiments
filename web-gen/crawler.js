@@ -45,13 +45,17 @@ function computeBounds(boundingBox, styles) {
     }
 
     const b = Object.assign({}, boundingBox)
+    // ignore margins as this will stuff up the AI learning
+    /*
     b.y -= (parseFloat(styles.marginTop) || 0)
     b.x -= (parseFloat(styles.marginLeft) || 0)
     b.height += (parseFloat(styles.marginTop) || 0) + (parseFloat(styles.marginBottom) || 0)
     b.width += (parseFloat(styles.marginLeft) || 0) + (parseFloat(styles.marginRight) || 0)
+    */
     return b
 }
 
+// TODO: if a container only has a single child with no margins, ignore it as it can be flattened with the child....
 async function handleElement(page, parent_element, parent_bounds, element, dir) {    
     const id = await getPropertyValue(element, 'id')
 
@@ -155,7 +159,7 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
         //return r
     }
 
-    const dataFile = `${dir}/data.json`
+    const dataFile = `${dir}/${r_children.length > 0 ? 'node' : 'leaf'}.json`
     const json = JSON.stringify(r, null, 4)
     fs.writeFileSync(dataFile, json)
 
@@ -171,7 +175,7 @@ export async function screenshotWebsite(browser, url) {
         dir = dir.slice(0, -1)
     }
     
-    const dataFile = `${dir}/data.json`
+    const dataFile = `${dir}/node.json`
     if (fs.existsSync(dataFile)) {
         console.log(`Already processed: ${url}`)
         return
@@ -191,9 +195,9 @@ export async function screenshotWebsite(browser, url) {
         await page.waitForLoadState('networkidle')
 
         await page.waitForSelector('body')
-        const element = await page.$('html')
+        const element = await page.$('body')
 
-        const results = await handleElement(page, null, null, element, `${dir}/html`)
+        const results = await handleElement(page, null, null, element, `${dir}/body`)
         /*
         const json = JSON.stringify(results, null, 4)
         fs.writeFileSync(dataFile, json)
@@ -237,7 +241,7 @@ c.queue(['http://www.google.com/','http://www.yahoo.com']);
 
 
 
-const TEST_SINGLE = true
+const TEST_SINGLE = false
 
 if (TEST_SINGLE) {
     const browser = await chromium.launch()

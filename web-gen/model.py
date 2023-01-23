@@ -63,7 +63,7 @@ class CNN(torch.nn.Module):
 
 class CNN2(torch.nn.Module):
     def __init__(self, image_size, out_features):
-        super().__init__()
+        super(CNN2, self).__init__()
         
         #total_sz = image_size[0] * image_size[1] * 3 #image_size[3]
         #max_pool_sz_1 = int(total_sz / 4)

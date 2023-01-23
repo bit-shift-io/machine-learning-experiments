@@ -15,6 +15,7 @@ from model import CNN2
 from config import *
 from utils import *
 import numpy as np
+import random
 
 tr = Transformer(image_size=image_size)
 ds = WebsitesDataset('data', transformer=tr)
@@ -38,7 +39,7 @@ def showimg():
     #plt.show()
     plt.show(block=False)
     #plt.draw()
-    plt.pause(0.5)
+    plt.pause(1.0)
 
 showimg()
 
@@ -56,6 +57,11 @@ optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
 io_params = load(model_path, model, optimizer, {
     'epoch': 0
 })
+
+#print(model.bounds_out[-4].weight)
+
+
+model.train()
 
 print('Training the Deep Learning network ...')
 train_loss = []
@@ -81,13 +87,14 @@ for epoch in tqdm(range(training_epochs)):
         pred_bounds, pred_node, pred_display = model(X)
 
         # help us debug the data
-        p_b = pred_bounds[0].detach().numpy()
+        sample_idx = random.randint(0, Y_bounds.shape[0] - 1)
+        p_b = pred_bounds[sample_idx].detach().numpy()
         plt.clf()
-        plt.imshow(X[0].permute(1, 2, 0))
-        plt.gca().add_patch(create_corner_rect(Y_bounds[0]))
+        plt.imshow(X[sample_idx].permute(1, 2, 0))
+        plt.gca().add_patch(create_corner_rect(Y_bounds[sample_idx]))
         plt.gca().add_patch(create_corner_rect(p_b, 'green'))
         plt.show(block=False)
-        plt.pause(0.5)
+        plt.pause(0.6)
 
         # testing - just to help test the decoder outputs code
         #decoded_pred = tr.decode_output(hypothesis)
@@ -105,7 +112,7 @@ for epoch in tqdm(range(training_epochs)):
         loss_2 = criterion_2(pred_node, Y_node_class)
         loss_3 = criterion_3(pred_display, Y_display_class)
 
-        loss_1 = loss_1 / 100.0
+        loss_1 = loss_1 / 10.0
         loss_total = loss_1 + loss_2 + loss_3
 
         # Backward propagation
@@ -134,6 +141,9 @@ for epoch in tqdm(range(training_epochs)):
         avg_display_class_loss += loss_3.data / total_batch
 
     print("[Epoch: {:>4}], mean loss: bounds = {:>.9}, node cls = {:>.9}, display cls = {:>.9}".format(epoch + io_params['epoch'] + 1, avg_bounds_loss.item(), avg_node_class_loss.item(), avg_display_class_loss.item()))
+    
+    #print(model.bounds_out[-4].weight)
+
     save(model_path, model, optimizer, {
         'epoch': epoch + io_params['epoch'] + 1
     })
