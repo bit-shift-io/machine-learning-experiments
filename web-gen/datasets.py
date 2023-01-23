@@ -50,9 +50,10 @@ class WebsitesDataset(Dataset):
             children = js['children'] if 'children' in js else []
             first_child = children[0]
             bounds_arr = [first_child['bounds']['x'], first_child['bounds']['y'], first_child['bounds']['width'], first_child['bounds']['height']]
+            parent_wh = [first_child['parent_size']['width'], first_child['parent_size']['height']]
         except:
-            # if not children we end up here.... return null bounds
-            bounds_arr = [0, 0, 0, 0]
+            # if not children we end up here.... return bounds that encompass the whole image
+            bounds_arr = [0, 0, parent_wh[0], parent_wh[1]]
         
 
         # the sample code above applies random variation and flips etc...

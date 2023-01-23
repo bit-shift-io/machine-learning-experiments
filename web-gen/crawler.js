@@ -112,7 +112,7 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
         const areaScreenshot = await page.screenshot({ path: img_path, clip: clipRelativeToPage, fullPage: true })
 
         const r = await sharp(img_path)
-            .resize(200, 200)
+            .resize(200, 200, { fit: 'fill' })
             .toFile(img_path_200)
 
         //await element.screenshot({path: img_path, clip: boundingBox})

@@ -61,6 +61,10 @@ class Transformer:
     def encode_node_class(self, node_cls):
         return one_hot(node_classes, node_cls)[0]
 
+    def decode_node_class(self, node_one_hot):
+        node_cls = one_hot_inverse(node_classes, [node_one_hot.argmax()])[0]
+        return node_cls
+
     def encode_display_class(self, display_cls):
         return one_hot(display_classes, display_cls)[0]
 

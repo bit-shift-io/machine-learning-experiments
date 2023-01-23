@@ -38,7 +38,7 @@ def showimg():
     #plt.show()
     plt.show(block=False)
     #plt.draw()
-    plt.pause(1.0)
+    plt.pause(0.5)
 
 showimg()
 
@@ -87,23 +87,29 @@ for epoch in tqdm(range(training_epochs)):
         plt.gca().add_patch(create_corner_rect(Y_bounds[0]))
         plt.gca().add_patch(create_corner_rect(p_b, 'green'))
         plt.show(block=False)
-        plt.pause(1.0)
+        plt.pause(0.5)
 
         # testing - just to help test the decoder outputs code
         #decoded_pred = tr.decode_output(hypothesis)
+
+        # TODO: do I need this bit below? as we now return a full image bounds for leaf nodes, which might even help the NN learn bounds 
+        #for i, (pred_n, y_n) in enumerate(zip(pred_node, Y_node_class)):
+        #    y_node_class = tr.decode_node_class(y_n)
+        #    if y_node_class == 'leaf':
+        #        pred_bounds[i] = Y_bounds[i] # set loss to zero for this case, as we don't care about bounding boxes for leaf nodes
+
 
         # https://discuss.pytorch.org/t/is-there-a-way-to-combine-classification-and-regression-in-single-model/165549/2
         # TODO: https://discuss.pytorch.org/t/ignore-loss-on-some-outputs-depending-on-others/170864 
         loss_1 = criterion_1(pred_bounds, Y_bounds)
         loss_2 = criterion_2(pred_node, Y_node_class)
         loss_3 = criterion_3(pred_display, Y_display_class)
+
+        loss_1 = loss_1 / 100.0
         loss_total = loss_1 + loss_2 + loss_3
 
-
-        #cost = criterion(hypothesis, Y) # <= compute the loss function
-        
         # Backward propagation
-        loss_total.backward() #cost.backward() # <= compute the gradient of the loss/cost function     
+        loss_total.backward() # <= compute the gradient of the loss/cost function     
         optimizer.step() # <= Update the gradients
              
 
