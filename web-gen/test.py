@@ -14,24 +14,7 @@ from model_io import save, load
 from utils import cxcy_to_iou
 import numpy as np
 from model import CNN2
-
-model_path = 'model.pt'
-
-# hyperparameters
-batch_size = 32
-
-keep_prob = 0.8
-hidden_sz = 1024 #out_features * out_features # TODO: make this a hyper param?
-
-image_size=[100, 100]
-reg_weight = 0.3333
-class_1_weight = 0.3333
-class_2_weight = 0.3333
-
-learning_rate = 0.001
-
-train_pct = 0.8 #0.001 # should e about 0.8, reduce to lower to speed up training for testing only
-training_epochs = 100 # should be abbout 100, reduce to speed up testing
+from config import *
 
 tr = Transformer(image_size=image_size)
 ds = WebsitesDataset('data', transformer=tr)

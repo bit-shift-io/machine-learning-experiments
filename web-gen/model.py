@@ -9,6 +9,7 @@ from datasets import WebsitesDataset
 from transformer import Transformer
 from tqdm import tqdm
 from model_io import save, load
+from config import *
 
 # Implementation of CNN/ConvNet Model
 class CNN(torch.nn.Module):
@@ -68,7 +69,9 @@ class CNN2(torch.nn.Module):
         #max_pool_sz_1 = int(total_sz / 4)
         #max_pool_sz_2 = int(max_pool_sz_1 / 4)
 
-        self.main = torch.nn.Sequential(
+        conv_output_size = 7500 # can we compute this from image_size?
+
+        self.conv = torch.nn.Sequential(
             torch.nn.Conv2d(in_channels=3, out_channels=3, kernel_size=(3, 3), padding=1),
             torch.nn.ReLU(),
             torch.nn.MaxPool2d(kernel_size=2, stride=2),
@@ -77,16 +80,44 @@ class CNN2(torch.nn.Module):
             torch.nn.Conv2d(in_channels=3, out_channels=3, kernel_size=(3, 3), padding=1),
             torch.nn.ReLU(),
             torch.nn.MaxPool2d(kernel_size=2, stride=2),
-            torch.nn.Dropout(p=1-keep_prob),
+            torch.nn.Dropout(p=1-keep_prob)
+        )
 
+        self.bounds_out = torch.nn.Sequential(
+            # todo, convert image to grayscale, conv2d -> single colour channel. Colour shouldnt play a factor in the bounding box
             torch.nn.Flatten(),
-            torch.nn.Linear(1875, hidden_sz), # max_pool_sz_1
+            torch.nn.Linear(conv_output_size, hidden_sz),
             torch.nn.ReLU(),
             torch.nn.Dropout(p=1-keep_prob),
 
-            torch.nn.Linear(hidden_sz, out_features)
+            torch.nn.Linear(hidden_sz, 4)
+        )
+
+        self.classifier_features = torch.nn.Sequential(
+            torch.nn.Flatten(),
+            torch.nn.Linear(conv_output_size, hidden_sz),
+            torch.nn.ReLU(),
+            torch.nn.Dropout(p=1-keep_prob),
+        )
+
+        self.node_class_out = torch.nn.Sequential(
+            torch.nn.Linear(hidden_sz, node_classes_len)
+        )
+
+        self.display_class_out = torch.nn.Sequential(
+            torch.nn.Linear(hidden_sz, display_classes_len)
         )
 
     def forward(self, x):
-        out = self.main(x)
-        return out
+        # conv -> bounds_out
+        # conv -> classifier_feautures -> node_classes_out
+        # conv -> classifier_feautures -> display_classes_out
+        t = self.conv(x)
+        b = self.bounds_out(t)
+
+        u = self.classifier_features(t)
+        n = self.node_class_out(u)
+        d = self.display_class_out(u)
+        
+
+        return b, n, d

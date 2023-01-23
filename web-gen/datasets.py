@@ -44,12 +44,20 @@ class WebsitesDataset(Dataset):
         # we need to know if it is a display: flex, grid or block layout
 
         parent_wh = [js['parent_size']['width'], js['parent_size']['height']] #[parent_js['bounds']['width'], parent_js['bounds']['height']]
-        bounds_arr = [js['bounds']['x'], js['bounds']['y'], js['bounds']['width'], js['bounds']['height']]
+
+        # for now return bounds of first child
+        try:
+            children = js['children'] if 'children' in js else []
+            first_child = children[0]
+            bounds_arr = [first_child['bounds']['x'], first_child['bounds']['y'], first_child['bounds']['width'], first_child['bounds']['height']]
+        except:
+            # if not children we end up here.... just return our bounds
+            bounds_arr = [js['bounds']['x'], js['bounds']['y'], js['bounds']['width'], js['bounds']['height']]
         
 
         # the sample code above applies random variation and flips etc...
         # do we need to do something similar to help AI in fuzzy situations?
-        image = Image.open(js['img_path'])
+        image = Image.open(js['img_path_200'])
         
         # convert CSS properties to a set of labels
         node_cls = 'node' if 'children' in js and len(js['children']) > 0 else 'leaf'
@@ -61,4 +69,5 @@ class WebsitesDataset(Dataset):
         except:
             pass
 
-        return self.transformer.encode_inputs(image), self.transformer.encode_outputs(parent_wh, bounds_arr, node_cls, display_cls)
+        X = self.transformer.encode_input_image_200(image)
+        return X, self.transformer.encode_bounds(parent_wh, bounds_arr), self.transformer.encode_node_class(node_cls), self.transformer.encode_display_class(display_cls) 

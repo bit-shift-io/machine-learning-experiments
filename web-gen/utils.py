@@ -7,9 +7,16 @@ import torchvision.ops.boxes as bops
 def to_fractional_scale(xy, parent_wh):
     return [xy[0] / parent_wh[0], xy[1] / parent_wh[1],  xy[2] / parent_wh[0], xy[3] / parent_wh[1]]
 
+def from_fractional_scale(xy, parent_wh):
+    return [xy[0] * parent_wh[0], xy[1] * parent_wh[1],  xy[2] * parent_wh[0], xy[3] * parent_wh[1]]
+
 # Convert bounding boxes from boundary coordinates (x_min, y_min, w, h) to center-size coordinates (c_x, c_y, w, h)
 def xy_to_cxcy(xy):
     return [xy[0] + (xy[2] / 2), xy[1] + (xy[3] / 2),  xy[2], xy[3]]
+
+# Convert bounding boxes from center-size coordinates (c_x, c_y, w, h) to boundary coordinates (x_min, y_min, w, h)
+def cxcy_to_xy(cxcy):
+    return [cxcy[0] - (cxcy[2] / 2), cxcy[1] - (cxcy[3] / 2),  cxcy[2], cxcy[3]]
 
 # convert center-size coordinates (c_x, c_y, w, h) to bbox (x1, y1, x2, y2)
 def cxcy_to_box(cxcy):

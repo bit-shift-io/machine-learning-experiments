@@ -5,7 +5,7 @@
 import chunk from 'lodash/chunk.js'
 import pick from 'lodash/pick.js'
 //import puppeteer from 'puppeteer'
-
+import sharp from 'sharp'
 import { chromium } from 'playwright' // Or 'chromium' or 'firefox'.
 
 import fs from 'fs'
@@ -77,9 +77,11 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
     }
 
     const img_path = `${dir}/screenshot.jpg`
+    const img_path_200 = `${dir}/screenshot_200.jpg`
     const r = {
         id,
         img_path,
+        img_path_200,
         parent_size: { // need parent size to compute fractional scaling
             width: parent_bounds?.width || boundingBox.width,
             height: parent_bounds?.height || boundingBox.height,
@@ -108,6 +110,10 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
 
         // Take an area screenshot.
         const areaScreenshot = await page.screenshot({ path: img_path, clip: clipRelativeToPage, fullPage: true })
+
+        const r = await sharp(img_path)
+            .resize(200, 200)
+            .toFile(img_path_200)
 
         //await element.screenshot({path: img_path, clip: boundingBox})
     } catch (err) {
@@ -176,6 +182,9 @@ export async function screenshotWebsite(browser, url) {
         const context = await browser.newContext()
         page = await context.newPage()
 
+        // might actually need to resize this AFTER we save the screnshot to help speed up the ML so it doesnt need to resize images...
+        //page.setViewportSize({ width: 400, height: 400 })
+
         await page.goto(url)
 
         // https://github.com/microsoft/playwright/issues/662
@@ -228,7 +237,7 @@ c.queue(['http://www.google.com/','http://www.yahoo.com']);
 
 
 
-const TEST_SINGLE = false
+const TEST_SINGLE = true
 
 if (TEST_SINGLE) {
     const browser = await chromium.launch()
