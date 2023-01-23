@@ -13,6 +13,14 @@
             "justMyCode": true
         },
         {
+            "name": "test",
+            "type": "python",
+            "request": "launch",
+            "program": "test.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "type": "node",
             "request": "launch",
             "name": "crawler",

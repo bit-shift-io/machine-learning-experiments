@@ -12,7 +12,9 @@ def load(path, model, optimizer, default_params={}):
     try:
         checkpoint = torch.load(path)
         model.load_state_dict(checkpoint['model_state_dict'])
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        if optimizer:
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            
         return checkpoint
     except:
         return default_params
