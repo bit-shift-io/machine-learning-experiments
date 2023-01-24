@@ -15,11 +15,11 @@ from sklearn import preprocessing
 
 # sample: https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Object-Detection/blob/master/datasets.py
 class WebsitesDataset(Dataset):
-    def __init__(self, data_dir, transformer, nodes_only=True):
+    def __init__(self, data_dir, transformer, layouts_only=True):
         search = f'{data_dir}/**/*.json'
-        # for now, lets ignore leaf nodes as it is most important to learn layouts
-        if nodes_only:
-            search = f'{data_dir}/**/node.json'
+        # for now, lets ignore leaf nodes and containers as it is most important to learn layouts
+        if layouts_only:
+            search = f'{data_dir}/**/layout.json'
 
         self.samples = glob.glob(search, recursive = True)
         self.transformer = transformer

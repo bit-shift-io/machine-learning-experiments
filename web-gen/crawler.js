@@ -159,7 +159,14 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
         //return r
     }
 
-    const dataFile = `${dir}/${r_children.length > 0 ? 'node' : 'leaf'}.json`
+    let filename = 'layout' // multiple children
+    if (children.length == 0) {
+        filename = 'leaf' // terminator (text or image)
+    } else if (children.length == 1) {
+        filename = 'container' // container of just a single child
+    }
+
+    const dataFile = `${dir}/${filename}.json`
     const json = JSON.stringify(r, null, 4)
     fs.writeFileSync(dataFile, json)
 
