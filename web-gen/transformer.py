@@ -68,6 +68,13 @@ class Transformer:
     def encode_display_class(self, display_cls):
         return one_hot(display_classes, display_cls)[0]
 
+
+    def encode_layout_class(self, layout):
+        return one_hot(layout_classes, layout)[0]
+
+    def encode_first_child_size(self, first_child_size):
+        return torch.FloatTensor(first_child_size)
+
     # # encode expected NN outputs for training
     # def encode_outputs(self, parent_wh, bounds_arr, node_cls, display_cls):
     #     frac_bounds_arr = to_fractional_scale(bounds_arr, parent_wh)

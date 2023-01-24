@@ -22,20 +22,22 @@ ds = WebsitesDataset('data', transformer=tr)
 train_data, test_data = torch.utils.data.random_split(ds, [int(train_pct * len(ds)), len(ds) - int(train_pct * len(ds))])
 train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
 
+def to_bounds(size):
+    return [0, 0, size[0], size[1]]
+
 # https://jovian.ml/aakanksha-ns/road-signs-bounding-box-prediction
-def create_corner_rect(cxcy, color='red'):
-    xy = cxcy_to_xy(cxcy)
-    xy = from_fractional_scale(xy, image_size)
+def create_corner_rect(bounds, color='red'):
+    xy = from_fractional_scale(bounds, image_size)
     rect = plt.Rectangle((xy[0], xy[1]), xy[2], xy[3], edgecolor=color, facecolor='none', lw=3)
     return rect
 
 # Display image and label.
 # https://stackoverflow.com/questions/28269157/plotting-in-a-non-blocking-way-with-matplotlib
 def showimg():
-    train_images, train_bounds, train_node_class, train_display_class = next(iter(train_dataloader))
+    train_images, train_layout, train_first_child_size = next(iter(train_dataloader))
     img = train_images[0]#.squeeze()
     plt.imshow(img.permute(1, 2, 0))
-    plt.gca().add_patch(create_corner_rect(train_bounds[0]))
+    plt.gca().add_patch(create_corner_rect(to_bounds(train_first_child_size[0])))
     #plt.show()
     plt.show(block=False)
     #plt.draw()
@@ -48,9 +50,8 @@ showimg()
 model = CNN2(image_size=tr.input_size(), out_features=tr.output_size())
 print(model)
 
-criterion_1 = torch.nn.MSELoss()
-criterion_2 = torch.nn.CrossEntropyLoss()    # Softmax is internally computed.
-criterion_3 = torch.nn.CrossEntropyLoss()
+criterion_first_child_size = torch.nn.MSELoss()
+criterion_layout = torch.nn.CrossEntropyLoss()    # Softmax is internally computed.
 optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
 
 # load existing model
@@ -76,23 +77,22 @@ print('Total number of batches is : {0:2.0f}'.format(total_batch))
 print('\nTotal number of epochs is : {0:2.0f}'.format(training_epochs))
 
 for epoch in tqdm(range(training_epochs)):
-    avg_bounds_loss = 0
-    avg_node_class_loss = 0
-    avg_display_class_loss = 0
-    for i, (X, Y_bounds, Y_node_class, Y_display_class) in tqdm(enumerate(train_dataloader), leave=False, total=total_batch):
+    avg_loss_layout = 0
+    avg_loss_first_child_size = 0
+    for i, (X, Y_layout, Y_first_child_size) in tqdm(enumerate(train_dataloader), leave=False, total=total_batch):
         optimizer.zero_grad() # <= initialization of the gradients
         
         # forward propagation
         # TODO: investigate this: https://pytorch.org/vision/stable/generated/torchvision.ops.generalized_box_iou_loss.html
-        pred_bounds, pred_node, pred_display = model(X)
+        pred_layout, pred_first_child_size = model(X)
 
         # help us debug the data
-        sample_idx = random.randint(0, Y_bounds.shape[0] - 1)
-        p_b = pred_bounds[sample_idx].detach().numpy()
+        sample_idx = random.randint(0, Y_layout.shape[0] - 1)
+        p_size = pred_first_child_size[sample_idx].detach().numpy()
         plt.clf()
         plt.imshow(X[sample_idx].permute(1, 2, 0))
-        plt.gca().add_patch(create_corner_rect(Y_bounds[sample_idx]))
-        plt.gca().add_patch(create_corner_rect(p_b, 'green'))
+        plt.gca().add_patch(create_corner_rect(to_bounds(Y_first_child_size[sample_idx])))
+        plt.gca().add_patch(create_corner_rect(to_bounds(p_size), 'green'))
         plt.show(block=False)
         plt.pause(0.6)
 
@@ -108,12 +108,11 @@ for epoch in tqdm(range(training_epochs)):
 
         # https://discuss.pytorch.org/t/is-there-a-way-to-combine-classification-and-regression-in-single-model/165549/2
         # TODO: https://discuss.pytorch.org/t/ignore-loss-on-some-outputs-depending-on-others/170864 
-        loss_1 = criterion_1(pred_bounds, Y_bounds)
-        loss_2 = criterion_2(pred_node, Y_node_class)
-        loss_3 = criterion_3(pred_display, Y_display_class)
+        loss_first_child_size = criterion_first_child_size(pred_first_child_size, Y_first_child_size)
+        loss_layout = criterion_layout(pred_layout, Y_layout)
 
-        loss_1 = loss_1 / 10.0
-        loss_total = loss_1 + loss_2 + loss_3
+        loss_first_child_size = loss_first_child_size / 10.0
+        loss_total = loss_first_child_size + loss_layout
 
         # Backward propagation
         loss_total.backward() # <= compute the gradient of the loss/cost function     
@@ -136,11 +135,10 @@ for epoch in tqdm(range(training_epochs)):
         #if i % 200 == 0:
         #    print("Epoch= {},\t batch = {},\t cost = {:2.4f},\t accuracy = {}".format(epoch+1, i, train_loss[-1], train_accu[-1]))
        
-        avg_bounds_loss += loss_1.data / total_batch
-        avg_node_class_loss += loss_2.data / total_batch
-        avg_display_class_loss += loss_3.data / total_batch
+        avg_loss_first_child_size += loss_first_child_size.data / total_batch
+        avg_loss_layout += loss_layout.data / total_batch
 
-    print("[Epoch: {:>4}], mean loss: bounds = {:>.9}, node cls = {:>.9}, display cls = {:>.9}".format(epoch + io_params['epoch'] + 1, avg_bounds_loss.item(), avg_node_class_loss.item(), avg_display_class_loss.item()))
+    print("[Epoch: {:>4}], mean loss: layout = {:>.9}, first child sz = {:>.9}".format(epoch + io_params['epoch'] + 1, avg_loss_layout.item(), avg_loss_first_child_size.item()))
     
     #print(model.bounds_out[-4].weight)
 

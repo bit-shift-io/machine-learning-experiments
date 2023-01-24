@@ -47,32 +47,39 @@ class WebsitesDataset(Dataset):
         # how do we deal with multiple children?
         # we need to know if it is a display: flex, grid or block layout
 
-        parent_wh = [js['parent_size']['width'], js['parent_size']['height']] #[parent_js['bounds']['width'], parent_js['bounds']['height']]
+        # parent_wh = [js['parent_size']['width'], js['parent_size']['height']] #[parent_js['bounds']['width'], parent_js['bounds']['height']]
 
-        # for now return bounds of first child
-        try:
-            children = js['children'] if 'children' in js else []
-            first_child = children[0]
-            bounds_arr = [first_child['bounds']['x'], first_child['bounds']['y'], first_child['bounds']['width'], first_child['bounds']['height']]
-            parent_wh = [first_child['parent_size']['width'], first_child['parent_size']['height']]
-        except:
-            # if not children we end up here.... return bounds that encompass the whole image
-            bounds_arr = [0, 0, parent_wh[0], parent_wh[1]]
+        # # for now return bounds of first child
+        # try:
+        #     children = js['children'] if 'children' in js else []
+        #     first_child = children[0]
+        #     bounds_arr = [first_child['bounds']['x'], first_child['bounds']['y'], first_child['bounds']['width'], first_child['bounds']['height']]
+        #     parent_wh = [first_child['parent_size']['width'], first_child['parent_size']['height']]
+        # except:
+        #     # if not children we end up here.... return bounds that encompass the whole image
+        #     bounds_arr = [0, 0, parent_wh[0], parent_wh[1]]
         
 
         # the sample code above applies random variation and flips etc...
         # do we need to do something similar to help AI in fuzzy situations?
         image = Image.open(js['img_path_200'])
         
-        # convert CSS properties to a set of labels
-        node_cls = 'node' if 'children' in js and len(js['children']) > 0 else 'leaf'
-        display_cls = 'column'
+        # # convert CSS properties to a set of labels
+        # node_cls = 'node' if 'children' in js and len(js['children']) > 0 else 'leaf'
+        # display_cls = 'column'
+        
+        # try:
+        #     if js['css']['display'] == 'flex' and js['css']['flex-direction'] == 'row':
+        #         display_cls = 'row'
+        # except:
+        #     pass
 
-        try:
-            if js['css']['display'] == 'flex' and js['css']['flex-direction'] == 'row':
-                display_cls = 'row'
-        except:
-            pass
+        size = [js['bounds']['width'], js['bounds']['height']]
+        layout = js['layout']
+        first_child_size = [js['first_child_size']['width'], js['first_child_size']['height']]
+        first_child_size = [first_child_size[0] / size[0], first_child_size[1] / size[1]] # convert to fraction of parent size
+
 
         X = self.transformer.encode_input_image_200(image)
-        return X, self.transformer.encode_bounds(parent_wh, bounds_arr), self.transformer.encode_node_class(node_cls), self.transformer.encode_display_class(display_cls) 
+        return X, self.transformer.encode_layout_class(layout), self.transformer.encode_first_child_size(first_child_size) 
+        #self.transformer.encode_bounds(parent_wh, bounds_arr), self.transformer.encode_node_class(node_cls), self.transformer.encode_display_class(display_cls) 

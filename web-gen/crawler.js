@@ -56,8 +56,17 @@ function computeBounds(boundingBox, styles) {
 }
 
 // TODO: if a container only has a single child with no margins, ignore it as it can be flattened with the child....
-async function handleElement(page, parent_element, parent_bounds, element, dir) {    
+async function handleElement(page, parent_element, parent_bounds, element, dir) { 
+    const MIN_SIZE = 10
+
     const id = await getPropertyValue(element, 'id')
+    const tag_name = (await getPropertyValue(element, 'tagName')).toLowerCase()
+
+    // we dont care about iframes or other tags
+    const VALID_TAGS = ['div', 'body', 'a', 'ul', 'li']
+    if (!VALID_TAGS.includes(tag_name)) {
+        return null
+    }
 
     const styles = await element.evaluate((element) => {
         return window.getComputedStyle(element)
@@ -65,6 +74,9 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
 
     // TODO: add other css properties we are interested in
     const pickedStyles = pick(styles, ['display', 'flex-direction', 'flex', 'marginTop', 'marginLeft', 'marginRight', 'marginBottom', 'paddingTop', 'paddingLeft', 'paddingRight', 'paddingBottom'])
+    if (pickedStyles.display == 'none') {
+        return null
+    }
 
     // this is relative to viewport apparently
     let boundingBox = computeBounds(await element.boundingBox(), styles)
@@ -74,10 +86,45 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
         return null
     }
 
+    // too small to care about
+    if (boundingBox.width < MIN_SIZE && boundingBox.height < MIN_SIZE) {
+        return null
+    }
+
     // compute bounds relative to parent
     let boundsRelativeToParent = boundingBox
     if (parent_bounds) {
         boundsRelativeToParent = makeRelativeToParent(boundingBox, parent_bounds)
+    }
+
+    // boil the layout down to row or column
+    // TODO: handle grid
+    let layout = 'column'
+    if (pickedStyles.display == 'flex') {
+        layout = pickedStyles['flex-direction'] || 'row'
+    }
+
+
+    const r_children = []
+    const children = await element.$$(':scope > *')
+    for (let i = 0; i < children?.length; ++i) {
+        const c = children[i]
+        const rc = await handleElement(page, element, boundingBox, c, `${dir}/child_${i}`)
+        if (rc) {
+            r_children.push(rc)
+        }
+    }
+
+    // now we really only care about the height of the first child in the case of a column layout
+    // and in the case of a row layout we only care about the width
+    let firstChildSize = {width: boundsRelativeToParent.width, height: boundsRelativeToParent.height}
+    let firstChild = r_children?.[0]
+    if (firstChild) {
+        if (layout == 'column') {
+            firstChildSize.height = firstChild.bounds.height
+        } else {
+            firstChildSize.width = firstChild.bounds.width
+        }
     }
 
     const img_path = `${dir}/screenshot.jpg`
@@ -86,18 +133,21 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
         id,
         img_path,
         img_path_200,
+
+        layout,
+        first_child_size: firstChildSize,
+
         parent_size: { // need parent size to compute fractional scaling
             width: parent_bounds?.width || boundingBox.width,
             height: parent_bounds?.height || boundingBox.height,
         },
         bounds: boundsRelativeToParent,
-        tag_name: await getPropertyValue(element, 'tagName'),
+        tag_name,
         css: {
             ...pickedStyles
         }
     }
-    const r_children = []
-
+    
     try {
         fs.mkdirSync(dir, { recursive: true })
 
@@ -130,39 +180,15 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
         return null
     }
 
-    const children = await element.$$(':scope > *')
-    //const children = await page.evaluateHandle(e => e.children, element)
-
-    /*
-    const p = children.map(async (c, idx) => {
-        const rc = await handleElement(page, element, boundingBox, c, `${dir}/child_${idx}`)
-        if (rc) {
-            r_children.push(rc)
-        }
-    })
-
-    await Promise.all(p)
-    */
-
-    for (let i = 0; i < children.length; ++i) {
-        const c = children[i]
-        const rc = await handleElement(page, element, boundingBox, c, `${dir}/child_${i}`)
-        if (rc) {
-            r_children.push(rc)
-        }
-    }
 
     if (r_children.length > 0) {
         r.children = r_children
-    } else {
-        // for now, if we have non children, we are a leaf node.... we don't care about having a json file
-        //return r
     }
 
     let filename = 'layout' // multiple children
-    if (children.length == 0) {
+    if (r_children.length == 0) {
         filename = 'leaf' // terminator (text or image)
-    } else if (children.length == 1) {
+    } else if (r_children.length == 1) {
         filename = 'container' // container of just a single child
     }
 
@@ -182,11 +208,12 @@ export async function screenshotWebsite(browser, url) {
         dir = dir.slice(0, -1)
     }
     
-    const dataFile = `${dir}/node.json`
+    /*
+    const dataFile = `${dir}/layout.json`
     if (fs.existsSync(dataFile)) {
         console.log(`Already processed: ${url}`)
         return
-    }
+    }*/
 
     let page = null
     try {
@@ -248,12 +275,13 @@ c.queue(['http://www.google.com/','http://www.yahoo.com']);
 
 
 
-const TEST_SINGLE = false
+const TEST_SINGLE = true
 
 if (TEST_SINGLE) {
     const browser = await chromium.launch()
     //const url = 'https://www.wikipedia.org/'
-    const url = `file://${__dirname}/test-web/test-1.html`
+    let url = `file://${__dirname}/test-web/test-1.html`
+    url = `https://www.cambridge.org/`
     await screenshotWebsite(browser, url)
     await browser.close()
 } else {

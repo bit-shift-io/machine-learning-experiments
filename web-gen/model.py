@@ -83,14 +83,14 @@ class CNN2(torch.nn.Module):
             torch.nn.Dropout(p=1-keep_prob)
         )
 
-        self.bounds_out = torch.nn.Sequential(
+        self.size_out = torch.nn.Sequential(
             # todo, convert image to grayscale, conv2d -> single colour channel. Colour shouldnt play a factor in the bounding box
             torch.nn.Flatten(),
             torch.nn.Linear(conv_output_size, hidden_sz),
             torch.nn.ReLU(),
             torch.nn.Dropout(p=1-keep_prob),
 
-            torch.nn.Linear(hidden_sz, 4)
+            torch.nn.Linear(hidden_sz, size_len)
         )
 
         self.classifier_features = torch.nn.Sequential(
@@ -100,11 +100,11 @@ class CNN2(torch.nn.Module):
             torch.nn.Dropout(p=1-keep_prob),
         )
 
-        self.node_class_out = torch.nn.Sequential(
-            torch.nn.Linear(hidden_sz, node_classes_len)
-        )
+        # self.node_class_out = torch.nn.Sequential(
+        #     torch.nn.Linear(hidden_sz, node_classes_len)
+        # )
 
-        self.display_class_out = torch.nn.Sequential(
+        self.layout_class_out = torch.nn.Sequential(
             torch.nn.Linear(hidden_sz, display_classes_len)
         )
 
@@ -113,11 +113,9 @@ class CNN2(torch.nn.Module):
         # conv -> classifier_feautures -> node_classes_out
         # conv -> classifier_feautures -> display_classes_out
         t = self.conv(x)
-        b = self.bounds_out(t)
+        b = self.size_out(t)
 
         u = self.classifier_features(t)
-        n = self.node_class_out(u)
-        d = self.display_class_out(u)
+        l = self.layout_class_out(u)
         
-
-        return b, n, d
+        return l, b
