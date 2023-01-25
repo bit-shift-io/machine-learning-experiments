@@ -58,6 +58,7 @@ function computeBounds(boundingBox, styles) {
 // TODO: if a container only has a single child with no margins, ignore it as it can be flattened with the child....
 async function handleElement(page, parent_element, parent_bounds, element, dir) { 
     const MIN_SIZE = 10
+    const MIN_ENTROPY = 0.2
 
     const id = await getPropertyValue(element, 'id')
     const tag_name = (await getPropertyValue(element, 'tagName')).toLowerCase()
@@ -165,14 +166,19 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
         // Take an area screenshot.
         const areaScreenshot = await page.screenshot({ path: img_path, clip: clipRelativeToPage, fullPage: true })
 
-        const r = await sharp(img_path)
-            .resize(200, 200, { fit: 'fill' })
+        const sImg = sharp(img_path)
+        const stats = await sImg.stats()
+        if (stats.entropy < MIN_ENTROPY) {
+            //throw `low entropy for: ${img_path}`
+            return null
+        }
+        
+        await sImg.resize(200, 200, { fit: 'fill' })
             .toFile(img_path_200)
 
-        //await element.screenshot({path: img_path, clip: boundingBox})
     } catch (err) {
         try {
-            fs.rmdirSync(dir)
+            fs.rmSync(dir, { recursive: true, force: true })
         } catch (err) {
             console.warn(err)
         }
