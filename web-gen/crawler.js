@@ -7,7 +7,7 @@ import pick from 'lodash/pick.js'
 //import puppeteer from 'puppeteer'
 import sharp from 'sharp'
 import { chromium } from 'playwright' // Or 'chromium' or 'firefox'.
-
+import fetch from 'node-fetch'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -105,6 +105,11 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
         layout = pickedStyles['flex-direction'] || 'row'
     }
 
+    // we could handle this by getting the parent to check if its children contain 'inline-block'
+    // then nchange its layout to a 'row'.... for now if we see inline block abort!
+    if (pickedStyles.display == 'inline-block') {
+        return null
+    }
 
     const r_children = []
     const children = await element.$$(':scope > *')
@@ -166,15 +171,16 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
         // Take an area screenshot.
         const areaScreenshot = await page.screenshot({ path: img_path, clip: clipRelativeToPage, fullPage: true })
 
-        const sImg = sharp(img_path)
+        let sImg = sharp(img_path)
+        sImg = await sImg.resize(200, 200, { fit: 'fill' })
+
         const stats = await sImg.stats()
         if (stats.entropy < MIN_ENTROPY) {
             //throw `low entropy for: ${img_path}`
             return null
         }
         
-        await sImg.resize(200, 200, { fit: 'fill' })
-            .toFile(img_path_200)
+        await sImg.toFile(img_path_200)
 
     } catch (err) {
         try {
@@ -214,12 +220,10 @@ export async function screenshotWebsite(browser, url) {
         dir = dir.slice(0, -1)
     }
     
-    /*
-    const dataFile = `${dir}/layout.json`
-    if (fs.existsSync(dataFile)) {
+    if (fs.existsSync(dir)) {
         console.log(`Already processed: ${url}`)
         return
-    }*/
+    }
 
     let page = null
     try {
@@ -253,35 +257,9 @@ export async function screenshotWebsite(browser, url) {
 }
 
 
-/*
-const Crawler = require('crawler');
-
-const c = new Crawler({
-    maxConnections: 10,
-    // This will be called for each crawled page
-    callback: (error, res, done) => {
-        if (error) {
-            console.log(error);
-        } else {
-            const $ = res.$;
-            // $ is Cheerio by default
-            //a lean implementation of core jQuery designed specifically for the server
-            console.log($('title').text());
-        }
-        done();
-    }
-});
-
-// Queue just one URL, with default callback
-//c.queue('http://www.amazon.com');
-
-// Queue a list of URLs
-c.queue(['http://www.google.com/','http://www.yahoo.com']);
-*/
 
 
-
-const TEST_SINGLE = true
+const TEST_SINGLE = false
 
 if (TEST_SINGLE) {
     const browser = await chromium.launch()

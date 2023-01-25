@@ -11,7 +11,16 @@ import torch.nn.functional as F
 from utils import *
 from pathlib import Path
 from sklearn import preprocessing
+import random
 
+# randomly shufle RGB channels
+# https://discuss.pytorch.org/t/torch-tensor-variable-from-rgb-to-bgr/18955
+class RandomColourShuffle(object):
+    def __call__(self, sample):
+        permute = [2, 1, 0]
+        random.shuffle(permute)
+        modified = sample[permute, :]
+        return modified
 
 # sample: https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Object-Detection/blob/master/datasets.py
 class WebsitesDataset(Dataset):
@@ -69,6 +78,33 @@ class WebsitesDataset(Dataset):
         # the sample code above applies random variation and flips etc...
         # do we need to do something similar to help AI in fuzzy situations?
         image = Image.open(js['img_path_200'])
+        X = self.transformer.encode_input_image_200(image)
+
+        # img_action = random.randint(0, 1)
+        # if img_action == 0: # convert to greyscale
+        #     X = transforms.Grayscale()(X)
+        # if img_action == 1: # shuffle colour channels
+        #     s = [0, 1, 2]
+        #     random.shuffle(s)
+        #     #X = torch.permute(X, s)
+        # if img_action == 2:
+        #     X = transforms.ColorJitter()(X)
+
+        # https://pytorch.org/vision/stable/transforms.html
+        xforms = [
+            RandomColourShuffle(),
+            transforms.ColorJitter(),
+            transforms.GaussianBlur(9),
+            transforms.RandomInvert(1),
+            #transforms.RandomPosterize(5, 0.5),
+            transforms.RandomSolarize(0.5, 1),
+            transforms.RandomAdjustSharpness(0.5, 1),
+            transforms.RandomAutocontrast(0.5),
+            #transforms.RandomEqualize(0.5)
+        ]
+        t = transforms.RandomApply(xforms, 0.5)
+        X = t(X)
+
         
         # # convert CSS properties to a set of labels
         # node_cls = 'node' if 'children' in js and len(js['children']) > 0 else 'leaf'
@@ -86,6 +122,5 @@ class WebsitesDataset(Dataset):
         first_child_size = [first_child_size[0] / size[0], first_child_size[1] / size[1]] # convert to fraction of parent size
 
 
-        X = self.transformer.encode_input_image_200(image)
         return X, self.transformer.encode_layout_class(layout), self.transformer.encode_first_child_size(first_child_size) 
         #self.transformer.encode_bounds(parent_wh, bounds_arr), self.transformer.encode_node_class(node_cls), self.transformer.encode_display_class(display_cls) 
