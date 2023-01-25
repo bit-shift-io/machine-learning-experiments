@@ -16,34 +16,15 @@ from config import *
 from utils import *
 import numpy as np
 import random
+from debug import *
 
 tr = Transformer(image_size=image_size)
 ds = WebsitesDataset('data', transformer=tr)
 train_data, test_data = torch.utils.data.random_split(ds, [int(train_pct * len(ds)), len(ds) - int(train_pct * len(ds))])
 train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
 
-def to_bounds(size):
-    return [0, 0, size[0], size[1]]
-
-# https://jovian.ml/aakanksha-ns/road-signs-bounding-box-prediction
-def create_corner_rect(bounds, color='red'):
-    xy = from_fractional_scale(bounds, image_size)
-    rect = plt.Rectangle((xy[0], xy[1]), xy[2], xy[3], edgecolor=color, facecolor='none', lw=3)
-    return rect
-
-# Display image and label.
-# https://stackoverflow.com/questions/28269157/plotting-in-a-non-blocking-way-with-matplotlib
-def showimg():
-    train_images, train_layout, train_first_child_size = next(iter(train_dataloader))
-    img = train_images[0]#.squeeze()
-    plt.imshow(img.permute(1, 2, 0))
-    plt.gca().add_patch(create_corner_rect(to_bounds(train_first_child_size[0])))
-    #plt.show()
-    plt.show(block=False)
-    #plt.draw()
-    plt.pause(1.0)
-
-showimg()
+train_images, train_layout, train_first_child_size = next(iter(train_dataloader))
+subplots = create_subplots(train_images)
 
 
 #instantiate CNN model
@@ -87,14 +68,9 @@ for epoch in tqdm(range(training_epochs)):
         pred_layout, pred_first_child_size = model(X)
 
         # help us debug the data
-        sample_idx = random.randint(0, Y_layout.shape[0] - 1)
-        p_size = pred_first_child_size[sample_idx].detach().numpy()
-        plt.clf()
-        plt.imshow(X[sample_idx].permute(1, 2, 0))
-        plt.gca().add_patch(create_corner_rect(to_bounds(Y_first_child_size[sample_idx])))
-        plt.gca().add_patch(create_corner_rect(to_bounds(p_size), 'green'))
-        plt.show(block=False)
-        plt.pause(0.6)
+        #sample_idx = random.randint(0, Y_layout.shape[0] - 1)
+        p_size = pred_first_child_size.detach() #pred_first_child_size[sample_idx].detach().numpy()
+        show_data_grid(subplots, X, Y_first_child_size, p_size)
 
         # testing - just to help test the decoder outputs code
         #decoded_pred = tr.decode_output(hypothesis)

@@ -21,7 +21,7 @@ node_classes_len = len(node_classes)
 display_classes = ['row', 'column']
 display_classes_len = len(display_classes)
 
-layout_classes = ['row', 'column', 'grid']
+layout_classes = ['row', 'column'] #, 'grid']
 layout_classes_len = len(display_classes)
 
 bounds_len = 4

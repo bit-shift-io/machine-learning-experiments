@@ -60,6 +60,12 @@ class WebsitesDataset(Dataset):
         #     bounds_arr = [0, 0, parent_wh[0], parent_wh[1]]
         
 
+        # TODO:
+        # dynamic modify data on nthe fly
+        # swap rgba channels
+        # convert to greyscale
+        # scale/skew
+
         # the sample code above applies random variation and flips etc...
         # do we need to do something similar to help AI in fuzzy situations?
         image = Image.open(js['img_path_200'])
