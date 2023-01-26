@@ -69,8 +69,11 @@ for epoch in tqdm(range(training_epochs)):
 
         # help us debug the data
         #sample_idx = random.randint(0, Y_layout.shape[0] - 1)
-        p_size = pred_first_child_size.detach() #pred_first_child_size[sample_idx].detach().numpy()
-        show_data_grid(subplots, X, Y_first_child_size, p_size)
+
+        # only show for first batch in the epoch so we don't slow thing too much
+        if i == 0:
+            p_size = pred_first_child_size.detach() #pred_first_child_size[sample_idx].detach().numpy()
+            show_data_grid(subplots, X, Y_first_child_size, p_size)
 
         # testing - just to help test the decoder outputs code
         #decoded_pred = tr.decode_output(hypothesis)
