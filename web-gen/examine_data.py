@@ -29,7 +29,7 @@ total_batch = len(ds) / batch_size
 print(f'\nBatch 0')
 for i, (X, Y_layout, Y_first_child_size) in tqdm(enumerate(train_dataloader), leave=False, total=total_batch):
     show_data_grid(subplots, X, Y_first_child_size)
-    plt.pause(10000)
+    plt.pause(10)
     print(f'\nBatch {i+1}')
 
 print('Finished!')
