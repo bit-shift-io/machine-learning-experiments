@@ -21,6 +21,14 @@
             "justMyCode": true
         },
         {
+            "name": "examine_data",
+            "type": "python",
+            "request": "launch",
+            "program": "examine_data.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "type": "node",
             "request": "launch",
             "name": "crawler",

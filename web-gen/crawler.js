@@ -15,6 +15,10 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
+
+const TEST_SINGLE = false
+
+
 async function getPropertyValue(element, property) {
     return await (await element.getProperty(property)).jsonValue()
 }
@@ -60,8 +64,14 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
     const MIN_SIZE = 10
     const MIN_ENTROPY = 0.2
 
+    //const cls = await getPropertyValue(element, 'class') 
     const id = await getPropertyValue(element, 'id')
     const tag_name = (await getPropertyValue(element, 'tagName')).toLowerCase()
+
+    /*
+    if (dir == 'data/cloudflare-com/body/child_0/child_0/child_0/child_2/child_4/child_0/child_0/child_0/child_1/child_0/child_2/child_0') {
+        debugger
+    }*/
 
     // we dont care about iframes or other tags
     const VALID_TAGS = ['div', 'body', 'a', 'ul', 'li']
@@ -74,7 +84,7 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
     })
 
     // TODO: add other css properties we are interested in
-    const pickedStyles = pick(styles, ['display', 'flex-direction', 'flex', 'marginTop', 'marginLeft', 'marginRight', 'marginBottom', 'paddingTop', 'paddingLeft', 'paddingRight', 'paddingBottom'])
+    const pickedStyles = pick(styles, ['display', 'flexDirection', 'flex', 'marginTop', 'marginLeft', 'marginRight', 'marginBottom', 'paddingTop', 'paddingLeft', 'paddingRight', 'paddingBottom'])
     if (pickedStyles.display == 'none') {
         return null
     }
@@ -102,7 +112,7 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
     // TODO: handle grid
     let layout = 'column'
     if (pickedStyles.display == 'flex') {
-        layout = pickedStyles['flex-direction'] || 'row'
+        layout = pickedStyles['flexDirection'] || 'row'
     }
 
     // we could handle this by getting the parent to check if its children contain 'inline-block'
@@ -215,12 +225,12 @@ export async function screenshotWebsite(browser, url) {
     console.log(`Starting processing: ${url}`)
 
     // create a dir from the website url
-    let dir = 'data/' + url.replace('https://', '').replace('http://', '').replaceAll('.', '-')
+    let dir = 'data/' + url.replace('https://', '').replace('http://', '').replace('www.', '').replaceAll('.', '-')
     if (dir.endsWith('/')) {
         dir = dir.slice(0, -1)
     }
     
-    if (fs.existsSync(dir)) {
+    if (!TEST_SINGLE && fs.existsSync(dir)) {
         console.log(`Already processed: ${url}`)
         return
     }
@@ -259,13 +269,12 @@ export async function screenshotWebsite(browser, url) {
 
 
 
-const TEST_SINGLE = false
-
 if (TEST_SINGLE) {
     const browser = await chromium.launch()
     //const url = 'https://www.wikipedia.org/'
     let url = `file://${__dirname}/test-web/test-1.html`
     url = `https://www.cambridge.org/`
+    url = `https://www.cloudflare.com/`
     await screenshotWebsite(browser, url)
     await browser.close()
 } else {

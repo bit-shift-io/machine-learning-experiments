@@ -13,8 +13,8 @@ def create_corner_rect(bounds, color='red'):
     return rect
 
 
-def create_subplots(image_arr):
-    l = len(image_arr)
+def create_subplots(size):
+    l = size
     s = math.ceil(math.sqrt(l))
     f, axarr = plt.subplots(s, s)
     

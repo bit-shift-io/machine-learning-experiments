@@ -24,7 +24,7 @@ class RandomColourShuffle(object):
 
 # sample: https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Object-Detection/blob/master/datasets.py
 class WebsitesDataset(Dataset):
-    def __init__(self, data_dir, transformer, layouts_only=True):
+    def __init__(self, data_dir, transformer, layouts_only=True, debug=False):
         search = f'{data_dir}/**/*.json'
         # for now, lets ignore leaf nodes and containers as it is most important to learn layouts
         if layouts_only:
@@ -32,6 +32,7 @@ class WebsitesDataset(Dataset):
 
         self.samples = glob.glob(search, recursive = True)
         self.transformer = transformer
+        self.debug = debug
         return
 
     def __len__(self):
@@ -75,6 +76,9 @@ class WebsitesDataset(Dataset):
         # convert to greyscale
         # scale/skew
 
+        if self.debug:
+            print(js['img_path_200'])
+
         # the sample code above applies random variation and flips etc...
         # do we need to do something similar to help AI in fuzzy situations?
         image = Image.open(js['img_path_200'])
@@ -111,7 +115,7 @@ class WebsitesDataset(Dataset):
         # display_cls = 'column'
         
         # try:
-        #     if js['css']['display'] == 'flex' and js['css']['flex-direction'] == 'row':
+        #     if js['css']['display'] == 'flex' and js['css']['flexDirection'] == 'row':
         #         display_cls = 'row'
         # except:
         #     pass

@@ -24,7 +24,7 @@ train_data, test_data = torch.utils.data.random_split(ds, [int(train_pct * len(d
 train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
 
 train_images, train_layout, train_first_child_size = next(iter(train_dataloader))
-subplots = create_subplots(train_images)
+subplots = create_subplots(len(train_images))
 
 
 #instantiate CNN model
