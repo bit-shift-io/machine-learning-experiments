@@ -122,6 +122,11 @@ class WebsitesDataset(Dataset):
 
         size = [js['bounds']['width'], js['bounds']['height']]
         layout = js['layout']
+
+        # todo: move to crawler.js
+        if layout == 'row-reverse':
+            layout = 'row'
+
         first_child_size = [js['first_child_size']['width'], js['first_child_size']['height']]
         first_child_size = [first_child_size[0] / size[0], first_child_size[1] / size[1]] # convert to fraction of parent size
 

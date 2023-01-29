@@ -24,7 +24,7 @@ def one_hot(voc, keys):
     le.fit(voc)
 
     xform_keys = le.transform(keys)
-    oh = F.one_hot(torch.tensor(xform_keys), num_classes=len(voc))
+    oh = F.one_hot(torch.tensor(xform_keys, dtype=torch.int64), num_classes=len(voc))
     return oh.type(torch.float32)
 
 def one_hot_inverse(voc, oh):
