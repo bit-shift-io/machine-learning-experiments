@@ -59,6 +59,23 @@ function computeBounds(boundingBox, styles) {
     return b
 }
 
+const layoutFromChildrenClientRects = (children) => {
+    let x = children[0].client_rect.right
+    let y = children[0].client_rect.bottom
+    //for (let i = 1; i < children?.length; ++i) {
+
+    let child = children[1]
+    if (child.client_rect.left >= x) {
+        return 'row'
+    }
+    if (child.client_rect.top >= y) {
+        return 'column'
+    }
+
+    //}
+    return null
+}
+
 // TODO: if a container only has a single child with no margins, ignore it as it can be flattened with the child....
 async function handleElement(page, parent_element, parent_bounds, element, dir) { 
     const MIN_SIZE = 20
@@ -119,7 +136,7 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
     }
 
     /*
-    if (dir == 'data/namebright-com/body/child_1/child_0/child_0/child_0/child_1/child_0/child_0/child_7/child_1') {
+    if (dir == 'data/fandom-com/body/child_7/child_2/child_1/child_0/child_1/child_2/child_0/child_0/child_1') {
         debugger
     }*/
 
@@ -132,7 +149,12 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
     // we could handle this by getting the parent to check if its children contain 'inline-block'
     // then change its layout to a 'row' or 'column' as appropriate.... 
     else if (pickedStyles.display == 'inline' || pickedStyles.display == 'inline-block' || pickedStyles.display == 'block') {
-        if (r_children.length) {
+        if (r_children.length > 1) {
+            layout = layoutFromChildrenClientRects(r_children)
+            if (!layout) {
+                return null // it could be any weird layout!
+            }
+/*
             const firstChildDisplay = r_children[0].css.display
             //const childrenDisplay = r_children.map(c => c.css.display)
             if (firstChildDisplay == 'inline' || firstChildDisplay == 'inline-block') {
@@ -144,7 +166,7 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
             const floatChild = r_children.find(c => c.css.float == 'left' || c.css.float == 'right')
             if (floatChild) {
                 return null // it could be any weird layout!
-            }
+            }*/
         }
     } else {
         //console.log(`unhandled display: ${pickedStyles.display} for: ${dir}`)
@@ -308,7 +330,7 @@ if (TEST_SINGLE) {
     const browser = await chromium.launch()
     //const url = 'https://www.wikipedia.org/'
     let url = `file://${__dirname}/test-web/test-1.html`
-    url = `https://www.namebright.com/`
+    url = `http://fandom.com`
     await screenshotWebsite(browser, url)
     await browser.close()
 } else {
