@@ -34,39 +34,42 @@ io_params = load(model_path, model, None, {
 # Test model and check accuracy
 model.eval()    # set the model to evaluation mode (dropout=False)
 
-bounds_acc_arr = []
-node_cls_acc_arr = []
-display_cls_acc_arr = []
+layout_acc_arr = []
+size_acc_arr = []
 
-test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=True)
-for i, (batch_X, batch_Y) in tqdm(enumerate(train_dataloader)):
-    X = batch_X    # images
-    Y = batch_Y    # labels are not one-hot encoded
+with torch.no_grad():
+    test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=True)
+    for i, (X, Y_layout, Y_first_child_size) in tqdm(enumerate(test_dataloader), leave=False):
+        pred_layout, pred_first_child_size = model(X)
 
-    prediction = model(X)
+        # layout accuracy
+        for i, (pred, actual) in enumerate(zip(pred_layout, Y_layout)):            
+            dec_pred_layout = tr.decode_layout_class(pred)
+            dec_actual_layout = tr.decode_layout_class(actual)
 
-    decoded_pred = tr.decode_output(prediction)
-    decoded_actual = tr.decode_output(Y)
+            layout_acc = (dec_pred_layout == dec_actual_layout)
+            layout_acc_arr.append(layout_acc)
 
-    for i, (pred, actual) in enumerate(zip(decoded_pred, decoded_actual)):
-        pred_bounds = pred[0] # cxcy
-        actual_bounds = actual[0] # cxcy
+        # accuracy for size
+        for i, (pred, actual) in enumerate(zip(pred_first_child_size, Y_first_child_size)):
+            layout_acc = (dec_pred_layout == dec_actual_layout)
+            layout_acc_arr.append(layout_acc)
 
-        bounds_acc = cxcy_to_iou(pred_bounds, actual_bounds)
-        node_cls_acc = (pred[1] == actual[1])
-        display_cls_acc = (pred[2] == actual[2])
+            layout = tr.decode_layout_class(Y_layout[i])
+            if layout == 'row':
+                size_acc = 1.0 - abs(pred[0] - actual[0])
+            elif layout == 'column':
+                size_acc = 1.0 - abs(pred[1] - actual[1])
+            
+            #box1 = torch.tensor([cxcy_to_box(cxcy1)], dtype=torch.float)
+            # iou = bops.box_iou(box1, box2).item()
+            size_acc_arr.append(size_acc)
 
-        bounds_acc_arr.append(bounds_acc)
-        node_cls_acc_arr.append(float(node_cls_acc))
-        display_cls_acc_arr.append(float(display_cls_acc))
-        pass
 
 
+avg_layout_acc = np.array(layout_acc_arr).mean()
+avg_size_acc = np.array(size_acc_arr).mean()
 
-avg_bounds_acc = np.array(bounds_acc_arr).mean()
-avg_node_cls_acc = np.array(node_cls_acc_arr).mean()
-avg_display_cls_acc = np.array(display_cls_acc_arr).mean()
-
-print('\nAccuracy for Bounds: {:2.2f} %'.format(avg_bounds_acc*100))
-print('\nAccuracy for Node Class: {:2.2f} %'.format(avg_node_cls_acc*100))
-print('\nAccuracy for Display Class: {:2.2f} %'.format(avg_display_cls_acc*100))
+print('\nAccuracy for Layout: {:2.2f} %'.format(avg_layout_acc*100))
+print('Accuracy for Size: {:2.2f} %'.format(avg_size_acc*100))
+print('\n')

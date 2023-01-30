@@ -72,6 +72,10 @@ class Transformer:
     def encode_layout_class(self, layout):
         return one_hot(layout_classes, layout)[0]
 
+    def decode_layout_class(self, layout_oh):
+        r = one_hot_inverse(display_classes, [layout_oh.argmax()])[0]
+        return r
+
     def encode_first_child_size(self, first_child_size):
         return torch.FloatTensor(first_child_size)
 
