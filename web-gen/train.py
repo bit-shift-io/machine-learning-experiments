@@ -28,7 +28,7 @@ subplots = create_subplots(len(train_images))
 
 
 #instantiate CNN model
-model = CNN2(image_size=tr.input_size(), out_features=tr.output_size())
+model = CNN2(image_size=tr.input_size(), out_features=tr.output_size()).to(device)
 print(model)
 
 criterion_first_child_size = torch.nn.MSELoss()
@@ -65,14 +65,14 @@ for epoch in tqdm(range(training_epochs)):
         
         # forward propagation
         # TODO: investigate this: https://pytorch.org/vision/stable/generated/torchvision.ops.generalized_box_iou_loss.html
-        pred_layout, pred_first_child_size = model(X)
+        pred_layout, pred_first_child_size = model(X.to(device))
 
         # help us debug the data
         #sample_idx = random.randint(0, Y_layout.shape[0] - 1)
 
         # only show for first batch in the epoch so we don't slow thing too much
-        if i == 0:
-            p_size = pred_first_child_size.detach() #pred_first_child_size[sample_idx].detach().numpy()
+        if i == 0 and (epoch % 10 == 0):
+            p_size = pred_first_child_size.cpu().detach() #pred_first_child_size[sample_idx].detach().numpy()
             show_data_grid(subplots, X, Y_first_child_size, p_size)
 
         # testing - just to help test the decoder outputs code
@@ -87,8 +87,8 @@ for epoch in tqdm(range(training_epochs)):
 
         # https://discuss.pytorch.org/t/is-there-a-way-to-combine-classification-and-regression-in-single-model/165549/2
         # TODO: https://discuss.pytorch.org/t/ignore-loss-on-some-outputs-depending-on-others/170864 
-        loss_first_child_size = criterion_first_child_size(pred_first_child_size, Y_first_child_size)
-        loss_layout = criterion_layout(pred_layout, Y_layout)
+        loss_first_child_size = criterion_first_child_size(pred_first_child_size, Y_first_child_size.to(device))
+        loss_layout = criterion_layout(pred_layout, Y_layout.to(device))
 
         loss_first_child_size = loss_first_child_size / 10.0
         loss_total = loss_first_child_size + loss_layout

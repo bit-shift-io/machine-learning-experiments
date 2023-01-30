@@ -1,3 +1,4 @@
+import torch
 
 model_path = 'model.pt'
 
@@ -12,7 +13,7 @@ image_size=[200, 200]
 learning_rate = 0.001
 
 train_pct = 0.8 #0.001 # should e about 0.8, reduce to lower to speed up training for testing only
-training_epochs = 100 # should be abbout 100, reduce to speed up testing
+training_epochs = 10000 # should be abbout 100, reduce to speed up testing
 
 
 node_classes = ['node', 'leaf']
@@ -26,3 +27,12 @@ layout_classes_len = len(display_classes)
 
 bounds_len = 4
 size_len = 2
+
+
+#if torch.cuda.is_available(): 
+# dev = "cuda:0" 
+#else: 
+# dev = "cpu" 
+#device = torch.device(dev)
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
