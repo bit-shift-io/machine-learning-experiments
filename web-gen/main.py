@@ -25,16 +25,16 @@ io_params = load(model_path, model, None, {
 
 model.eval() 
 
-layout, first_child_size = model(X)
+y_layout, y_first_child_size = model(torch.unsqueeze(X, dim=0))
 
-layout = tr.decode_layout_class(layout)
+layout = tr.decode_layout_class(y_layout[0])
 
 if layout == 'row':
-    size = first_child_size[0]
+    size = y_first_child_size[0][0].item()
 elif layout == 'column':
-    size = first_child_size[1]
+    size = y_first_child_size[0][1].item()
 
-dictionary ={ 
+dictionary = { 
   "layout": layout, 
   "size": size,
 } 
