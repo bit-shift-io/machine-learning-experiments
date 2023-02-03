@@ -19,9 +19,7 @@ X = tr.encode_input_image(image)
 model = CNN2(image_size=tr.input_size(), out_features=tr.output_size()).to(device)
 
 # load existing model
-io_params = load(model_path, model, None, {
-    'epoch': 0
-})
+io_params = load(model_path, model)
 
 model.eval() 
 

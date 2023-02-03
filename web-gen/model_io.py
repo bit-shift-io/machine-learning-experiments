@@ -8,13 +8,20 @@ def save(path, model, optimizer, other_params={}):
         **other_params
     }, path)
 
-def load(path, model, optimizer, default_params={}):
+def load(path, model, optimizer=None, default_params={}):
     try:
-        checkpoint = torch.load(path)
+        # https://github.com/pytorch/pytorch/issues/10622
+        if torch.cuda.is_available():
+            map_location=lambda storage, loc: storage.cuda()
+        else:
+            map_location='cpu'
+
+        checkpoint = torch.load(path, map_location=map_location)
         model.load_state_dict(checkpoint['model_state_dict'])
         if optimizer:
             optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
             
         return checkpoint
-    except:
+    except Exception as e: 
+        print(e)
         return default_params
