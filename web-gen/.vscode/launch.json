@@ -29,6 +29,15 @@
             "justMyCode": true
         },
         {
+            "name": "main",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args":["temp.jpg"],
+        },
+        {
             "type": "node",
             "request": "launch",
             "name": "crawler",
