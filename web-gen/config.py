@@ -3,7 +3,7 @@ import torch
 model_path = 'model.pt'
 
 # hyperparameters
-batch_size = 32
+batch_size = 64
 
 keep_prob = 0.8
 hidden_sz = 1024 #out_features * out_features # TODO: make this a hyper param?

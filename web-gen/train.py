@@ -21,11 +21,15 @@ from debug import *
 tr = Transformer(image_size=image_size)
 ds = WebsitesDataset('data', transformer=tr)
 train_data, test_data = torch.utils.data.random_split(ds, [int(train_pct * len(ds)), len(ds) - int(train_pct * len(ds))])
-train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
+
+# https://www.reddit.com/r/MachineLearning/comments/kvs1ex/d_here_are_17_ways_of_making_pytorch_training/
+# https://pytorch.org/docs/stable/data.html
+train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True, pin_memory=True) # , num_workers=2
 
 train_images, train_layout, train_first_child_size = next(iter(train_dataloader))
 subplots = create_subplots(len(train_images))
 
+torch.backends.cudnn.benchmark = True
 
 #instantiate CNN model
 model = CNN2(image_size=tr.input_size(), out_features=tr.output_size()).to(device)
@@ -33,7 +37,7 @@ print(model)
 
 criterion_first_child_size = torch.nn.MSELoss()
 criterion_layout = torch.nn.CrossEntropyLoss()    # Softmax is internally computed.
-optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
+optimizer = torch.optim.AdamW(params=model.parameters(), lr=learning_rate)
 
 # load existing model
 io_params = load(model_path, model, optimizer, {
@@ -61,11 +65,13 @@ for epoch in tqdm(range(training_epochs)):
     avg_loss_layout = 0
     avg_loss_first_child_size = 0
     for i, (X, Y_layout, Y_first_child_size) in tqdm(enumerate(train_dataloader), leave=False, total=total_batch):
-        optimizer.zero_grad() # <= initialization of the gradients
+        optimizer.zero_grad(set_to_none=True) # <= initialization of the gradients
         
         # forward propagation
         # TODO: investigate this: https://pytorch.org/vision/stable/generated/torchvision.ops.generalized_box_iou_loss.html
-        pred_layout, pred_first_child_size = model(X.to(device))
+        # Casts operations to mixed precision
+        with torch.cuda.amp.autocast():
+            pred_layout, pred_first_child_size = model(X)
 
         # help us debug the data
         #sample_idx = random.randint(0, Y_layout.shape[0] - 1)
@@ -87,8 +93,8 @@ for epoch in tqdm(range(training_epochs)):
 
         # https://discuss.pytorch.org/t/is-there-a-way-to-combine-classification-and-regression-in-single-model/165549/2
         # TODO: https://discuss.pytorch.org/t/ignore-loss-on-some-outputs-depending-on-others/170864 
-        loss_first_child_size = criterion_first_child_size(pred_first_child_size, Y_first_child_size.to(device))
-        loss_layout = criterion_layout(pred_layout, Y_layout.to(device))
+        loss_first_child_size = criterion_first_child_size(pred_first_child_size, Y_first_child_size)
+        loss_layout = criterion_layout(pred_layout, Y_layout)
 
         loss_first_child_size = loss_first_child_size / 10.0
         loss_total = loss_first_child_size + loss_layout
