@@ -56,13 +56,15 @@ def show_data_grid(axarr, image_arr, actual_first_child_size_arr, pred_first_chi
     
 
 
-def show_data(image, actual_first_child_size, pred_first_child_size=None):
+def show_data(image, actual_first_child_size=None, pred_first_child_size=None, block=False, pause=0.6):
     plt.clf()
     plt.imshow(image.permute(1, 2, 0))
-    plt.gca().add_patch(create_corner_rect(to_bounds(actual_first_child_size)))
+
+    if actual_first_child_size is not None:
+        plt.gca().add_patch(create_corner_rect(to_bounds(actual_first_child_size)))
 
     if pred_first_child_size is not None:
         plt.gca().add_patch(create_corner_rect(to_bounds(pred_first_child_size), 'green'))
 
-    plt.show(block=False)
-    plt.pause(0.6)
+    plt.show(block=block)
+    plt.pause(pause)
