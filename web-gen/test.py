@@ -13,7 +13,7 @@ from tqdm import tqdm
 from model_io import save, load
 from utils import cxcy_to_iou
 import numpy as np
-from model import CNN2
+from model import CNN
 from config import *
 
 tr = Transformer(image_size=image_size)
@@ -23,7 +23,7 @@ train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
 
 
 #instantiate CNN model
-model = CNN2(image_size=tr.input_size(), out_features=tr.output_size())
+model = CNN(image_size=tr.input_size(), out_features=tr.output_size())
 print(model)
 
 # load existing model

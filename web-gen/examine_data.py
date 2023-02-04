@@ -11,7 +11,7 @@ from datasets import WebsitesDataset
 from transformer import Transformer
 from tqdm import tqdm
 from model_io import save, load
-from model import CNN2
+from model import CNN
 from config import *
 from utils import *
 import numpy as np

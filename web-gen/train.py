@@ -11,7 +11,7 @@ from datasets import WebsitesDataset
 from transformer import Transformer
 from tqdm import tqdm
 from model_io import save, load
-from model import CNN2
+from model import CNN
 from config import *
 from utils import *
 import numpy as np
@@ -32,7 +32,7 @@ subplots = create_subplots(len(train_images))
 torch.backends.cudnn.benchmark = True
 
 #instantiate CNN model
-model = CNN2(image_size=tr.input_size(), out_features=tr.output_size()).to(device)
+model = CNN(image_size=tr.input_size(), out_features=tr.output_size()).to(device)
 print(model)
 
 criterion_first_child_size = torch.nn.MSELoss()
@@ -77,7 +77,7 @@ for epoch in tqdm(range(training_epochs)):
         #sample_idx = random.randint(0, Y_layout.shape[0] - 1)
 
         # only show for first batch in the epoch so we don't slow thing too much
-        if i == 0 and (epoch % 10 == 0):
+        if i == 0 and (epoch % 20 == 0):
             p_size = pred_first_child_size.cpu().detach() #pred_first_child_size[sample_idx].detach().numpy()
             show_data_grid(subplots, X, Y_first_child_size, p_size)
 
@@ -125,11 +125,12 @@ for epoch in tqdm(range(training_epochs)):
 
     print("[Epoch: {:>4}], mean loss: layout = {:>.9}, first child sz = {:>.9}".format(epoch + io_params['epoch'] + 1, avg_loss_layout.item(), avg_loss_first_child_size.item()))
     
-    #print(model.bounds_out[-4].weight)
+    if (epoch % 10 == 0):
+        #print('Saving model')
+        save(model_path, model, optimizer, {
+            'epoch': epoch + io_params['epoch'] + 1
+        })
 
-    save(model_path, model, optimizer, {
-        'epoch': epoch + io_params['epoch'] + 1
-    })
 
 print('Training Finished!')
 

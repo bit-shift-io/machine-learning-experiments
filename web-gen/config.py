@@ -6,7 +6,7 @@ model_path = 'model.pt'
 batch_size = 64
 
 keep_prob = 0.8
-hidden_sz = 1024 #out_features * out_features # TODO: make this a hyper param?
+hidden_sz = 64
 
 image_size=[200, 200]
 

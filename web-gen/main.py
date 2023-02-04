@@ -5,7 +5,7 @@ from config import *
 from utils import *
 from debug import *
 from model_io import save, load
-from model import CNN2
+from model import CNN
 import json
 import torchvision.transforms.functional as FT
 
@@ -19,7 +19,7 @@ tr = Transformer(image_size=image_size)
 image = Image.open(args.image)
 X = tr.encode_input_image(image)
 
-model = CNN2(image_size=tr.input_size(), out_features=tr.output_size()).to(device)
+model = CNN(image_size=tr.input_size(), out_features=tr.output_size()).to(device)
 
 # load existing model
 io_params = load(model_path, model)
