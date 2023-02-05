@@ -12,6 +12,7 @@ from utils import *
 from pathlib import Path
 from sklearn import preprocessing
 import random
+from config import *
 
 # randomly shufle RGB channels
 # https://discuss.pytorch.org/t/torch-tensor-variable-from-rgb-to-bgr/18955
@@ -130,6 +131,8 @@ class WebsitesDataset(Dataset):
         first_child_size = [js['first_child_size']['width'], js['first_child_size']['height']]
         first_child_size = [first_child_size[0] / size[0], first_child_size[1] / size[1]] # convert to fraction of parent size
 
-
-        return X, self.transformer.encode_layout_class(layout), self.transformer.encode_first_child_size(first_child_size) 
-        #self.transformer.encode_bounds(parent_wh, bounds_arr), self.transformer.encode_node_class(node_cls), self.transformer.encode_display_class(display_cls) 
+        x = X #.to(device)
+        l = self.transformer.encode_layout_class(layout) #.to(device)
+        s = self.transformer.encode_first_child_size(first_child_size) #.to(device)
+        return x, l, s
+           
