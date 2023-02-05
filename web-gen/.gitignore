@@ -4,3 +4,4 @@ MNIST_data/
 *.pyc
 *.pt
 temp.jpg
+myimage.png

@@ -97,8 +97,8 @@ class WebsitesDataset(Dataset):
 
         # https://pytorch.org/vision/stable/transforms.html
         xforms = [
-            RandomColourShuffle(),
-            transforms.ColorJitter(),
+            #RandomColourShuffle(),
+            #transforms.ColorJitter(),
             transforms.GaussianBlur(9),
             transforms.RandomInvert(1),
             #transforms.RandomPosterize(5, 0.5),
@@ -107,7 +107,7 @@ class WebsitesDataset(Dataset):
             transforms.RandomAutocontrast(0.5),
             #transforms.RandomEqualize(0.5)
         ]
-        t = transforms.RandomApply(xforms, 0.5)
+        t = transforms.RandomApply(xforms, 0.9)
         X = t(X)
 
         

@@ -134,6 +134,7 @@ def plot_filters_single_channel(t):
             ax1.set_xticklabels([])
             ax1.set_yticklabels([])
    
+    plt.savefig('myimage.png', dpi=100) 
     plt.tight_layout()
     plt.show()
 

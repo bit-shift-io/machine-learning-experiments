@@ -29,7 +29,7 @@ model.eval()
 print(model)
 
 # visualize weights - first conv layer
-plot_weights(model.conv, 0, single_channel = False)
+plot_weights(model.conv, 0, single_channel=True)
 
 with torch.no_grad():
     

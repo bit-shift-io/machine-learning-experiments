@@ -17,7 +17,7 @@ class CNN(torch.nn.Module):
         super(CNN, self).__init__()
         
         self.conv = torch.nn.Sequential(
-            torch.nn.Conv2d(in_channels=3, out_channels=conv_sz, kernel_size=(3, 3), padding=1),
+            torch.nn.Conv2d(in_channels=1, out_channels=conv_sz, kernel_size=(3, 3), padding=1),
             torch.nn.ReLU(),
             torch.nn.MaxPool2d(kernel_size=2, stride=2),
             #torch.nn.Dropout(p=1-keep_prob),
@@ -25,7 +25,7 @@ class CNN(torch.nn.Module):
             torch.nn.Conv2d(in_channels=conv_sz, out_channels=conv_sz, kernel_size=(3, 3), padding=1),
             torch.nn.ReLU(),
             torch.nn.MaxPool2d(kernel_size=2, stride=2),
-            #torch.nn.Dropout(p=1-keep_prob),
+            torch.nn.Dropout(p=1-keep_prob),
 
             #torch.nn.Conv2d(in_channels=conv_sz, out_channels=conv_sz, kernel_size=(3, 3), padding=1),
             #torch.nn.ReLU(),
@@ -34,7 +34,7 @@ class CNN(torch.nn.Module):
         )
 
         # compute the output size for the above Sequential 
-        outshape = [1, 3] + image_size #(batch_size, in_channels, image_height, image_width)
+        outshape = [1, 1] + image_size #(batch_size, in_channels, image_height, image_width)
         for module in self.conv.children():
             outshape = tensorshape(module, outshape)
         conv_output_size = outshape[1] * outshape[2] * outshape[3]

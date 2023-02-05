@@ -3,11 +3,11 @@ import torch
 model_path = 'model.pt'
 
 # hyperparameters
-batch_size = 64
+batch_size = 16
 
 keep_prob = 0.8
-hidden_sz = 64
-conv_sz = 64
+hidden_sz = 16
+conv_sz = 8
 
 image_size=[200, 200]
 
