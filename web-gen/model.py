@@ -17,20 +17,20 @@ class CNN(torch.nn.Module):
         super(CNN, self).__init__()
         
         self.conv = torch.nn.Sequential(
-            torch.nn.Conv2d(in_channels=3, out_channels=3, kernel_size=(3, 3), padding=1),
+            torch.nn.Conv2d(in_channels=3, out_channels=conv_sz, kernel_size=(3, 3), padding=1),
             torch.nn.ReLU(),
             torch.nn.MaxPool2d(kernel_size=2, stride=2),
-            torch.nn.Dropout(p=1-keep_prob),
+            #torch.nn.Dropout(p=1-keep_prob),
 
-            torch.nn.Conv2d(in_channels=3, out_channels=3, kernel_size=(3, 3), padding=1),
+            torch.nn.Conv2d(in_channels=conv_sz, out_channels=conv_sz, kernel_size=(3, 3), padding=1),
             torch.nn.ReLU(),
             torch.nn.MaxPool2d(kernel_size=2, stride=2),
-            torch.nn.Dropout(p=1-keep_prob),
+            #torch.nn.Dropout(p=1-keep_prob),
 
-            torch.nn.Conv2d(in_channels=3, out_channels=3, kernel_size=(3, 3), padding=1),
-            torch.nn.ReLU(),
-            torch.nn.MaxPool2d(kernel_size=2, stride=2),
-            torch.nn.Dropout(p=1-keep_prob)
+            #torch.nn.Conv2d(in_channels=conv_sz, out_channels=conv_sz, kernel_size=(3, 3), padding=1),
+            #torch.nn.ReLU(),
+            #torch.nn.MaxPool2d(kernel_size=2, stride=2),
+            #torch.nn.Dropout(p=1-keep_prob)
         )
 
         # compute the output size for the above Sequential 
@@ -42,6 +42,7 @@ class CNN(torch.nn.Module):
         self.size_out = torch.nn.Sequential(
             # todo, convert image to grayscale, conv2d -> single colour channel. Colour shouldnt play a factor in the bounding box
             torch.nn.Flatten(),
+            torch.nn.Dropout(p=1-keep_prob),
             torch.nn.Linear(conv_output_size, hidden_sz),
             torch.nn.ReLU(),
             torch.nn.Dropout(p=1-keep_prob),
@@ -51,6 +52,7 @@ class CNN(torch.nn.Module):
 
         self.classifier_features = torch.nn.Sequential(
             torch.nn.Flatten(),
+            torch.nn.Dropout(p=1-keep_prob),
             torch.nn.Linear(conv_output_size, hidden_sz),
             torch.nn.ReLU(),
             torch.nn.Dropout(p=1-keep_prob),

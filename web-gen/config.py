@@ -7,6 +7,7 @@ batch_size = 64
 
 keep_prob = 0.8
 hidden_sz = 64
+conv_sz = 64
 
 image_size=[200, 200]
 

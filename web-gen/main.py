@@ -19,23 +19,28 @@ tr = Transformer(image_size=image_size)
 image = Image.open(args.image)
 X = tr.encode_input_image(image)
 
-model = CNN(image_size=tr.input_size(), out_features=tr.output_size()).to(device)
+model = CNN(image_size=tr.input_size(), out_features=tr.output_size()) #.to(device)
 
 # load existing model
 io_params = load(model_path, model)
 
 model.eval() 
 
+print(model)
+
+# visualize weights - first conv layer
+plot_weights(model.conv, 0, single_channel = False)
+
 with torch.no_grad():
     
   # recursively divide an image while it gives the same layout as expected_layout
   def divide(X, expected_layout=None, size_scale=1.0, depth=0):
-    y_layout, y_first_child_size = model(torch.unsqueeze(X, dim=0))
+    y_layout, y_first_child_size = model(torch.unsqueeze(X, dim=0)) # .to(device, non_blocking=True)
 
     #if depth == 0:
-    show_data(X, y_first_child_size[0], block=False, pause=2.0)
+    show_data(X, y_first_child_size[0].cpu(), block=False, pause=2.0)
 
-    layout = tr.decode_layout_class(y_layout[0])
+    layout = tr.decode_layout_class(y_layout[0].cpu())
 
     if expected_layout == None:
       expected_layout = layout
