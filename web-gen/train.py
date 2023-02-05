@@ -25,7 +25,7 @@ def main():
 
     # https://www.reddit.com/r/MachineLearning/comments/kvs1ex/d_here_are_17_ways_of_making_pytorch_training/
     # https://pytorch.org/docs/stable/data.html
-    train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=8)
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=2)
 
     train_images, train_layout, train_first_child_size = next(iter(train_dataloader))
     subplots = create_subplots(len(train_images))
@@ -40,7 +40,7 @@ def main():
         loss = torch.mean((output - target)**2)
         return loss
 
-    criterion_first_child_size = my_loss #torch.nn.MSELoss()
+    criterion_first_child_size = torch.nn.MSELoss() #my_loss #
     criterion_layout = torch.nn.CrossEntropyLoss()    # Softmax is internally computed.
     optimizer = torch.optim.AdamW(params=model.parameters(), lr=learning_rate)
 
@@ -79,19 +79,20 @@ def main():
             #with torch.cuda.amp.autocast():
             pred_layout, pred_first_child_size = model(X.to(device, non_blocking=True))
 
-            # only show for first batch in the epoch so we don't slow thing too much
-            if i == 0 and (epoch % 20 == 0):
-                p_size = pred_first_child_size.cpu().detach() #pred_first_child_size[sample_idx].detach().numpy()
-                show_data_grid(subplots, X.cpu(), Y_first_child_size.cpu(), p_size)
-            
-            # for rows, we only care about measuring loss on the the x-axis component, so set the y-axis to same as target data
-            # for columns we only care about measuing loss on the y-axis component, so set the x-asi the same as the target data
-            for i, layout_oh in enumerate(Y_layout):
-                layout = tr.decode_layout_class(layout_oh)
-                if (layout == 'row'):
-                    pred_first_child_size[i][1] = Y_first_child_size[i][1]
-                elif (layout == 'column'):
-                    pred_first_child_size[i][0] = Y_first_child_size[i][0]
+            with torch.no_grad():
+                # only show for first batch in the epoch so we don't slow thing too much
+                #if i == 0 and (epoch % 20 == 0):
+                #    p_size = pred_first_child_size.cpu().detach() #pred_first_child_size[sample_idx].detach().numpy()
+                #    show_data_grid(subplots, X.cpu(), Y_first_child_size.cpu(), p_size)
+                
+                # for rows, we only care about measuring loss on the the x-axis component, so set the y-axis to same as target data
+                # for columns we only care about measuing loss on the y-axis component, so set the x-asi the same as the target data
+                for i, layout_oh in enumerate(Y_layout):
+                    layout = tr.decode_layout_class(layout_oh)
+                    if (layout == 'row'):
+                        pred_first_child_size[i][1] = Y_first_child_size[i][1]
+                    elif (layout == 'column'):
+                        pred_first_child_size[i][0] = Y_first_child_size[i][0]
 
             # https://discuss.pytorch.org/t/is-there-a-way-to-combine-classification-and-regression-in-single-model/165549/2
             # TODO: https://discuss.pytorch.org/t/ignore-loss-on-some-outputs-depending-on-others/170864 
@@ -105,8 +106,9 @@ def main():
             loss_total.backward() # <= compute the gradient of the loss/cost function     
             optimizer.step() # <= Update the gradients
                 
-            avg_loss_first_child_size += loss_first_child_size.data / total_batch
-            avg_loss_layout += loss_layout.data / total_batch
+            with torch.no_grad():
+                avg_loss_first_child_size += loss_first_child_size.data / total_batch
+                avg_loss_layout += loss_layout.data / total_batch
 
         print("\033[F [Epoch: {:>4}], mean loss: layout = {:>.6}, size = {:>.6}\n".format(epoch + io_params['epoch'] + 1, avg_loss_layout.item(), avg_loss_first_child_size.item()))
         #pbar.set_postfix({'epoch': epoch + io_params['epoch'] + 1, 'layout loss': avg_loss_layout.item(), 'size loss': avg_loss_first_child_size.item()})
