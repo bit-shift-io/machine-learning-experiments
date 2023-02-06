@@ -17,8 +17,8 @@ const __dirname = path.dirname(__filename)
 
 const TEST_SINGLE = false
 const TEST_SCREENSHOT_DISABLED = false
-const TEST_SINGLE_URL = `https://cnbc.com`
-const TEST_DIR_BREAKPOINT = ''//'data/cnbc-com/body/child_61/child_0/child_0/child_3/child_1/child_0/child_0/child_4/child_1/child_0/child_0/child_0/child_1/child_3/child_0/child_0'
+const TEST_SINGLE_URL = `https://metro.co.uk`
+const TEST_DIR_BREAKPOINT = '' //'data/metro-co-uk/body/child_2/child_2/child_0/child_2/child_11/child_1'
 
 async function getPropertyValue(element, property) {
     return await (await element.getProperty(property)).jsonValue()
@@ -221,12 +221,12 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
     }
 
     const img_path = `${dir}/screenshot.jpg`
-    const img_path_200 = `${dir}/screenshot_200.jpg`
+    const img_path_400 = `${dir}/screenshot_400.jpg`
     const r = {
         id,
         dir,
         img_path,
-        img_path_200,
+        img_path_400,
 
         layout,
         first_child_size: firstChildSize,
@@ -262,7 +262,7 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
             const areaScreenshot = await page.screenshot({ path: img_path, clip: clipRelativeToPage, fullPage: true })
 
             let sImg = sharp(img_path)
-            sImg = await sImg.resize(200, 200, { fit: 'fill' })
+            sImg = await sImg.resize(400, 400, { fit: 'fill' })
 
             const stats = await sImg.stats()
             if (stats.entropy < MIN_ENTROPY) {
@@ -270,7 +270,7 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
                 return null
             }
             
-            await sImg.toFile(img_path_200)
+            await sImg.toFile(img_path_400)
         }
 
     } catch (err) {

@@ -78,12 +78,12 @@ class WebsitesDataset(Dataset):
         # scale/skew
 
         if self.debug:
-            print(js['img_path_200'])
+            print(js['img_path_400'])
 
         # the sample code above applies random variation and flips etc...
         # do we need to do something similar to help AI in fuzzy situations?
-        image = Image.open(js['img_path_200'])
-        X = self.transformer.encode_input_image_200(image)
+        image = Image.open(js['img_path_400'])
+        X = self.transformer.encode_input_image_400(image)
 
         # img_action = random.randint(0, 1)
         # if img_action == 0: # convert to greyscale

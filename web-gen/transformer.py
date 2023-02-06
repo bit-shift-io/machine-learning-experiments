@@ -48,7 +48,7 @@ class Transformer:
         return image
 
     # image already resized by crawler
-    def encode_input_image_200(self, image):
+    def encode_input_image_400(self, image):
         image = transforms.Grayscale()(image)
         image = transforms.ToTensor()(image) # convert from 0->255 to 0->1
         return image

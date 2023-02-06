@@ -9,7 +9,7 @@ keep_prob = 0.8
 hidden_sz = 16
 conv_sz = 8
 
-image_size=[200, 200]
+image_size=[400, 400]
 
 learning_rate = 0.001
 
