@@ -4,7 +4,6 @@
 
 import chunk from 'lodash/chunk.js'
 import pick from 'lodash/pick.js'
-//import puppeteer from 'puppeteer'
 import sharp from 'sharp'
 import { chromium } from 'playwright' // Or 'chromium' or 'firefox'.
 import fetch from 'node-fetch'
@@ -16,9 +15,10 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 
-const TEST_SINGLE = true
+const TEST_SINGLE = false
 const TEST_SCREENSHOT_DISABLED = false
-const TEST_SINGLE_URL = `https://amazon.co.uk/`
+const TEST_SINGLE_URL = `https://cnbc.com`
+const TEST_DIR_BREAKPOINT = ''//'data/cnbc-com/body/child_61/child_0/child_0/child_3/child_1/child_0/child_0/child_4/child_1/child_0/child_0/child_0/child_1/child_3/child_0/child_0'
 
 async function getPropertyValue(element, property) {
     return await (await element.getProperty(property)).jsonValue()
@@ -158,10 +158,10 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
         }
     }
 
-    /*
-    if (dir == 'data/fandom-com/body/child_7/child_2/child_1/child_0/child_1/child_2/child_0/child_0/child_1') {
+    
+    if (TEST_DIR_BREAKPOINT && dir == TEST_DIR_BREAKPOINT) {
         debugger
-    }*/
+    }
 
     // boil the layout down to row or column
     // TODO: handle grid
@@ -224,6 +224,7 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
     const img_path_200 = `${dir}/screenshot_200.jpg`
     const r = {
         id,
+        dir,
         img_path,
         img_path_200,
 
@@ -362,7 +363,7 @@ if (TEST_SINGLE) {
 } else {
     const browser = await chromium.launch()
     const r = await fetch('https://raw.githubusercontent.com/Kikobeats/top-sites/master/top-sites.json').then(r => r.json())
-    const c = chunk(r, r.length / 10)
+    const c = chunk(r, r.length / 5)
     const p = c.map(async (arr, idx) => {
         for (const w of arr) {
             await screenshotWebsite(browser, 'http://' + w.rootDomain)

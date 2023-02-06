@@ -21,7 +21,7 @@ from debug import *
 batch_size = 16
 
 tr = Transformer(image_size=image_size)
-ds = WebsitesDataset('data/amazon-co-uk', transformer=tr, debug=True)
+ds = WebsitesDataset('data', transformer=tr, debug=True)
 train_dataloader = DataLoader(ds, batch_size=batch_size, shuffle=False)
 
 subplots = create_subplots(batch_size)
@@ -29,7 +29,7 @@ subplots = create_subplots(batch_size)
 total_batch = len(ds) / batch_size
 
 print(f'\nBatch 0')
-for i, (X, Y_layout, Y_first_child_size) in tqdm(enumerate(train_dataloader), leave=False, total=total_batch):
+for i, (X, Y_layout, Y_first_child_size) in enumerate(train_dataloader):
     show_data_grid(subplots, X, Y_first_child_size)
     plt.pause(10)
     print(f'\nBatch {i+1}')
