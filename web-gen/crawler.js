@@ -16,8 +16,9 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 
-const TEST_SINGLE = false
+const TEST_SINGLE = true
 const TEST_SCREENSHOT_DISABLED = false
+const TEST_SINGLE_URL = `https://amazon.co.uk/`
 
 async function getPropertyValue(element, property) {
     return await (await element.getProperty(property)).jsonValue()
@@ -76,6 +77,27 @@ const layoutFromChildrenClientRects = (children) => {
     return null
 }
 
+// Hide some elements on the page, like popups/modals/sticky crap/menus
+async function cleanElement(element) {
+    const hidden = await element.evaluate((element) => {
+        const s = window.getComputedStyle(element)
+        if (s.position == 'fixed' || s.position == 'absolute') {
+            element.style.visibility = 'hidden'
+            return true
+        }
+        return false
+    })
+    if (hidden) {
+        return
+    }
+
+    const children = await element.$$(':scope > *')
+    for (let i = 0; i < children?.length; ++i) {
+        const c = children[i]
+        const rc = await cleanElement(c)
+    }
+}
+
 // TODO: if a container only has a single child with no margins, ignore it as it can be flattened with the child....
 async function handleElement(page, parent_element, parent_bounds, element, dir) { 
     const MIN_SIZE = 20
@@ -92,7 +114,8 @@ async function handleElement(page, parent_element, parent_bounds, element, dir) 
     }
 
     const styles = await element.evaluate((element) => {
-        return window.getComputedStyle(element)
+        const s = window.getComputedStyle(element)
+        return s
     })
 
     // TODO: add other css properties we are interested in
@@ -308,6 +331,7 @@ export async function screenshotWebsite(browser, url) {
         await page.waitForSelector('body')
         const element = await page.$('body')
 
+        const results2 = await cleanElement(element)
         const results = await handleElement(page, null, null, element, `${dir}/body`)
         /*
         const json = JSON.stringify(results, null, 4)
@@ -327,10 +351,12 @@ export async function screenshotWebsite(browser, url) {
 
 
 if (TEST_SINGLE) {
-    const browser = await chromium.launch()
+    const browser = await chromium.launch({
+        headless: false
+    })
     //const url = 'https://www.wikipedia.org/'
     let url = `file://${__dirname}/test-web/test-1.html`
-    url = `http://fandom.com`
+    url = TEST_SINGLE_URL
     await screenshotWebsite(browser, url)
     await browser.close()
 } else {

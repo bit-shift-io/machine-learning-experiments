@@ -45,7 +45,7 @@
                 "<node_internals>/**"
             ],
             "program": "crawler.js",
-            "runtimeExecutable": "/usr/local/bin/node"
+            //"runtimeExecutable": "/usr/local/bin/node"
         }
     ]
 }

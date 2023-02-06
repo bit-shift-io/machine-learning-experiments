@@ -18,8 +18,10 @@ import numpy as np
 import random
 from debug import *
 
+batch_size = 16
+
 tr = Transformer(image_size=image_size)
-ds = WebsitesDataset('data', transformer=tr, debug=True)
+ds = WebsitesDataset('data/amazon-co-uk', transformer=tr, debug=True)
 train_dataloader = DataLoader(ds, batch_size=batch_size, shuffle=False)
 
 subplots = create_subplots(batch_size)
