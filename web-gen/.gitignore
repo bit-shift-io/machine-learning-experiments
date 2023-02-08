@@ -1,7 +1,0 @@
-node_modules/
-data*/
-MNIST_data/
-*.pyc
-*.pt
-temp.jpg
-myimage.png
